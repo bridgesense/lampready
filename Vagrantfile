@@ -39,9 +39,9 @@ Vagrant.configure("2") do |config|
         echo "Updating Bind..."
         sudo sed -i "s@mywebsite\.local@#{config.vm.hostname}@g" /etc/bind/named.conf.local
         sudo sed -i "s@mywebsite\.local@#{config.vm.hostname}@g" /etc/bind/zones/db.default.com
-        sudo sed -i "s@.* ; Serial Number.*@            201703769 ;Serial Number@" /etc/bind/zones/db.default.com
+        sudo sed -i "s@.* ; Serial Number.*@            201704769 ;Serial Number@" /etc/bind/zones/db.default.com
         sudo sed -i "s@mywebsite\.local@#{config.vm.hostname}@g" /etc/bind/zones/db.10.33.168.192
-        sudo sed -i "s@.* ; Serial Number.*@            201703769 ;Serial Number@" /etc/bind/zones/db.10.33.168.192
+        sudo sed -i "s@.* ; Serial Number.*@            201704769 ;Serial Number@" /etc/bind/zones/db.10.33.168.192
 
         echo "Updating Apache..."
         sudo sed -i "s@ServerName.*@ServerName #{config.vm.hostname}@" /etc/apache2/apache2.conf
