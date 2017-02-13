@@ -88,7 +88,6 @@ SSH Pass: vagrant<br />
 MySQL<br />
 Database User: root<br />
 Database Pass: root<br />
-Database Host: localhost / 127.0.0.1<br />
 
 Roundcube<br />
 URL: 192.168.33.10/webmail<br />
@@ -105,8 +104,6 @@ Xdebug Settings
 Xdebug port: 9041 (*see script setting*)
 
 Xdebug is preconfigured and ready to go.  There are a few things to be aware of when working with Xdebug within an IDE.
-
-Be sure to turn off E_STRICT break on exceptions.  Scotchbox is distributed with PHP 5.6 which includes E_STRICT by default.
 
 **FIREWALL NOTICE:**  If you're blocking all inbound connections, Xdebug will NOT interface with Sublime Text or Vdebug.  Be sure to open port 9041 or what ever port was entered in the Vagrantfile script:
 
