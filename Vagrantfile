@@ -52,7 +52,9 @@ Vagrant.configure("2") do |config|
 
         echo "Updating the Xdebug Port..."
         sudo sed -i "s@9041@${XDEBUG_PORT}@" /etc/php5/mods-available/xdebug.ini
-        sudo ufw allow $XDEBUG_PORT
+        sudo service iptables-persistent restart
+        sudo iptables -I INPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
+        sudo iptables -I OUTPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
 
         echo "Creating SSL Key..."
         sudo mkdir /etc/apache2/ssl 2>/dev/null
