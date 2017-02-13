@@ -57,6 +57,7 @@ Vagrant.configure("2") do |config|
         sudo iptables -I OUTPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
 
         echo "Creating SSL Key..."
+        sudo rm -rf /etc/apache2/ssl 2>/dev/null
         sudo mkdir /etc/apache2/ssl 2>/dev/null
         sudo openssl req -newkey rsa:2048 -x509 -sha256 -days 999999 -nodes \
             -subj "/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=#{config.vm.hostname}" \
