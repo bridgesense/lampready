@@ -104,8 +104,7 @@ vagrant box update
 ```
 
 
-**WARNING!** If you run Vagrant destroy, you will have to reinstall
-your database.  Any previous changes to the database will be gone.
+**Note:** If you run Vagrant destroy, the box will be built from scratch again -- which may be a good thing.
 
 
 _More to come ..._
