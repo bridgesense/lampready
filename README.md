@@ -5,12 +5,11 @@
 Why XdebugBox?
 ---
 
-There are hundreds of great Vagrant boxes out there.  Personally, I was tired of tinkering with broken boxes brewed from anonymous missing repos.  I wanted something I could spin up fast and just get to work. This project took about a week to build and probably needs a bit more tinkering.  It does have some features I'm pretty excited about already.
+There are hundreds of great Vagrant boxes out there.  Personally, I was tired of tinkering with broken boxes brewed from anonymous missing repos.  I wanted something I could spin up fast and just get to work. This project is fairly new, but it already has some features I'm pretty excited about.
 
-* A lot less tinking with a site's configuration to get it to run in a virtual environment
-* ... like no more SPAM!  The mail shield is ready to go.  No adjustments are neccessary.
-* Xdebug is setup and ready to go
-* A light selection of Vim Tools, Tmux and Ranger for quick customization (or Windows users)
+* A lot less tinking with a website's configuration before launching it in a virtual environment
+* ... no more developer SPAM!  The mail shield is set up and ready to go.  No adjustments are neccessary.
+* Xdebug is setup and ready to go with a light selection of Vim Tools, Tmux and Ranger
 
 ####_What goes in the box -- Stays in the box._
 
