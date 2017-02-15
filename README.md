@@ -1,4 +1,4 @@
-![screenshot](http://i.imgur.com/hDXpH0O.jpg)
+![screenshot](http://i.imgur.com/XAs0eIf.jpg)
 
 
 
@@ -39,19 +39,24 @@ How to Install this Vagrant Box?
 
 * Download and install Vagrant from https://www.vagrantup.com
 
-* Open up your terminal in your project's root directory and run the following command:
+* Download the xdebugbox Vagrantfile script from [Github] (https://github.com/bridgesense/xdebugbox)
 
-```
-vagrant init bridgesense/xdebugbox
-```
-* Overwrite the default Vagrantfile script with the one provided here.
+* Place the script in your project's root directory
 
-* Fill free to change any of the Hostname and other user defined options. 
+* Fill free to make any changes to the script's options
 
-* Start the script with this command:
+* Run the following command to spin up the new virtual environment in minutes
+
 ```
 vagrant up
 ```
+
+* Log into to shell to check out the virtual environment (user: vagrant, pass: vagrant)
+
+```
+vagrant ssh
+```
+
 * Access the website via https://192.168.33.10 or customize a url in your hosts file
 
 * Access outbound mail from https://192.168.33.10/webmail (user: vagrant, pass: vagrant)
