@@ -43,7 +43,7 @@ How to Install this Vagrant Box?
 
 * Place the script in your project's root directory
 
-* Fill free to make any changes to the script's options
+* Feel free to make changes to the script's options
 
 * Run the following command to spin up the new virtual environment in minutes
 
