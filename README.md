@@ -2,7 +2,7 @@
 
 
 
-Why XdebugBox?
+Why xdebugbox?
 ---
 
 There are hundreds of great Vagrant boxes out there.  Personally, I was tired of tinkering with broken boxes brewed from anonymous missing repos.  I wanted something I could spin up fast and just get to work. This project is fairly new, but it already has some features I'm pretty excited about.
@@ -17,7 +17,7 @@ There are hundreds of great Vagrant boxes out there.  Personally, I was tired of
 How it Works
 ---
 
-This script syncs your project's root folder inside the virtual machine.  That allows you to work on the code from either in or outside the box.  Most of these virtual environments do not have mail utilities set up because dealing with the fallout of development spam is never fun.  Sometimes those forms and crons need tested.  XdebugBox uses Postfix to route all outbound mail to a single convenient box that can be accessed through Roundcube.
+This script syncs your project's root folder inside the virtual machine.  That allows you to work on the code from either in or outside the box.  Most of these virtual environments do not have mail utilities set up because dealing with the fallout of development spam is never fun.  Sometimes those forms and crons need tested.  xdebugbox uses Postfix to route all outbound mail to a single convenient box that can be accessed through Roundcube.
 
 
 
@@ -67,7 +67,7 @@ How to Use this Box?
 ---
 After installing Vagrant will not run from being launced in VirtualBox. Vagrant must be started and managed from the terminal: 
 
-**initialize XdebugBox**
+**initialize xdebugbox without the script**
 ```
 vagrant init bridgesense/xdebugbox
 ```
