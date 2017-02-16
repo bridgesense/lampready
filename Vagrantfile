@@ -105,7 +105,6 @@ Vagrant.configure("2") do |config|
             if [ "${DB_IS_MAGENTO}" == "yes" ]; then
                 MGQ1=$(mysql -N -u root -proot -e "use ${DB_NAME}; SELECT value FROM core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
                 MGA1=$(sed -E "s@(:\/\/([a-zA-Z]*\.)?([a-zA-Z]*)\.([a-zA-Z]*))@://${FULL_DOMAIN}@" <<< $MGQ1)
-                echo "This is what happened: $MGA1";
                 mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE core_config_data SET value = '$MGA1' WHERE path = 'web/unsecure/base_url'"
                 MGQ2=$(mysql -N -u root -proot -e "use ${DB_NAME}; SELECT value FROM core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
                 MGA2=$(sed -E "s@(:\/\/([a-zA-Z]*\.)?([a-zA-Z]*)\.([a-zA-Z]*))@://${FULL_DOMAIN}@" <<< $MGQ2)
