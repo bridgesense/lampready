@@ -64,6 +64,11 @@ vagrant ssh
 * Access outbound mail from https://192.168.33.10/webmail (user: vagrant, pass: vagrant)
 
 
+What the Script Options do
+---
+
+Coming soon...
+
 
 How to Use this Box?
 ---
