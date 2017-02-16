@@ -39,9 +39,11 @@ How to Install this Vagrant Box?
 
 * Download and install Vagrant from https://www.vagrantup.com
 
-* Download the xdebugbox Vagrantfile script from [Github] (https://github.com/bridgesense/xdebugbox)
+* Download the xdebugbox Vagrantfile script to your project's root directory
 
-* Place the script in your project's root directory
+```
+curl https://raw.githubusercontent.com/bridgesense/xdebugbox/master/Vagrantfile > Vagrantfile
+```
 
 * Feel free to make changes to the script's options
 
