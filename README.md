@@ -1,78 +1,117 @@
-Notes:
+![screenshot](http://i.imgur.com/yBAlToR.jpg)
+
+
+
+Why xdebugbox?
 ---
 
-What goes in the box -- Stays in the box.
+There are hundreds of great Vagrant boxes out there.  Personally, I was tired of tinkering with broken boxes brewed from anonymous missing repos.  I wanted something I could spin up fast and just get to work. This project is fairly new, but it already has some features I'm pretty excited about.
 
-A bulletproof LAMP stack designed for PHP developers. Be up and debugging in minutes without a care in the world.
+* A lot less tinking with a website's configuration before launching it in a virtual environment
+* ... no more developer SPAM!  The mail shield is set up and ready to go.  No adjustments are neccessary.
+* Xdebug is setup and ready to go with a light selection of Vim Tools, Tmux and Ranger
 
-XdebugBox also includes a mail shield that captures all outbound mail and routes it to the address defined in the Vagrantfile script.  No extra configuration or fiddling with your project's config files is neccessary.
+####_What goes in the box -- Stays in the box._
 
-More technical info to come....
+
+How it Works
+---
+
+This script syncs your project's root folder inside the virtual machine.  That allows you to work on the code from either in or outside the box.  Most of these virtual environments do not have mail utilities set up because dealing with the fallout of development spam is never fun.  Sometimes those forms and crons need tested.  xdebugbox uses Postfix to route all outbound mail to a single convenient box that can be accessed through Roundcube.
+
+
 
 What is a Vagrant Box?
 ---
-Vagrant allows developers to distribute a consistant development environment with the rest of the project code without taking up the space.
-
-This box was built from scratch from Ubuntu 14.04 Trusty. It has been tested on MacOS, but is available for Windows and Linux distros.
+Vagrant allows developers to distribute a consistant development environment with their code.  This box was built from scratch from Ubuntu 14.04 Trusty.  It has been tested on MacOS, but vagrant is also available for Windows and Linux.
 
 This development environment includes:
 
 Apache, Bind, Dovecot, PHP5, Postfix, and Roundcube which are already setup and ready to run from your project directory. 
 
-This box also includes a set of lightweight development tools to customize Vim and Tmux. [YADRLite] (https://github.com/bridgesense/dotfiles)  
+This box also includes a set of lightweight development tools to customize Vim and Tmux from [YADRLite] (https://github.com/bridgesense/dotfiles).
+
 
 
 How to Install this Vagrant Box?
 ---
-1. Download and Install VirtualBox from https://www.virtualbox.org
+* Download and Install VirtualBox from https://www.virtualbox.org
 
-2. Download and install Vagrant from https://www.vagrantup.com
+* Download and install Vagrant from https://www.vagrantup.com
 
-3. Open up your terminal in your project's root directory and run the following command:
+* Download the xdebugbox Vagrantfile script from [Github] (https://github.com/bridgesense/xdebugbox)
 
-```
-vagrant init bridgesense/xdebugbox
-```
-4. Overwrite the default Vagrantfile script with the one provided here.
+* Place the script in your project's root directory
 
-5. Fill free to change any of the Hostname and other user defined options. 
+* Feel free to make changes to the script's options
 
-6. Start the script with this command:
+* Run the following command to spin up the new virtual environment in minutes
+
 ```
 vagrant up
 ```
+
+* Log into to shell to check out the virtual environment (user: vagrant, pass: vagrant)
+
+```
+vagrant ssh
+```
+
+* Access the website via https://192.168.33.10 or customize a url in your hosts file
+
+* Access outbound mail from https://192.168.33.10/webmail (user: vagrant, pass: vagrant)
+
 
 
 How to Use this Box?
 ---
 After installing Vagrant will not run from being launced in VirtualBox. Vagrant must be started and managed from the terminal: 
 
-**initialize XdebugBox
+**initialize xdebugbox without the script**
+```
+vagrant init bridgesense/xdebugbox
+```
 
 **start/install the VM server:**
-```vagrant up```
+```
+vagrant up
+```
 
 **pause the server:**
-```vagrant suspend```
+```
+vagrant suspend
+```
 
 **stop the server:**
-```vagrant halt```
+```
+vagrant halt
+```
 
 **delete the server:**
-```vagrant destroy```
+```
+vagrant destroy
+```
 
 **quick SSH into the server:**
-```vagrant ssh```
+```
+vagrant ssh
+```
 
 **check if you are running the latest version:**
-```vagrant box outdated```
+```
+vagrant box outdated
+```
 
 **update Scotch Box:**
-```vagrant box update```
+```
+vagrant box update
+```
 
 
-**WARNING!** If you run Vagrant destroy, you will have to reinstall
-your database.  Any previous changes to the database will be gone.
+**Note:** If you run Vagrant destroy, the box will be built from scratch again -- which may be a good thing.
+
+
+_More to come ..._
 
 
 Credentials
@@ -88,7 +127,6 @@ SSH Pass: vagrant<br />
 MySQL<br />
 Database User: root<br />
 Database Pass: root<br />
-Database Host: localhost / 127.0.0.1<br />
 
 Roundcube<br />
 URL: 192.168.33.10/webmail<br />
@@ -105,8 +143,6 @@ Xdebug Settings
 Xdebug port: 9041 (*see script setting*)
 
 Xdebug is preconfigured and ready to go.  There are a few things to be aware of when working with Xdebug within an IDE.
-
-Be sure to turn off E_STRICT break on exceptions.  Scotchbox is distributed with PHP 5.6 which includes E_STRICT by default.
 
 **FIREWALL NOTICE:**  If you're blocking all inbound connections, Xdebug will NOT interface with Sublime Text or Vdebug.  Be sure to open port 9041 or what ever port was entered in the Vagrantfile script:
 
@@ -145,6 +181,7 @@ let g:vdebug_options = {
 \    "continuous_mode"  : 0
 \}
 ```
+
 
 
 SublimeText Settings
