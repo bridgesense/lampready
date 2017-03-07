@@ -104,15 +104,15 @@ Vagrant.configure("2") do |config|
             fi
             if [ "${DB_IS_MAGENTO}" == "yes" ]; then
                 MGQ1=$(mysql -N -u root -proot -e "use ${DB_NAME}; SELECT value FROM core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
-                MGA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?@://${FULL_DOMAIN}@" <<< $MGQ1)
+                MGA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ1)
                 mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE core_config_data SET value = '$MGA1' WHERE path = 'web/unsecure/base_url'"
                 MGQ2=$(mysql -N -u root -proot -e "use ${DB_NAME}; SELECT value FROM core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
-                MGA2=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?@://${FULL_DOMAIN}@" <<< $MGQ2)
+                MGA2=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ2)
                 mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE core_config_data SET value = '$MGA2' WHERE path = 'web/secure/base_url'"
             fi
             if [ "${DB_IS_WORDPRESS}" == "yes" ]; then
                 WPQ1=$(mysql -N -u root -proot -e "use ${DB_NAME}; SELECT option_value FROM wp_options WHERE option_name = 'siteurl'")
-                WPA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?@://${FULL_DOMAIN}@" <<< $WPQ1)
+                WPA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $WPQ1)
                 mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE wp_options SET option_value = '${WPA1}' WHERE option_name = 'siteurl' OR option_name = 'home'"
             fi
         fi
@@ -131,15 +131,15 @@ Vagrant.configure("2") do |config|
             fi
             if [ "${DB2_IS_MAGENTO}" == "yes" ]; then
                 MGQ3=$(mysql -N -u root -proot -e "use ${DB2_NAME}; SELECT value FROM core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
-                MGA3=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?@://${FULL_DOMAIN}@" <<< $MGQ3)
+                MGA3=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ3)
                 mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE core_config_data SET value = '$MGA3' WHERE path = 'web/unsecure/base_url'"
                 MGQ4=$(mysql -N -u root -proot -e "use ${DB2_NAME}; SELECT value FROM core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
-                MGA4=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?@://${FULL_DOMAIN}@" <<< $MGQ4)
+                MGA4=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ4)
                 mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE core_config_data SET value = '$MGA4' WHERE path = 'web/secure/base_url'"
             fi
             if [ "${DB2_IS_WORDPRESS}" == "yes" ]; then
                 WPQ2=$(mysql -N -u root -proot -e "use ${DB2_NAME}; SELECT option_value FROM wp_options WHERE option_name = 'siteurl'")
-                WPA2=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?@://${FULL_DOMAIN}@" <<< $WPQ2)
+                WPA2=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $WPQ2)
                 mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE wp_options SET option_value = '${WPA2}' WHERE option_name = 'siteurl' OR option_name = 'home'"
             fi
         fi
@@ -159,7 +159,8 @@ Vagrant.configure("2") do |config|
         fi
 
         echo "Updating YadrLite"
-        sudo -H -u vagrant bash -c '~/.yadrlite/setup update'
+        sudo -H -u vagrant bash -c '~/.yadrlite/setup remove'
+        sudo -H -u vagrant bash -c "`curl -fsSL https://raw.githubusercontent.com/bridgesense/dotfiles/master/setup`"
 
         echo "Restart Services..."
         sudo service mysql restart
