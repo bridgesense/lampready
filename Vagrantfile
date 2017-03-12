@@ -159,6 +159,7 @@ Vagrant.configure("2") do |config|
         fi
 
         echo "Updating YadrLite"
+        sudo sed -i "s@\/usr\/bin\/zsh@/bin/bash@" /etc/passwd  
         sudo -H -u vagrant bash -c '~/.yadrlite/setup remove'
         sudo -H -u vagrant bash -c "`curl -fsSL https://raw.githubusercontent.com/bridgesense/dotfiles/master/setup`"
 
