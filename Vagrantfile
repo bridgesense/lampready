@@ -56,9 +56,9 @@ Vagrant.configure("2") do |config|
         echo "Updating Bind..."
         sudo sed -i "s@mywebsite\.local@#{config.vm.hostname}@g" /etc/bind/named.conf.local
         sudo sed -i "s@mywebsite\.local@#{config.vm.hostname}@g" /etc/bind/zones/db.default.com
-        sudo sed -i "s@.* ; Serial Number.*@            201704769 ;Serial Number@" /etc/bind/zones/db.default.com
+        sudo sed -i "s@.* ; Serial Number.*@            201704800 ;Serial Number@" /etc/bind/zones/db.default.com
         sudo sed -i "s@mywebsite\.local@#{config.vm.hostname}@g" /etc/bind/zones/db.10.33.168.192
-        sudo sed -i "s@.* ; Serial Number.*@            201704769 ;Serial Number@" /etc/bind/zones/db.10.33.168.192
+        sudo sed -i "s@.* ; Serial Number.*@            201704800 ;Serial Number@" /etc/bind/zones/db.10.33.168.192
 
         echo "Updating Apache..."
         sudo sed -i "s@ServerName.*@ServerName #{config.vm.hostname}@" /etc/apache2/apache2.conf
@@ -157,11 +157,6 @@ Vagrant.configure("2") do |config|
                 mysql -u root -p'root' -e "GRANT ALL PRIVILEGES ON * . * TO '${DB3_USER}'@'localhost'"
             fi
         fi
-
-        echo "Updating YadrLite"
-        sudo sed -i "s@\/usr\/bin\/zsh@/bin/bash@" /etc/passwd  
-        sudo -H -u vagrant bash -c '~/.yadrlite/setup remove'
-        sudo -H -u vagrant bash -c "`curl -fsSL https://raw.githubusercontent.com/bridgesense/dotfiles/master/setup`"
 
         echo "Restart Services..."
         sudo service mysql restart
