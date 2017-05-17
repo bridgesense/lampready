@@ -29,7 +29,7 @@ Vagrant.configure("2") do |config|
         DB_FILENAME="user_database.sql"
         DB_NAME="user_database"
         DB_USER="user_user"
-        DB_PASS="drowssap"
+        DB_PASS='drowssap' 
 
         INSTALL_DB2="no"
         DB2_IS_MAGENTO="no"
@@ -37,13 +37,13 @@ Vagrant.configure("2") do |config|
         DB2_FILENAME=""
         DB2_NAME=""
         DB2_USER=""
-        DB2_PASS=""
+        DB2_PASS=''
 
         INSTALL_DB3="no"
         DB3_FILENAME=""
         DB3_NAME=""
         DB3_USER=""
-        DB3_PASS=""
+        DB3_PASS=''
 
         # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
