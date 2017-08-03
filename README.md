@@ -1,4 +1,4 @@
-![screenshot](http://i.imgur.com/yBAlToR.jpg)
+![screenshot](https://bridgesense.com/static/images/dotfiles/xdebugbox.jpeg)
 
 
 
