@@ -258,7 +258,7 @@ All Geben needs is the correct path mapping to the project's root directory (not
 
 M-x customize-variable geben-path-mappings 
 
-![screenshot](https://bridgesense.com/static/images/dotfiles/geben.png)
+![screenshot](https://bridgesense.com/static/images/dotfiles/geben1.png)
 
 You can also modify your .emacs file directly.
 ```
