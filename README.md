@@ -248,3 +248,20 @@ You also add a setup specific to the account via a SublimeText project file. Unl
     }
 }
 ```
+
+
+
+Emacs & Geben Settings
+---
+
+All Geben needs is the correct path mapping to the project's root directory (not the public directory).  See here for operational details: [GIT: ahungry/geben](https://github.com/ahungry/geben#vms)
+
+M-x customize-variable geben-path-mappings 
+
+![screenshot](https://bridgesense.com/static/images/dotfiles/geben.png)
+
+You can also modify your .emacs file directly.
+```
+;; Geben Path Mapping
+(setq geben-path-mappings '(("<project base on host>" "<project base on vm>"))
+```
