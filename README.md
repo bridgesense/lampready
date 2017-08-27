@@ -9,7 +9,7 @@ There are hundreds of great Vagrant boxes out there.  Personally, I was tired of
 
 * A lot less tinking with a website's configuration before launching it in a virtual environment
 * ... no more developer SPAM!  The mail shield is set up and ready to go.  No adjustments are neccessary.
-* Xdebug is setup and ready to go with a light selection of Vim Tools, Tmux and Ranger
+* Xdebug is setup and ready to go with a lite selection of Vim Tools, Tmux and Ranger
 
 ####_What goes in the box -- Stays in the box._
 
