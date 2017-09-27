@@ -109,7 +109,7 @@ vagrant ssh
 vagrant box outdated
 ```
 
-**update Scotch Box:**
+**update to latest version:**
 ```
 vagrant box update
 ```
