@@ -69,24 +69,29 @@ How to Configure this Script for Your Project
 The very first time you run the "vagrant up" command, the config.vm.hostname and "User Defined Settings" will be used to set up Bind, Apache, Xdebug, the SSL certificate, mail relay and up to three databases without further intervention.
 
 **config.vm.hostname and SUB_DOMAIN**
+
 The config.vm.hostname should contain your domain name.  It is recommended that you choose a unique sub domain for your virtual machine.  This way your public domain is active for comparison.  Next, alter your hosts file to allow the new domain to be accessed from any of your browsers and via command-line.
 ```
 dev.mywebsite.com 192.168.33.10
 ```  
 
 **XDEBUG_PORT**
+
 This is the default port normally allocated for Xdebug.  You'll want to be sure to open up your firewall to allow communication between Xdebug and your browser.
 
 **MAIL_RELAY**
+
 This line shouldn't need to be modified. Roundcube is already set up and ready to go. With exception of direct connection to a remote SMTP service through an API, all other outgoing mail will be diverted to a local box.  This should prevent any developer spam from harassing your colleagues.  You can access this box from your browser:
 ```
 https://dev.mywebsite.com/webmail
 ``` 
 
 **INSTALL_DB**
+
 The script can automatically set up and install up to three MySQL databases.  By setting the INSTALL message to "yes"  and filling out the rest of the information, the script will create the database and inject your data from a sql file you place in the project's root directory.
 
 **DOCUMENT_ROOT and DB_FILENAME**
+
 This Vagrant script should be placed in your project's root directory.  If your root directory contains an index file, you'll need to leave this setting blank.  Otherwise, you'll include the local path to your index file.  The example default entries in this script assume the following directory structure:
 ```
 Vagraingfile
@@ -106,6 +111,7 @@ public_html/store/app
 The above examples should demonstrate the fact that this Vagrant script is designed to set up one website with one corresponding URL. 
 
 **DB_IS_MAGENTO or DB_IS_WORDPRESS**
+
 If the database is Magento or Wordpress, you will want to set this option to "yes".  The script will update the core_config_data or wp_config table to match the config.vm.hostname and SUB_DOMAIN settings.  For typical installations no manual fiddling should be necessary.
         
 How to Use this Box?
