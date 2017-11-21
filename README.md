@@ -120,6 +120,12 @@ The above examples should demonstrate the fact that this Vagrant script is desig
 
 If the database is Magento or Wordpress, you will want to set this option to "yes".  The script will update the core_config_data or wp_config table to match this script's config.vm.hostname and SUB_DOMAIN settings.  For typical installations no manual fiddling should be necessary.
         
+
+**DB_NAME, DB_USER and DB_PASS**
+
+These settings should match the same database name, user and password as the original website.  If these settings are different, the code will need to be altered accordingly.  Notice the single quotes used for the password.  This is an important work-around to allow the bash script to insert certain special characters correctly.
+      
+
 How to Use this Box?
 ---
 After installing Vagrant will not run from being launced in VirtualBox. Vagrant must be started and managed from the terminal: 
