@@ -45,7 +45,7 @@ How to Install this Vagrant Box?
 curl https://raw.githubusercontent.com/bridgesense/xdebugbox/master/Vagrantfile > Vagrantfile
 ```
 
-* Feel free to make changes to the script's options
+* You'll want to make some adjustments to the script's options (see below)
 
 * Run the following command to spin up the new virtual environment in minutes
 
@@ -59,7 +59,7 @@ vagrant up
 vagrant ssh
 ```
 
-* Access the website via https://192.168.33.10 or customize a url in your hosts file
+* Access the website via https://192.168.33.10 or use your custom domain settings (see below)
 
 * Access outbound mail from https://192.168.33.10/webmail (user: vagrant, pass: vagrant)
 
@@ -118,7 +118,7 @@ The above examples should demonstrate the fact that this Vagrant script is desig
     
 **DB_IS_MAGENTO or DB_IS_WORDPRESS**
 
-If the database is Magento or Wordpress, you will want to set this option to "yes".  The script will update the core_config_data or wp_config table to match the config.vm.hostname and SUB_DOMAIN settings.  For typical installations no manual fiddling should be necessary.
+If the database is Magento or Wordpress, you will want to set this option to "yes".  The script will update the core_config_data or wp_config table to match this script's config.vm.hostname and SUB_DOMAIN settings.  For typical installations no manual fiddling should be necessary.
         
 How to Use this Box?
 ---
@@ -230,7 +230,7 @@ let g:vdebug_options = {
 \    "debug_window_level" : 0,
 \    "debug_file_level" : 1,
 \    "debug_file" : "~/.vdebug.log",
-\    "path_maps" : {"/var/www" : "/Users/Paul/www/projects_root_dir"},
+\    "path_maps" : {"/var/www" : "/Users/Paul/www/your_projects_root_dir"},
 \    "watch_window_style" : 'expanded',
 \    "marker_default" : '⬦',
 \    "marker_closed_tree" : '▸',
@@ -292,7 +292,7 @@ You also add a setup specific to the account via a SublimeText project file. Unl
     {
         "xdebug": {
             "path_mapping":{
-                "/var/www/public_html/" : "/Users/Paul/www/projects_root_dir/public_html/"
+                "/var/www/public_html/" : "/Users/Paul/www/your_projects_root_dir/your_public_html_dir/"
             }
         }
     }
