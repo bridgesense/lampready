@@ -304,7 +304,7 @@ You also add a setup specific to the account via a SublimeText project file. Unl
 Emacs & Geben Settings
 ---
 
-All Geben needs is the correct path mapping to the project's root directory (not the public directory).  See here for operational details: [GIT: ahungry/geben](https://github.com/ahungry/geben#vms)
+All Geben needs is the correct path mapping to the project's root directory (not the public directory unless they are both the same).  See here for operational details: [GIT: ahungry/geben](https://github.com/ahungry/geben#vms)
 
 M-x customize-variable geben-path-mappings 
 
