@@ -176,7 +176,7 @@ Vagrant.configure("2") do |config|
         echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
         echo "+  That's all folks!                                       +"
         echo "+  Please add the following line to your hosts file:       +"
-        echo "+  ${FULL_DOMAIN}   192.168.33.10"
+        echo "+  192.168.33.10   ${FULL_DOMAIN}"
         echo "+                                                          +"
         echo "+  Xdebug has been set up on port: ${XDEBUG_PORT}"
         echo "+                                                          +"
