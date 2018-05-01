@@ -68,7 +68,7 @@ Vagrant.configure("2") do |config|
         sudo sed -i "s@mywebsite\.local@#{config.vm.hostname}@g" /etc/apache2/sites-available/default-ssl.conf
 
         echo "Updating the Xdebug Port..."
-        sudo sed -i "s@9041@${XDEBUG_PORT}@" /etc/php5/mods-available/xdebug.ini
+        sudo sed -i "s@9041@${XDEBUG_PORT}@" /etc/php/5.6/mods-available/xdebug.ini
         sudo service iptables-persistent restart
         sudo iptables -I INPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
         sudo iptables -I OUTPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
