@@ -1,23 +1,26 @@
-![screenshot](https://bridgesense.com/static/images/dotfiles/xdebugbox.jpeg)
+![screenshot](https://bridgesense.com/static/images/dotfiles/lampready.jpg)
 
 
 
-Why xdebugbox?
+Why LAMPready?
 ---
 
-There are hundreds of great Vagrant boxes out there.  Personally, I was tired of tinkering with broken boxes brewed from anonymous missing repos.  I wanted something I could spin up fast and just get to work. This project is fairly new, but it already has some features I'm pretty excited about.
+There are hundreds of great Vagrant boxes out there.  However, I wanted something I could spin up fast and just get to work.  Some of the features include: 
 
-* A lot less tinking with a website's configuration before launching it in a virtual environment
-* ... no more developer SPAM!  The mail shield is set up and ready to go.  No adjustments are neccessary.
-* Xdebug is setup and ready to go with a lite selection of Vim Tools, Tmux and Ranger
+* Self propagating database and permissions based on script settings
+* Choose from PHP versions 5.6, 7.0, 7.1, and 7.2
+* Most of the common PHP modules are preinstalled
+* Xdebug is already set up and ready to go
+* All email sent from local PHP routines is routed back to the system
 
+    
 #### _What goes in the box -- Stays in the box._
 
 
 How it Works
 ---
 
-This script syncs your project's root folder inside the virtual machine.  That allows you to work on the code from either in or outside the box.  Most of these virtual environments do not have mail utilities set up because dealing with the fallout of development spam is never fun.  Sometimes those forms and crons need tested.  xdebugbox uses Postfix to route all outbound mail to a single convenient box that can be accessed through Roundcube.
+This script syncs your project's root folder inside the virtual machine.  That allows you to work on the code from either in or outside the box.  Most of these virtual environments do not have mail utilities set up because dealing with the fallout of development spam is never fun.  Sometimes those forms and crons need tested.  LAMPready uses Postfix to route all outbound mail to a single convenient box that can be accessed through Roundcube.
 
 
 
@@ -39,10 +42,10 @@ How to Install this Vagrant Box?
 
 * Download and install Vagrant from https://www.vagrantup.com
 
-* Download the xdebugbox Vagrantfile script to your project's root directory
+* Download the LAMPready Vagrantfile script to your project's root directory
 
 ```
-curl https://raw.githubusercontent.com/bridgesense/xdebugbox/master/Vagrantfile > Vagrantfile
+curl https://raw.githubusercontent.com/bridgesense/LAMPready/master/Vagrantfile > Vagrantfile
 ```
 
 * You'll want to make some adjustments to the script's options (see below)
@@ -76,25 +79,7 @@ The config.vm.hostname should contain your domain name.  It is recommended that 
 dev.mywebsite.com 192.168.33.10
 ```  
 
-    
-**XDEBUG_PORT**
-
-This is the default port normally allocated for Xdebug.  You'll want to be sure to open up your firewall to allow communication between Xdebug and your browser.
-
-    
-**MAIL_RELAY**
-
-This line shouldn't need to be modified. Roundcube is already set up and ready to go. With exception of direct connection to a remote SMTP service through an API, all other outgoing mail will be diverted to a local box.  This should prevent any developer spam from harassing your colleagues.  You can access this box from your browser:
-```
-https://dev.mywebsite.com/webmail
-``` 
-
-    
-**INSTALL_DB**
-
-The script can automatically set up and install up to three MySQL databases.  By setting the INSTALL message to "yes"  and filling out the rest of the information, the script will create the database and inject your data from a sql file you place in the project's root directory.
-
-    
+     
 **DOCUMENT_ROOT and DB_FILENAME**
 
 This Vagrant script should be placed in your project's root directory.  If your root directory contains an index file, you'll need to leave this setting blank.  Otherwise, you'll include the local path to your index file.  The example default entries in this script assume the following directory structure:
@@ -116,6 +101,31 @@ public_html/store/app
 The above examples should demonstrate the fact that this Vagrant script is designed to set up one website with one corresponding URL. 
 
     
+**MAIL_RELAY**
+
+This line shouldn't need to be modified. Roundcube is already set up and ready to go. With exception of direct connection to a remote SMTP service through an API, all other outgoing mail will be diverted to a local box.  This should prevent any developer spam from harassing your colleagues.  You can access this box from your browser:
+```
+https://dev.mywebsite.com/webmail
+``` 
+
+**PHP_VERSION**
+Two PHP versions are running simutanesouly on the serveTwo PHP versions are running simultaneously on the server.  This is to provide easier debugging for PHP upgrades.  Set this option to 5.6 or 7.2.        
+
+        
+**XDEBUG_PORT**
+
+This is the default port normally allocated for Xdebug.  You'll want to be sure to open up your firewall to allow communication between Xdebug and your browser.
+    
+
+**XDEBUG_FORCE_ERROR_DISPLAY**
+For sites constructed from many packages with different settings, it is nice to be able to easily override error suppression.  Set this option to "yes" to override individual error settings throughout the code.
+
+    
+**INSTALL_DB**
+
+The script can automatically set up and install up to three MySQL databases.  By setting the INSTALL message to "yes"  and filling out the rest of the information, the script will create the database and inject your data from a sql file you place in the project's root directory.
+
+        
 **DB_IS_MAGENTO or DB_IS_WORDPRESS**
 
 If the database is Magento or Wordpress, you will want to set this option to "yes".  The script will update the core_config_data or wp_config table to match this script's config.vm.hostname and SUB_DOMAIN settings.  For typical installations no manual fiddling should be necessary.
@@ -123,16 +133,23 @@ If the database is Magento or Wordpress, you will want to set this option to "ye
 
 **DB_NAME, DB_USER and DB_PASS**
 
-These settings should match the same database name, user and password as the original website.  If these settings are different, the code will need to be altered accordingly.  Notice the single quotes used for the password.  This is an important work-around to allow the bash script to insert certain special characters correctly.
-      
+These settings should mirror the same database name and user credentials written in the website's database configuration file.  Notice the single quotes used for the password.  This is an important work-around to allow the bash script to insert certain special characters correctly.
 
+     
+**DB_FILENAME**
+This option is not neccessary if there is no database to import.  While the DB_NAME option will create an empty database, this option populates that database.  The script will look for the sql file in your projects root directory (one directory below document root).
+
+**DB_CUSTOM_FUNCTIONS**
+This option is used for importing an additional script or custom functions.   
+     
+    
 How to Use this Box?
 ---
-After installing Vagrant will not run from being launced in VirtualBox. Vagrant must be started and managed from the terminal: 
+After installing, Vagrant will not run from being launced in VirtualBox. Vagrant must be started and managed from the terminal: 
 
-**initialize xdebugbox without the script**
+**initialize LAMPready without the script**
 ```
-vagrant init bridgesense/xdebugbox
+vagrant init bridgesense/lampready
 ```
 
 **start/install the VM server:**
