@@ -97,23 +97,15 @@ Vagrant.configure("2") do |config|
         echo "Creating SSL Key..."
         sudo rm -rf /etc/apache2/ssl 2>/dev/null
         sudo mkdir /etc/apache2/ssl 2>/dev/null
-        if [ "#{config.vm.hostname}" == "${FULL_DOMAIN}" ]; then
-            sudo openssl req -newkey rsa:2048 -x509 -sha256 -days 999999 -nodes \
-                -subj "/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=#{config.vm.hostname}" \
-                -out /etc/apache2/ssl/apache.pem \
-                -keyout /etc/apache2/ssl/apache.key
-        else
-            sudo printf "[ SAN ]\nsubjectAltName=DNS:#{config.vm.hostname},DNS:${FULL_DOMAIN}" >> /etc/ssl/openssl.cnf 
-            sudo openssl req -newkey rsa:2048 -x509 -sha256 -days 999999 -nodes \
-                -subj "/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=#{config.vm.hostname}" \
-                -reqexts SAN \
-                -extensions SAN \
-                -out /etc/apache2/ssl/apache.pem \
-                -keyout /etc/apache2/ssl/apache.key
-        fi 
+        sudo printf "[ SAN ]\nsubjectAltName=DNS:#{config.vm.hostname},DNS:*.#{config.vm.hostname}" >> /etc/ssl/openssl.cnf 
+        sudo openssl req -newkey rsa:2048 -x509 -sha256 -days 999999 -nodes \
+            -subj "/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=#{config.vm.hostname}" \
+            -reqexts SAN \
+            -extensions SAN \
+            -out /etc/apache2/ssl/apache.pem \
+            -keyout /etc/apache2/ssl/apache.key
         sudo sed -i "s@SSLCertificateFile.*@SSLCertificateFile /etc/apache2/ssl/apache.pem@g" /etc/apache2/sites-available/default-ssl.conf
         sudo sed -i "s@SSLCertificateKeyFile.*@SSLCertificateKeyFile /etc/apache2/ssl/apache.key@g" /etc/apache2/sites-available/default-ssl.conf
-        sudo a2enmod ssl 2>/dev/null
         sudo a2ensite default-ssl.conf 2>/dev/null
 
         echo "Setting up Mail Relay..."

@@ -5,13 +5,13 @@
 Why LAMPready?
 ---
 
-There are hundreds of great Vagrant boxes out there.  However, I wanted something I could spin up fast and just get to work.  Some of the features include: 
+There are hundreds of great Vagrant boxes out there.  However, I wanted something I could spin up fast without a lot of manual intervention.  Some of the features include: 
 
 * Self propagating database and permissions based on script settings
-* Choose from PHP versions 5.6, 7.0, 7.1, and 7.2
-* Most of the common PHP modules are preinstalled
-* Xdebug is already set up and ready to go
-* All email sent from local PHP routines is routed back to the system
+* Multiple versions of PHP to enable 5.6, 7.0, 7.1, and 7.2
+* The most common PHP modules
+* Xdebug
+* Routing outbound email back to the system
 
     
 #### _What goes in the box -- Stays in the box._
@@ -45,7 +45,7 @@ How to Install this Vagrant Box?
 * Download the LAMPready Vagrantfile script to your project's root directory
 
 ```
-curl https://raw.githubusercontent.com/bridgesense/LAMPready/master/Vagrantfile > Vagrantfile
+curl https://gitlab.com/bridgesense/lampready/raw/master/Vagrantfile > Vagrantfile
 ```
 
 * You'll want to make some adjustments to the script's options (see below)
