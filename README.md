@@ -73,7 +73,6 @@ The very first time you run the "vagrant up" command, the config.vm.hostname and
 
 
 **config.vm.hostname and SUB_DOMAIN**
-
 The config.vm.hostname should contain your domain name.  It is recommended that you choose a unique sub domain for your virtual machine.  This way your public domain is active for comparison.  Next, alter your hosts file to allow the new domain to be accessed from any of your browsers and via command-line.
 ```
 dev.mywebsite.com 192.168.33.10
@@ -81,7 +80,6 @@ dev.mywebsite.com 192.168.33.10
 
      
 **DOCUMENT_ROOT and DB_FILENAME**
-
 This Vagrant script should be placed in your project's root directory.  If your root directory contains an index file, you'll need to leave this setting blank.  Otherwise, you'll include the local path to your index file.  The example default entries in this script assume the following directory structure:
 ```
 Vagraingfile
