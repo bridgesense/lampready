@@ -79,16 +79,16 @@ Vagrant.configure("2") do |config|
         sudo sed -i "s@9041@${XDEBUG_PORT}@" /etc/php/5.6/mods-available/xdebug.ini
         sudo sed -i "s@9041@${XDEBUG_PORT}@" /etc/php/7.2/mods-available/xdebug.ini
         if [ "${XDEBUG_FORCE_ERROR_DISPLAY}" == "yes" ]; then
-            sudo printf "xdebug.force_display_errors=1" >> /etc/php/5.6/mods-available/xdebug.ini
+            sudo printf "xdebug.force_display_errors=1\r" >> /etc/php/5.6/mods-available/xdebug.ini
             sudo printf "xdebug.scream=1" >> /etc/php/5.6/mods-available/xdebug.ini           
            
-            sudo printf "xdebug.force_display_errors=1" >> /etc/php/7.0/mods-available/xdebug.ini
+            sudo printf "xdebug.force_display_errors=1\r" >> /etc/php/7.0/mods-available/xdebug.ini
             sudo printf "xdebug.scream=1" >> /etc/php/7.0/mods-available/xdebug.ini
  
-            sudo printf "xdebug.force_display_errors=1" >> /etc/php/7.1/mods-available/xdebug.ini
+            sudo printf "xdebug.force_display_errors=1\r" >> /etc/php/7.1/mods-available/xdebug.ini
             sudo printf "xdebug.scream=1" >> /etc/php/7.1/mods-available/xdebug.ini          
  
-            sudo printf "xdebug.force_display_errors=1" >> /etc/php/7.2/mods-available/xdebug.ini
+            sudo printf "xdebug.force_display_errors=1\r" >> /etc/php/7.2/mods-available/xdebug.ini
             sudo printf "xdebug.scream=1" >> /etc/php/7.2/mods-available/xdebug.ini
         fi
         sudo iptables -I INPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
