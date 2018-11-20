@@ -26,7 +26,7 @@ This script syncs your project's root folder inside the virtual machine.  That a
 
 What is a Vagrant Box?
 ---
-Vagrant allows developers to distribute a consistant development environment with their code.  This box was built from scratch from Ubuntu 14.04 Trusty.  It has been tested on MacOS, but vagrant is also available for Windows and Linux.
+Vagrant allows developers to distribute a consistant development environment with their code.  This box was built from scratch from Debian 9.5 stretch.  It has been tested on MacOS, but vagrant is also available for Windows and Linux.
 
 This development environment includes:
 
@@ -73,7 +73,6 @@ The very first time you run the "vagrant up" command, the config.vm.hostname and
 
 
 **config.vm.hostname and SUB_DOMAIN**
-
 The config.vm.hostname should contain your domain name.  It is recommended that you choose a unique sub domain for your virtual machine.  This way your public domain is active for comparison.  Next, alter your hosts file to allow the new domain to be accessed from any of your browsers and via command-line.
 ```
 dev.mywebsite.com 192.168.33.10
@@ -81,7 +80,6 @@ dev.mywebsite.com 192.168.33.10
 
      
 **DOCUMENT_ROOT and DB_FILENAME**
-
 This Vagrant script should be placed in your project's root directory.  If your root directory contains an index file, you'll need to leave this setting blank.  Otherwise, you'll include the local path to your index file.  The example default entries in this script assume the following directory structure:
 ```
 Vagraingfile
@@ -102,18 +100,16 @@ The above examples should demonstrate the fact that this Vagrant script is desig
 
     
 **MAIL_RELAY**
-
 This line shouldn't need to be modified. Roundcube is already set up and ready to go. With exception of direct connection to a remote SMTP service through an API, all other outgoing mail will be diverted to a local box.  This should prevent any developer spam from harassing your colleagues.  You can access this box from your browser:
 ```
 https://dev.mywebsite.com/webmail
 ``` 
 
 **PHP_VERSION**
-Two PHP versions are running simutanesouly on the serveTwo PHP versions are running simultaneously on the server.  This is to provide easier debugging for PHP upgrades.  Set this option to 5.6 or 7.2.        
+This option is intended to provide easier debugging during PHP upgrades.  PHP versions 5.6, 7.0, 7.1 and 7.2 are installed and ready to use.  Each version includes the most common modules.    
 
         
 **XDEBUG_PORT**
-
 This is the default port normally allocated for Xdebug.  You'll want to be sure to open up your firewall to allow communication between Xdebug and your browser.
     
 
@@ -122,17 +118,14 @@ For sites constructed from many packages with different settings, it is nice to 
 
     
 **INSTALL_DB**
-
 The script can automatically set up and install up to three MySQL databases.  By setting the INSTALL message to "yes"  and filling out the rest of the information, the script will create the database and inject your data from a sql file you place in the project's root directory.
 
         
 **DB_IS_MAGENTO or DB_IS_WORDPRESS**
-
 If the database is Magento or Wordpress, you will want to set this option to "yes".  The script will update the core_config_data or wp_config table to match this script's config.vm.hostname and SUB_DOMAIN settings.  For typical installations no manual fiddling should be necessary.
         
 
 **DB_NAME, DB_USER and DB_PASS**
-
 These settings should mirror the same database name and user credentials written in the website's database configuration file.  Notice the single quotes used for the password.  This is an important work-around to allow the bash script to insert certain special characters correctly.
 
      
