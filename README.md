@@ -216,7 +216,7 @@ Xdebug port: 9041 (*see script setting*)
 
 Xdebug is preconfigured and ready to go.  There are a few things to be aware of when working with Xdebug within an IDE.
 
-**FIREWALL NOTICE:**  If you're blocking all inbound connections, Xdebug will NOT interface with your local IDE.  Be sure to open port 9041 or which ever port was entered in the Vagrantfile script:
+**FIREWALL NOTICE:**  If you're blocking all inbound connections, Xdebug will NOT interface with your local IDE.  Be sure to open port 9041 or which ever port was entered in the Vagrantfile script.
 
 
 VIM & Vdebug Settings 
