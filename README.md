@@ -10,7 +10,7 @@ There are hundreds of great Vagrant boxes out there.  However, I wanted somethin
 * Working web server on first boot for most configurations
 * Database injection via script settings
 * Multiple versions of PHP selectable via script; 5.6, 7.0, 7.1, and 7.2
-* The most common PHP modules
+* Includes the most common PHP modules
 * Easily override error supression
 * Isolates outbound email
 
