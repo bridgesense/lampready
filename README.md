@@ -76,7 +76,7 @@ The very first time you run the "vagrant up" command, the config.vm.hostname and
 **config.vm.hostname and SUB_DOMAIN**
 The config.vm.hostname should contain your domain name.  It is recommended that you choose a unique sub domain for your virtual machine.  This way your public domain is active for comparison.  Next, alter your hosts file to allow the new domain to be accessed from any of your browsers and via command-line.
 ```
-dev.mywebsite.com 192.168.33.10
+192.168.33.10   dev.mywebsite.com
 ```  
 
      
