@@ -33,7 +33,7 @@ This development environment includes:
 
 Apache, Bind, Dovecot, PHP5, Postfix, and Roundcube which are already setup and ready to run from your project directory. 
 
-This box also includes a set of lightweight development tools to customize Vim and Tmux from [YADRLite](https://github.com/bridgesense/dotfiles).
+This box also includes a set of lightweight development tools to customize Vim and Tmux from [YADRLite](https://gitlab.com/bridgesense/dotfiles).
 
 
 
