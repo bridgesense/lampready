@@ -7,11 +7,12 @@ Why LAMPready?
 
 There are hundreds of great Vagrant boxes out there.  However, I wanted something I could spin up fast without a lot of manual intervention.  Some of the features include: 
 
-* Self propagating database and permissions based on script settings
-* Multiple versions of PHP to enable 5.6, 7.0, 7.1, and 7.2
+* Working web server on first boot for most configurations
+* Database injection via script settings
+* Multiple versions of PHP selectable via script; 5.6, 7.0, 7.1, and 7.2
 * The most common PHP modules
-* Xdebug
-* Routing outbound email back to the system
+* Force error reporting without hassling with site scripts
+* Isolates outbound email
 
     
 #### _What goes in the box -- Stays in the box._
