@@ -185,8 +185,6 @@ vagrant box update
 **Note:** If you run Vagrant destroy, the box will be built from scratch again -- which may be a good thing.
 
 
-_More to come ..._
-
 
 Credentials
 ---
