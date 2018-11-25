@@ -11,7 +11,7 @@ There are hundreds of great Vagrant boxes out there.  However, I wanted somethin
 * Database injection via script settings
 * Multiple versions of PHP selectable via script; 5.6, 7.0, 7.1, and 7.2
 * The most common PHP modules
-* Force error reporting without hassling with site scripts
+* Easily override error supression
 * Isolates outbound email
 
     
