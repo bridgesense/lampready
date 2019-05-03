@@ -9,9 +9,6 @@ Vagrant.configure("2") do |config|
     config.vm.network "private_network", ip: "192.168.33.10"
     config.vm.synced_folder ".", "/var/www", :mount_options => ["dmode=755", "fmode=644"]
 
-    config.ssh.username = "vagrant"
-    config.ssh.password = "vagrant"
-
     config.vm.provision "shell", inline: <<-SHELL
 
         # # User Defined Settings # #
@@ -20,7 +17,7 @@ Vagrant.configure("2") do |config|
         SUB_DOMAIN="dev"
         DOCUMENT_ROOT="public_html"
         MAIL_RELAY="vagrant@#{config.vm.hostname}"
-        PHP_VERSION="5.6" # 5.6 - 7.2
+        PHP_VERSION="5.6" # 5.6 - 7.3
 
         XDEBUG_PORT=9041
         XDEBUG_FORCE_ERROR_DISPLAY="no"
