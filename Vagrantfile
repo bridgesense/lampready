@@ -24,6 +24,7 @@ Vagrant.configure("2") do |config|
 
         INSTALL_DB="no"
         DB_IS_MAGENTO="no"
+        DB_IS_MAGENTO_2="no"
         DB_IS_WORDPRESS="no"
         DB_NAME="user_database"
         DB_USER="user_user"
@@ -34,6 +35,7 @@ Vagrant.configure("2") do |config|
 
         INSTALL_DB2="no"
         DB2_IS_MAGENTO="no"
+        DB2_IS_MAGENTO_2="no"
         DB2_IS_WORDPRESS="no"
         DB2_NAME=""
         DB2_USER=""
@@ -148,10 +150,19 @@ Vagrant.configure("2") do |config|
                 php -f shell/compiler.php -- disable
                 php -f shell/indexer.php reindexall
             fi
+            if [ "${DB_IS_MAGENTO_2}" == "yes" ]; then
+                php bin/magento setup:store-config:set --base-url="http://${FULL_DOMAIN}/"
+                php bin/magento setup:store-config:set --base-url-secure="https://${FULL_DOMAIN}/"
+                php bin/magento cache:flush
+                php bin/magento indexer:reindex
+            fi
             if [ "${DB_IS_WORDPRESS}" == "yes" ]; then
                 WPQ1=$(mysql -N -u root -proot -e "use ${DB_NAME}; SELECT option_value FROM ${DB_PREFIX}options WHERE option_name = 'siteurl'")
-                WPA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $WPQ1)
+                WPA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}@" <<< $WPQ1)
                 mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}options SET option_value = '${WPA1}' WHERE option_name = 'siteurl' OR option_name = 'home'"
+                mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}posts SET guid = replace(guid, '${WPQ1}','${WPA1}')"
+                mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}posts SET post_content = replace(post_content, '${WPQ1}', '${WPA1}')"
+                mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}postmeta SET meta_value = replace(meta_value,'${WPQ1}','${WPA1}')"
             fi
         fi
 
@@ -183,10 +194,19 @@ Vagrant.configure("2") do |config|
                 php -f shell/compiler.php -- disable
                 php -f shell/indexer.php reindexall
             fi
+            if [ "${DB2_IS_MAGENTO_2}" == "yes" ]; then
+                php bin/magento setup:store-config:set --base-url="http://${FULL_DOMAIN}/"
+                php bin/magento setup:store-config:set --base-url-secure="https://${FULL_DOMAIN}/"
+                php bin/magento cache:flush
+                php bin/magento indexer:reindex
+            fi
             if [ "${DB2_IS_WORDPRESS}" == "yes" ]; then
                 WPQ2=$(mysql -N -u root -proot -e "use ${DB2_NAME}; SELECT option_value FROM ${DB2_PREFIX}options WHERE option_name = 'siteurl'")
-                WPA2=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $WPQ2)
+                WPA2=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}@" <<< $WPQ2)
                 mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}options SET option_value = '${WPA2}' WHERE option_name = 'siteurl' OR option_name = 'home'"
+                mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}posts SET guid = replace(guid, '${WPQ2}','${WPA2}')"
+                mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}posts SET post_content = replace(post_content, '${WPQ2}', '${WPA2}')"
+                mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}postmeta SET meta_value = replace(meta_value,'${WPQ2}','${WPA2}')"
             fi
         fi
 
