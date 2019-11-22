@@ -22,10 +22,9 @@ Vagrant.configure("2") do |config|
         XDEBUG_PORT=9041
         XDEBUG_FORCE_ERROR_DISPLAY="no"
 
-        INSTALL_DB="no"
-        DB_IS_MAGENTO="no"
-        DB_IS_MAGENTO_2="no"
-        DB_IS_WORDPRESS="no"
+        INSTALL_DB="no" # yes or no
+        DB_IS_MAGENTO="no" # 1, 2 or no 
+        DB_IS_WORDPRESS="no" # yes or no
         DB_NAME="user_database"
         DB_USER="user_user"
         DB_PASS='drowssap'
@@ -33,10 +32,9 @@ Vagrant.configure("2") do |config|
         DB_FILENAME="user_database.sql" # located below document root
         DB_CUSTOM_FUNCTIONS="custom_functions.sql"
 
-        INSTALL_DB2="no"
-        DB2_IS_MAGENTO="no"
-        DB2_IS_MAGENTO_2="no"
-        DB2_IS_WORDPRESS="no"
+        INSTALL_DB2="no" # yes or no
+        DB2_IS_MAGENTO="no" # 1, 2 or no
+        DB2_IS_WORDPRESS="no" # yes or no
         DB2_NAME=""
         DB2_USER=""
         DB2_PASS=''
@@ -136,7 +134,7 @@ Vagrant.configure("2") do |config|
                 mysql -u root -p'root' -e "CREATE USER '${DB_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB_PASS})'"
                 mysql -u root -p'root' -e "GRANT ALL PRIVILEGES ON * . * TO '${DB_USER}'@'localhost'"
             fi
-            if [ "${DB_IS_MAGENTO}" == "yes" ]; then
+            if [ "${DB_IS_MAGENTO}" == "1" ] || [ "${DB_IS_MAGENTO}" == "yes" ]; then
                 echo "Setting up Magento..."
                 MGQ1=$(mysql -N -u root -proot -e "use ${DB_NAME}; SELECT value FROM ${DB_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
                 MGA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ1)
@@ -150,7 +148,7 @@ Vagrant.configure("2") do |config|
                 php -f shell/compiler.php -- disable
                 php -f shell/indexer.php reindexall
             fi
-            if [ "${DB_IS_MAGENTO_2}" == "yes" ]; then
+            if [ "${DB_IS_MAGENTO}" == "2" ]; then
                 php bin/magento setup:store-config:set --base-url="http://${FULL_DOMAIN}/"
                 php bin/magento setup:store-config:set --base-url-secure="https://${FULL_DOMAIN}/"
                 php bin/magento cache:flush
@@ -180,7 +178,7 @@ Vagrant.configure("2") do |config|
                 mysql -u root -p'root' -e "CREATE USER '${DB2_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB2_PASS})'"
                 mysql -u root -p'root' -e "GRANT ALL PRIVILEGES ON * . * TO '${DB2_USER}'@'localhost'"
             fi
-            if [ "${DB2_IS_MAGENTO}" == "yes" ]; then
+            if [ "${DB2_IS_MAGENTO}" == "1" ] || [ "${DB2_IS_MAGENTO}" == "yes" ]; then
                 echo "Setting up Magento..."
                 MGQ3=$(mysql -N -u root -proot -e "use ${DB2_NAME}; SELECT value FROM ${DB2_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
                 MGA3=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ3)
@@ -194,7 +192,7 @@ Vagrant.configure("2") do |config|
                 php -f shell/compiler.php -- disable
                 php -f shell/indexer.php reindexall
             fi
-            if [ "${DB2_IS_MAGENTO_2}" == "yes" ]; then
+            if [ "${DB2_IS_MAGENTO}" == "2" ]; then
                 php bin/magento setup:store-config:set --base-url="http://${FULL_DOMAIN}/"
                 php bin/magento setup:store-config:set --base-url-secure="https://${FULL_DOMAIN}/"
                 php bin/magento cache:flush
