@@ -31,7 +31,7 @@ Vagrant allows developers to distribute a consistant development environment wit
 
 This development environment includes:
 
-Apache, Bind, Dovecot, PHP5, Postfix, and Roundcube which are already setup and ready to run from your project directory. 
+Apache, Bind, Dovecot, PHP7, Postfix, and Roundcube which are already setup and ready to run from your project directory. 
 
 This box also includes a set of lightweight development tools to customize Vim and Tmux from [YADRLite](https://gitlab.com/bridgesense/dotfiles).
 
@@ -107,7 +107,7 @@ https://dev.lampready.com/webmail
 ``` 
 
 **PHP_VERSION**
-This option is intended to provide easier debugging during PHP upgrades.  PHP versions 5.6, 7.0, 7.1 and 7.2 are installed and ready to use.  Each version includes the most common modules.    
+This option is intended to provide easier debugging during PHP upgrades.  PHP versions 7.2, 7.3 and 7.4 are ready to use.  Each version has access to the most common modules.    
 
         
 **XDEBUG_PORT**
