@@ -9,7 +9,7 @@ There are hundreds of great Vagrant boxes out there.  However, I wanted somethin
 
 * Working web server on first boot for most configurations
 * Database injection via script settings
-* Multiple versions of PHP selectable via script; 5.6, 7.0, 7.1, and 7.2
+* Multiple versions of PHP selectable via script; 7.2, 7.3 and 7.4
 * Includes the most common PHP modules
 * Easily override error supression
 * Isolates outbound email
@@ -76,7 +76,7 @@ The very first time you run the "vagrant up" command, the config.vm.hostname and
 **config.vm.hostname and SUB_DOMAIN**
 The config.vm.hostname should contain your domain name.  It is recommended that you choose a unique sub domain for your virtual machine.  This way your public domain is active for comparison.  Next, alter your hosts file to allow the new domain to be accessed from any of your browsers and via command-line.
 ```
-192.168.33.10   dev.mywebsite.com
+192.168.33.10   dev.lampready.com
 ```  
 
      
@@ -103,7 +103,7 @@ The above examples should demonstrate the fact that this Vagrant script is desig
 **MAIL_RELAY**
 This line shouldn't need to be modified. Roundcube is already set up and ready to go. With exception of direct connection to a remote SMTP service through an API, all other outgoing mail will be diverted to a local box.  This should prevent any developer spam from harassing your colleagues.  You can access this box from your browser:
 ```
-https://dev.mywebsite.com/webmail
+https://dev.lampready.com/webmail
 ``` 
 
 **PHP_VERSION**
