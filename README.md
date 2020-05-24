@@ -27,7 +27,7 @@ This script syncs your project's root folder inside the virtual machine.  That a
 
 What is a Vagrant Box?
 ---
-Vagrant allows developers to distribute a consistant development environment with their code.  This box was built from scratch from Debian 9.5 stretch.  It has been tested on MacOS, but vagrant is also available for Windows and Linux.
+Vagrant allows developers to distribute a consistant development environment with their code.  This box was built with CentOS 8.1. 
 
 This development environment includes:
 

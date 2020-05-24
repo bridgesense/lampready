@@ -17,7 +17,7 @@ Vagrant.configure("2") do |config|
         SUB_DOMAIN="dev"
         DOCUMENT_ROOT="public_html"
         MAIL_RELAY="vagrant@#{config.vm.hostname}"
-        PHP_VERSION="5.6" # 5.6 - 7.3
+        PHP_VERSION="7.2" # 7.2 - 7.4
 
         XDEBUG_PORT=9041
         XDEBUG_FORCE_ERROR_DISPLAY="no"
@@ -59,92 +59,78 @@ Vagrant.configure("2") do |config|
 
         echo "Choosing PHP Version"
 
-        sudo a2dismod php5.6
-        sudo a2enmod php${PHP_VERSION}
-        sudo update-alternatives --set php /usr/bin/php${PHP_VERSION}
+        dnf module reset -y php
+        dnf module enable -y php:remi-${PHP_VERSION}
 
         echo "Updating Bind..."
-        sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/bind/named.conf.local
-        sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/bind/zones/db.default.com
-        sudo sed -i "s@.* ; Serial Number.*@            201704800 ;Serial Number@" /etc/bind/zones/db.default.com
-        sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/bind/zones/db.10.33.168.192
-        sudo sed -i "s@.* ; Serial Number.*@            201704800 ;Serial Number@" /etc/bind/zones/db.10.33.168.192
+        sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/named.conf
+        sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /var/named/custom.site.db
+        sudo sed -i "s@.* ; Serial Number.*@            201704800 ;Serial Number@" /var/named/custom.site.db
+        sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /var/named/custom.site.rev
+        sudo sed -i "s@.* ; Serial Number.*@            201704800 ;Serial Number@" /var/named/custom.site.rev
 
         echo "Updating Apache..."
-        sudo sed -i "s@ServerName.*@ServerName #{config.vm.hostname}@" /etc/apache2/apache2.conf
-        sudo sed -i "s@DocumentRoot.*@DocumentRoot /var/www/${DOCUMENT_ROOT}@" /etc/apache2/sites-available/000-default.conf
-        sudo sed -i "s@DocumentRoot.*@DocumentRoot /var/www/${DOCUMENT_ROOT}@" /etc/apache2/sites-available/default-ssl.conf
-        sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/apache2/sites-available/000-default.conf
-        sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/apache2/sites-available/default-ssl.conf
+        sudo sed -i "s@DocumentRoot.*@DocumentRoot /var/www/${DOCUMENT_ROOT}@" /etc/httpd/conf.d/default.conf
+        sudo sed -i "s@DocumentRoot.*@DocumentRoot /var/www/${DOCUMENT_ROOT}@" /etc/httpd/conf.d/ssl.conf
+        sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/httpd/conf.d/default.conf
+        sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/httpd/conf.d/ssl.conf
 
         echo "Updating the Xdebug Configuration..."
-        sudo sed -i "s@9041@${XDEBUG_PORT}@" /etc/php/5.6/mods-available/xdebug.ini
-        sudo sed -i "s@9041@${XDEBUG_PORT}@" /etc/php/7.2/mods-available/xdebug.ini
+        sudo sed -i "s@9041@${XDEBUG_PORT}@" /etc/php.d/15-xdebug.ini
         if [ "${XDEBUG_FORCE_ERROR_DISPLAY}" == "yes" ]; then
-            sudo printf "xdebug.force_display_errors=1\r" >> /etc/php/5.6/mods-available/xdebug.ini
-            sudo printf "xdebug.scream=1" >> /etc/php/5.6/mods-available/xdebug.ini
-
-            sudo printf "xdebug.force_display_errors=1\r" >> /etc/php/7.0/mods-available/xdebug.ini
-            sudo printf "xdebug.scream=1" >> /etc/php/7.0/mods-available/xdebug.ini
-
-            sudo printf "xdebug.force_display_errors=1\r" >> /etc/php/7.1/mods-available/xdebug.ini
-            sudo printf "xdebug.scream=1" >> /etc/php/7.1/mods-available/xdebug.ini
-
-            sudo printf "xdebug.force_display_errors=1\r" >> /etc/php/7.2/mods-available/xdebug.ini
-            sudo printf "xdebug.scream=1" >> /etc/php/7.2/mods-available/xdebug.ini
+            sudo printf "xdebug.force_display_errors=1\n" >> /etc/php.d/15-xdebug.ini
+            sudo printf "xdebug.scream=1" >> /etc/php.d/15-debug.ini
         fi
         sudo iptables -I INPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
         sudo iptables -I OUTPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
 
         echo "Creating SSL Key..."
-        sudo rm -rf /etc/apache2/ssl 2>/dev/null
-        sudo mkdir /etc/apache2/ssl 2>/dev/null
-        sudo printf "[ SAN ]\nsubjectAltName=DNS:#{config.vm.hostname},DNS:*.#{config.vm.hostname}" >> /etc/ssl/openssl.cnf
+        sudo rm -rf /etc/pki/tls/certs/localhost.crt 2>/dev/null
+        sudo rm -rf /etc/pki/tls/private/localhost.key 2>/dev/null
+        sudo printf "\n[ SAN ]\nsubjectAltName=DNS:#{config.vm.hostname},DNS:*.#{config.vm.hostname}" >> /etc/pki/tls/openssl.cnf
         sudo openssl req -newkey rsa:2048 -x509 -sha256 -days 999999 -nodes \
             -subj "/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=#{config.vm.hostname}" \
             -reqexts SAN \
             -extensions SAN \
-            -out /etc/apache2/ssl/apache.pem \
-            -keyout /etc/apache2/ssl/apache.key
-        sudo sed -i "s@SSLCertificateFile.*@SSLCertificateFile /etc/apache2/ssl/apache.pem@g" /etc/apache2/sites-available/default-ssl.conf
-        sudo sed -i "s@SSLCertificateKeyFile.*@SSLCertificateKeyFile /etc/apache2/ssl/apache.key@g" /etc/apache2/sites-available/default-ssl.conf
-        sudo a2ensite default-ssl.conf 2>/dev/null
+            -out /etc/pki/tls/certs/localhost.crt \
+            -keyout /etc/pki/tls/private/localhost.key
 
         echo "Setting up Mail Relay..."
         sudo sed -i "s#vagrant\@lampready\.com#${MAIL_RELAY}#" /etc/postfix/virtual-regexp
         sudo sed -i "s#vagrant\@lampready\.com##{config.vm.hostname}#" /etc/postfix/main.cf
         sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/postfix/main.cf
-        sudo service postfix reload
+        postmap /etc/postfix/virtual-regexp
+        systemctl reload postfix 
 
         echo "Checking for Database..."
         if [ "${INSTALL_DB}" == "yes" ]; then
             if [ "${DB_NAME}" != "" ]; then
                 echo "CREATING DATABASE: ${DB_NAME}..."
-                mysql -u root -p'root' -e "CREATE DATABASE ${DB_NAME}"
+                mysql -e "CREATE DATABASE ${DB_NAME}"
             fi
             if [ -f "/var/www/${DB_FILENAME}"  ]; then
                 echo "INJECTING ${DB_FILENAME}..."
-                mysql -u root -p'root' -f ${DB_NAME} < /var/www/${DB_FILENAME}
+                mysql -f ${DB_NAME} < /var/www/${DB_FILENAME}
             fi
             if [ -f "/var/www/${DB_CUSTOM_FUNCTIONS}"  ]; then
                 echo "INJECTING ${DB_CUSTOM_FUNCTIONS}..."
-                mysql -u root -p'root' -f ${DB_NAME} < /var/www/${DB_CUSTOM_FUNCTIONS}
+                mysql -f ${DB_NAME} < /var/www/${DB_CUSTOM_FUNCTIONS}
             fi
             if [ "${DB_USER}" != "" ]; then
-                mysql -u root -p'root' -e "CREATE USER '${DB_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB_PASS})'"
-                mysql -u root -p'root' -e "GRANT ALL PRIVILEGES ON * . * TO '${DB_USER}'@'localhost'"
+                mysql -e "CREATE USER '${DB_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB_PASS})'"
+                mysql -e "GRANT ALL PRIVILEGES ON * . * TO '${DB_USER}'@'localhost'"
             fi
             if [ "${DB_IS_MAGENTO}" == "1" ] || [ "${DB_IS_MAGENTO}" == "yes" ]; then
                 echo "Setting up Magento..."
-                MGQ1=$(mysql -N -u root -proot -e "use ${DB_NAME}; SELECT value FROM ${DB_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
+                MGQ1=$(mysql -N -e "use ${DB_NAME}; SELECT value FROM ${DB_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
                 MGA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ1)
-                mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}core_config_data SET value = '$MGA1' WHERE path = 'web/unsecure/base_url'"
-                MGQ2=$(mysql -N -u root -proot -e "use ${DB_NAME}; SELECT value FROM ${DB_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
+                mysql -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}core_config_data SET value = '$MGA1' WHERE path = 'web/unsecure/base_url'"
+                MGQ2=$(mysql -N -e "use ${DB_NAME}; SELECT value FROM ${DB_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
                 MGA2=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ2)
-                mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}core_config_data SET value = '$MGA2' WHERE path = 'web/secure/base_url'"
-                mysql -u root -p'root' -e "USE ${DB_NAME}; TRUNCATE ${DB_PREFIX}core_cache"
-                mysql -u root -p'root' -e "USE ${DB_NAME}; TRUNCATE ${DB_PREFIX}core_cache_tag"
-                mysql -u root -p'root' -e "USE ${DB_NAME}; TRUNCATE ${DB_PREFIX}core_session"
+                mysql -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}core_config_data SET value = '$MGA2' WHERE path = 'web/secure/base_url'"
+                mysql -e "USE ${DB_NAME}; TRUNCATE ${DB_PREFIX}core_cache"
+                mysql -e "USE ${DB_NAME}; TRUNCATE ${DB_PREFIX}core_cache_tag"
+                mysql -e "USE ${DB_NAME}; TRUNCATE ${DB_PREFIX}core_session"
                 php -f shell/compiler.php -- disable
                 php -f shell/indexer.php reindexall
             fi
@@ -155,12 +141,12 @@ Vagrant.configure("2") do |config|
                 php bin/magento indexer:reindex
             fi
             if [ "${DB_IS_WORDPRESS}" == "yes" ]; then
-                WPQ1=$(mysql -N -u root -proot -e "use ${DB_NAME}; SELECT option_value FROM ${DB_PREFIX}options WHERE option_name = 'siteurl'")
+                WPQ1=$(mysql -N -e "use ${DB_NAME}; SELECT option_value FROM ${DB_PREFIX}options WHERE option_name = 'siteurl'")
                 WPA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}@" <<< $WPQ1)
-                mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}options SET option_value = '${WPA1}' WHERE option_name = 'siteurl' OR option_name = 'home'"
-                mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}posts SET guid = replace(guid, '${WPQ1}','${WPA1}')"
-                mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}posts SET post_content = replace(post_content, '${WPQ1}', '${WPA1}')"
-                mysql -u root -p'root' -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}postmeta SET meta_value = replace(meta_value,'${WPQ1}','${WPA1}')"
+                mysql -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}options SET option_value = '${WPA1}' WHERE option_name = 'siteurl' OR option_name = 'home'"
+                mysql -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}posts SET guid = replace(guid, '${WPQ1}','${WPA1}')"
+                mysql -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}posts SET post_content = replace(post_content, '${WPQ1}', '${WPA1}')"
+                mysql -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}postmeta SET meta_value = replace(meta_value,'${WPQ1}','${WPA1}')"
             fi
         fi
 
@@ -168,27 +154,27 @@ Vagrant.configure("2") do |config|
         if [ "${INSTALL_DB2}" == "yes" ]; then
             if [ "${DB2_NAME}" != "" ]; then
                 echo "CREATING DATABASE: ${DB2_NAME}..."
-                mysql -u root -p'root' -e "CREATE DATABASE ${DB2_NAME}"
+                mysql -e "CREATE DATABASE ${DB2_NAME}"
             fi
             if [ -f "/var/www/${DB2_FILENAME}"  ]; then
                 echo "INJECTING ${DB2_FILENAME}..."
-                mysql -u root -p'root' -f ${DB2_NAME} < /var/www/${DB2_FILENAME}
+                mysql -f ${DB2_NAME} < /var/www/${DB2_FILENAME}
             fi
             if [ "${DB2_USER}" != "" ]; then
-                mysql -u root -p'root' -e "CREATE USER '${DB2_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB2_PASS})'"
-                mysql -u root -p'root' -e "GRANT ALL PRIVILEGES ON * . * TO '${DB2_USER}'@'localhost'"
+                mysql -e "CREATE USER '${DB2_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB2_PASS})'"
+                mysql -e "GRANT ALL PRIVILEGES ON * . * TO '${DB2_USER}'@'localhost'"
             fi
             if [ "${DB2_IS_MAGENTO}" == "1" ] || [ "${DB2_IS_MAGENTO}" == "yes" ]; then
                 echo "Setting up Magento..."
-                MGQ3=$(mysql -N -u root -proot -e "use ${DB2_NAME}; SELECT value FROM ${DB2_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
+                MGQ3=$(mysql -N -e "use ${DB2_NAME}; SELECT value FROM ${DB2_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
                 MGA3=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ3)
-                mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}core_config_data SET value = '$MGA3' WHERE path = 'web/unsecure/base_url'"
-                MGQ4=$(mysql -N -u root -proot -e "use ${DB2_NAME}; SELECT value FROM ${DB@_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
+                mysql -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}core_config_data SET value = '$MGA3' WHERE path = 'web/unsecure/base_url'"
+                MGQ4=$(mysql -N -e "use ${DB2_NAME}; SELECT value FROM ${DB@_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
                 MGA4=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ4)
-                mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}core_config_data SET value = '$MGA4' WHERE path = 'web/secure/base_url'"
-                mysql -u root -p'root' -e "USE ${DB2_NAME}; TRUNCATE ${DB2_PREFIX}core_cache"
-                mysql -u root -p'root' -e "USE ${DB2_NAME}; TRUNCATE ${DB2_PREFIX}core_cache_tag"
-                mysql -u root -p'root' -e "USE ${DB2_NAME}; TRUNCATE ${DB2_PREFIX}core_session"
+                mysql -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}core_config_data SET value = '$MGA4' WHERE path = 'web/secure/base_url'"
+                mysql -e "USE ${DB2_NAME}; TRUNCATE ${DB2_PREFIX}core_cache"
+                mysql -e "USE ${DB2_NAME}; TRUNCATE ${DB2_PREFIX}core_cache_tag"
+                mysql -e "USE ${DB2_NAME}; TRUNCATE ${DB2_PREFIX}core_session"
                 php -f shell/compiler.php -- disable
                 php -f shell/indexer.php reindexall
             fi
@@ -199,12 +185,12 @@ Vagrant.configure("2") do |config|
                 php bin/magento indexer:reindex
             fi
             if [ "${DB2_IS_WORDPRESS}" == "yes" ]; then
-                WPQ2=$(mysql -N -u root -proot -e "use ${DB2_NAME}; SELECT option_value FROM ${DB2_PREFIX}options WHERE option_name = 'siteurl'")
+                WPQ2=$(mysql -N -e "use ${DB2_NAME}; SELECT option_value FROM ${DB2_PREFIX}options WHERE option_name = 'siteurl'")
                 WPA2=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}@" <<< $WPQ2)
-                mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}options SET option_value = '${WPA2}' WHERE option_name = 'siteurl' OR option_name = 'home'"
-                mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}posts SET guid = replace(guid, '${WPQ2}','${WPA2}')"
-                mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}posts SET post_content = replace(post_content, '${WPQ2}', '${WPA2}')"
-                mysql -u root -p'root' -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}postmeta SET meta_value = replace(meta_value,'${WPQ2}','${WPA2}')"
+                mysql -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}options SET option_value = '${WPA2}' WHERE option_name = 'siteurl' OR option_name = 'home'"
+                mysql -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}posts SET guid = replace(guid, '${WPQ2}','${WPA2}')"
+                mysql -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}posts SET post_content = replace(post_content, '${WPQ2}', '${WPA2}')"
+                mysql -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}postmeta SET meta_value = replace(meta_value,'${WPQ2}','${WPA2}')"
             fi
         fi
 
@@ -212,22 +198,24 @@ Vagrant.configure("2") do |config|
         if [ "${INSTALL_DB3}" == "yes" ]; then
             if [ "${DB3_NAME}" != "" ]; then
                 echo "CREATING DATABASE: ${DB3_NAME}..."
-                mysql -u root -p'root' -e "CREATE DATABASE ${DB3_NAME}"
+                mysql -e "CREATE DATABASE ${DB3_NAME}"
             fi
             if [ -f "/var/www/${DB3_FILENAME}"  ]; then
                 echo "INJECTING ${DB3_FILENAME}..."
-                mysql -u root -p'root' -f ${DB2_NAME} < /var/www/${DB3_FILENAME}
+                mysql -f ${DB2_NAME} < /var/www/${DB3_FILENAME}
             fi
             if [ "${DB3_USER}" != "" ]; then
-                mysql -u root -p'root' -e "CREATE USER '${DB3_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB3_PASS})'"
-                mysql -u root -p'root' -e "GRANT ALL PRIVILEGES ON * . * TO '${DB3_USER}'@'localhost'"
+                mysql -e "CREATE USER '${DB3_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB3_PASS})'"
+                mysql -e "GRANT ALL PRIVILEGES ON * . * TO '${DB3_USER}'@'localhost'"
             fi
         fi
 
         echo "Restart Services..."
-        sudo service mysql restart
-        sudo service bind9 restart
-        sudo service apache2 restart
+        systemctl restart mysqld
+        systemctl restart named
+        systemctl restart httpd
+        systemctl restart php-fpm
+        
 
         echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
         echo "+                                                          +"
