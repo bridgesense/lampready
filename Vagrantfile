@@ -64,7 +64,7 @@ Vagrant.configure("2") do |config|
 
         echo "Updating Bind..."
         sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/hostname
-        sudo printf "\n127.0.0.1   #{FULL_DOMAIN}\n" >> /etc/hosts
+        sudo printf "\n127.0.0.1   ${FULL_DOMAIN}\n" >> /etc/hosts
         sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/named.conf
         sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /var/named/custom.site.db
         sudo sed -i "s@.* ; Serial Number.*@            201704800 ;Serial Number@" /var/named/custom.site.db
