@@ -59,10 +59,12 @@ Vagrant.configure("2") do |config|
 
         echo "Choosing PHP Version"
 
-        dnf module reset -y php
-        dnf module enable -y php:remi-${PHP_VERSION}
+        sudo dnf module reset -y php
+        sudo dnf module enable -y php:remi-${PHP_VERSION}
 
         echo "Updating Bind..."
+        sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/hostname
+        sudo printf "\n127.0.0.1   #{FULL_DOMAIN}\n" >> /etc/hosts
         sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/named.conf
         sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /var/named/custom.site.db
         sudo sed -i "s@.* ; Serial Number.*@            201704800 ;Serial Number@" /var/named/custom.site.db
@@ -78,7 +80,7 @@ Vagrant.configure("2") do |config|
         echo "Updating the Xdebug Configuration..."
         sudo sed -i "s@9041@${XDEBUG_PORT}@" /etc/php.d/15-xdebug.ini
         if [ "${XDEBUG_FORCE_ERROR_DISPLAY}" == "yes" ]; then
-            sudo printf "xdebug.force_display_errors=1\n" >> /etc/php.d/15-xdebug.ini
+            sudo printf "xdebug.force_display_errors=2\n" >> /etc/php.d/15-xdebug.ini
             sudo printf "xdebug.scream=1" >> /etc/php.d/15-debug.ini
         fi
         sudo iptables -I INPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
@@ -99,8 +101,8 @@ Vagrant.configure("2") do |config|
         sudo sed -i "s#vagrant\@lampready\.com#${MAIL_RELAY}#" /etc/postfix/virtual-regexp
         sudo sed -i "s#vagrant\@lampready\.com##{config.vm.hostname}#" /etc/postfix/main.cf
         sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/postfix/main.cf
-        postmap /etc/postfix/virtual-regexp
-        systemctl reload postfix 
+        sudo postmap /etc/postfix/virtual-regexp
+        sudo systemctl reload postfix 
 
         echo "Checking for Database..."
         if [ "${INSTALL_DB}" == "yes" ]; then
@@ -211,10 +213,10 @@ Vagrant.configure("2") do |config|
         fi
 
         echo "Restart Services..."
-        systemctl restart mysqld
-        systemctl restart named
-        systemctl restart httpd
-        systemctl restart php-fpm
+        sudo systemctl restart mysqld
+        sudo systemctl restart named
+        sudo systemctl restart httpd
+        sudo systemctl restart php-fpm
         
 
         echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
@@ -225,6 +227,7 @@ Vagrant.configure("2") do |config|
         echo "+  192.168.33.10   ${FULL_DOMAIN}"
         echo "+                                                          +"
         echo "+  Xdebug has been set up on port: ${XDEBUG_PORT}"
+        echo "+  Memcached is: localhost 11211                           +"
         echo "+                                                          +"
         echo "+  All mail will be routed to the following email:         +"
         echo "+  ${MAIL_RELAY}"
