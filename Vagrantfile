@@ -227,7 +227,7 @@ Vagrant.configure("2") do |config|
         echo "+  192.168.33.10   ${FULL_DOMAIN}"
         echo "+                                                          +"
         echo "+  Xdebug has been set up on port: ${XDEBUG_PORT}"
-        echo "+  Memcached is: localhost 11211                           +"
+        echo "+  Memcached on: localhost 11211                           +"
         echo "+                                                          +"
         echo "+  All mail will be routed to the following email:         +"
         echo "+  ${MAIL_RELAY}"
