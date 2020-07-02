@@ -17,7 +17,7 @@ Vagrant.configure("2") do |config|
         SUB_DOMAIN="dev"
         DOCUMENT_ROOT="public_html"
         MAIL_RELAY="vagrant@#{config.vm.hostname}"
-        PHP_VERSION="7.2" # 7.2 - 7.4
+        PHP_VERSION="7.4" # 7.2 - 7.4
 
         XDEBUG_PORT=9041
         XDEBUG_FORCE_ERROR_DISPLAY="no"
@@ -61,6 +61,7 @@ Vagrant.configure("2") do |config|
 
         sudo dnf module reset -y php
         sudo dnf module enable -y php:remi-${PHP_VERSION}
+        sudo dnf update -y
 
         echo "Updating Bind..."
         sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/hostname
