@@ -23,7 +23,7 @@ Vagrant.configure("2") do |config|
         XDEBUG_FORCE_ERROR_DISPLAY="no"
 
         INSTALL_DB="no" # yes or no
-        DB_IS_MAGENTO="no" # 1, 2 or no 
+        DB_IS_MAGENTO="no" # 1, 2 or no
         DB_IS_WORDPRESS="no" # yes or no
         DB_NAME="user_database"
         DB_USER="user_user"
@@ -59,9 +59,13 @@ Vagrant.configure("2") do |config|
 
         echo "Choosing PHP Version"
 
-        sudo dnf module reset -y php
-        sudo dnf module enable -y php:remi-${PHP_VERSION}
-        sudo dnf update -y
+        if [ "${PHP_VERSION}" != "7.4" ]; then
+          sudo dnf remove -y php
+          sudo dnf module reset -y php
+          sleep 1
+          sudo dnf module enable -y php:remi-${PHP_VERSION}
+          sudo dnf install -y php
+        fi
 
         echo "Updating Bind..."
         sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/hostname
@@ -81,8 +85,8 @@ Vagrant.configure("2") do |config|
         echo "Updating the Xdebug Configuration..."
         sudo sed -i "s@9041@${XDEBUG_PORT}@" /etc/php.d/15-xdebug.ini
         if [ "${XDEBUG_FORCE_ERROR_DISPLAY}" == "yes" ]; then
-            sudo printf "xdebug.force_display_errors=2\n" >> /etc/php.d/15-xdebug.ini
-            sudo printf "xdebug.scream=1" >> /etc/php.d/15-debug.ini
+            sudo printf "\nxdebug.force_display_errors=2" >> /etc/php.d/15-xdebug.ini
+            sudo printf "\nxdebug.scream=1" >> /etc/php.d/15-xdebug.ini
         fi
         sudo iptables -I INPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
         sudo iptables -I OUTPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
@@ -103,7 +107,7 @@ Vagrant.configure("2") do |config|
         sudo sed -i "s#vagrant\@lampready\.com##{config.vm.hostname}#" /etc/postfix/main.cf
         sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/postfix/main.cf
         sudo postmap /etc/postfix/virtual-regexp
-        sudo systemctl reload postfix 
+        sudo systemctl reload postfix
 
         echo "Checking for Database..."
         if [ "${INSTALL_DB}" == "yes" ]; then
@@ -218,7 +222,7 @@ Vagrant.configure("2") do |config|
         sudo systemctl restart named
         sudo systemctl restart httpd
         sudo systemctl restart php-fpm
-        
+
 
         echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
         echo "+                                                          +"
