@@ -21,6 +21,9 @@ Vagrant.configure("2") do |config|
 
         XDEBUG_PORT=9041
         XDEBUG_FORCE_ERROR_DISPLAY="no"
+        XDEBUG_MAX_DATA="-1"
+        XDEBUG_MAX_CHILDREN="-1"
+        XDEBUG_MAX_DEPTH="3"
 
         INSTALL_DB="no" # yes or no
         DB_IS_MAGENTO="no" # 1, 2 or no
@@ -88,6 +91,10 @@ Vagrant.configure("2") do |config|
             sudo printf "\nxdebug.force_display_errors=2" >> /etc/php.d/15-xdebug.ini
             sudo printf "\nxdebug.scream=1" >> /etc/php.d/15-xdebug.ini
         fi
+        sudo printf "\nxdebug.var_display_max_data=${XDEBUG_MAX_DATA}" >> /etc/php.d/15-xdebug.ini
+        sudo printf "\nxdebug.var_display_max_depth=${XDEBUG_MAX_DEPTH}" >> /etc/php.d/15-xdebug.ini
+        sudo printf "\nxdebug.var_display_max_children=${XDEBUG_MAX_CHILDREN}" >> /etc/php.d/15-xdebug.ini
+
         sudo iptables -I INPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
         sudo iptables -I OUTPUT -p tcp -s 0.0.0.0/0 --dport ${XDEBUG_PORT} -j ACCEPT
 
