@@ -68,6 +68,7 @@ Vagrant.configure("2") do |config|
           sleep 1
           sudo dnf module enable -y php:remi-${PHP_VERSION}
           sudo dnf install -y php
+          chown vagrant:vagrant -R /var/lib/php/*
         fi
 
         echo "Updating Bind..."
