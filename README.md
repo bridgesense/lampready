@@ -33,7 +33,7 @@ This development environment includes:
 
 Apache, Bind, Dovecot, PHP7, Postfix, and Roundcube which are already setup and ready to run from your project directory. 
 
-This box also includes a set of lightweight development tools to customize Vim and Tmux from [YADRLite](https://gitlab.com/bridgesense/dotfiles).
+This box also includes a set of lightweight development tools to customize Vim and Tmux from [YADRLite](https://github.com/bridgesense/dotfiles).
 
 
 
@@ -46,7 +46,7 @@ How to Install this Vagrant Box?
 * Download the LAMPready Vagrantfile script to your project's root directory
 
 ```
-curl https://gitlab.com/bridgesense/lampready/raw/master/Vagrantfile > Vagrantfile
+curl https://raw.githubusercontent.com/bridgesense/lampready/master/Vagrantfile > Vagrantfile
 ```
 
 * You'll want to make some adjustments to the script's options (see below)
