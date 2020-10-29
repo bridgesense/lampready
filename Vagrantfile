@@ -62,15 +62,27 @@ Vagrant.configure("2") do |config|
 
         echo "Choosing PHP Version"
 
-        if [ "${PHP_VERSION}" != "7.4" ]; then
-          sudo dnf remove -y php
-          sudo dnf module reset -y php
-          sleep 1
-          sudo dnf module enable -y php:remi-${PHP_VERSION}
-          sudo dnf install -y php
-          chown vagrant:vagrant -R /var/lib/php/*
-        fi
+        function set_php {
+          arr="${1}"
+          cnt=0
+          while [ "$(php -v | head -n 1 | cut -d ' ' -f 2 | cut -f1-2 -d'.')" != "${arr}" ]; do
+            if [ $cnt -eq 3 ]; then
+              echo "WARNING! Your PHP version has not been set to ${arr}."
+              echo "You may want to do that manually."
+              break;
+            fi
+            sudo dnf remove -y php
+            sudo dnf module reset -y php
+            sudo dnf module enable -y php:remi-${arr}
+            sudo dnf install -y php
+            chown vagrant:vagrant -R /var/lib/php/*
+            sleep 4
+            let "cnt+=1"
+          done
+        }
 
+        set_php ${PHP_VERSION}
+        
         echo "Updating Bind..."
         sudo sed -i "s@lampready\.com@#{config.vm.hostname}@g" /etc/hostname
         sudo printf "\n127.0.0.1   ${FULL_DOMAIN}\n" >> /etc/hosts
