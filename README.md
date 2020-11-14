@@ -54,7 +54,7 @@ curl https://raw.githubusercontent.com/bridgesense/lampready/master/Vagrantfile 
 * Run the following command to spin up the new virtual environment in minutes
 
 ```
-vagrant up --provider=virtualbox
+vagrant up
 ```
 
 * Log into to shell to check out the virtual environment (user: vagrant, pass: vagrant)

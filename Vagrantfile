@@ -4,6 +4,7 @@
 Vagrant.configure("2") do |config|
 
     config.vm.box = "bridgesense/lampready"
+    config.vm.provider = "virtualbox"
 
     config.vm.hostname = "lampready.com"
     config.vm.network "private_network", ip: "192.168.33.10"
@@ -74,9 +75,9 @@ Vagrant.configure("2") do |config|
             sudo dnf remove -y php
             sudo dnf module reset -y php
             sudo dnf module enable -y php:remi-${arr}
+            sleep 4
             sudo dnf install -y php
             chown vagrant:vagrant -R /var/lib/php/*
-            sleep 4
             let "cnt+=1"
           done
         }
