@@ -24,8 +24,8 @@ Vagrant.configure("2") do |config|
 
         XDEBUG_PORT=9041
         XDEBUG_FORCE_ERROR_DISPLAY="no"
-        XDEBUG_MAX_DATA="-1"
-        XDEBUG_MAX_CHILDREN="-1"
+        XDEBUG_MAX_DATA="512"
+        XDEBUG_MAX_CHILDREN="128"
         XDEBUG_MAX_DEPTH="3"
 
         INSTALL_DB="no" # yes or no
