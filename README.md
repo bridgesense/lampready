@@ -148,7 +148,7 @@ vagrant init bridgesense/lampready
 
 **start/install the VM server:**
 ```
-vagrant up --provider=virtualbox
+vagrant up
 ```
 
 **pause the server:**
