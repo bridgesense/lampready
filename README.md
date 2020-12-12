@@ -117,6 +117,10 @@ This is the default port normally allocated for Xdebug.  You'll want to be sure 
 **XDEBUG_FORCE_ERROR_DISPLAY**
 For sites constructed from many packages with different settings, it is nice to be able to easily override error suppression.  Set this option to "yes" to override individual error settings throughout the code.
 
+
+**XDEBUG_MAX_DATA, CHILDREN, DEPTH**
+Set limitations on the variables returned by Xdebug.
+
     
 **INSTALL_DB**
 The script can automatically set up and install up to three MySQL databases.  By setting the INSTALL message to "yes"  and filling out the rest of the information, the script will create the database and inject your data from a sql file you place in the project's root directory.
@@ -124,14 +128,19 @@ The script can automatically set up and install up to three MySQL databases.  By
         
 **DB_IS_MAGENTO or DB_IS_WORDPRESS**
 If the database is Magento or Wordpress, you will want to set this option to "yes".  For Magento 2 set this option to "2".  The script will update the appropriate tables to match this script's config.vm.hostname and SUB_DOMAIN settings.  For typical installations no manual fiddling should be necessary.
-        
+
 
 **DB_NAME, DB_USER and DB_PASS**
 These settings should mirror the same database name and user credentials written in the website's database configuration file.  Notice the single quotes used for the password.  This is an important work-around to allow the bash script to insert certain special characters correctly.
 
-     
+
+**DB_PERM**
+Assign DB permissions to specific users.
+
+
 **DB_FILENAME**
 This option is not neccessary if there is no database to import.  While the DB_NAME option will create an empty database, this option populates that database.  The script will look for the sql file in your projects root directory (one directory below document root).
+
 
 **DB_CUSTOM_FUNCTIONS**
 This option is used for importing an additional script or custom functions.   
