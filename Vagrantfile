@@ -33,6 +33,7 @@ Vagrant.configure("2") do |config|
         DB_IS_WORDPRESS="no" # yes or no
         DB_NAME="user_database"
         DB_USER="user_user"
+        DB_PERM="SELECT, DELETE, INDEX, INSERT, UPDATE, EXECUTE"
         DB_PASS='drowssap'
         DB_PREFIX=""
         DB_FILENAME="user_database.sql" # located below document root
@@ -43,6 +44,7 @@ Vagrant.configure("2") do |config|
         DB2_IS_WORDPRESS="no" # yes or no
         DB2_NAME=""
         DB2_USER=""
+        DB2_PERM="SELECT, DELETE, INDEX, INSERT, UPDATE, EXECUTE"
         DB2_PASS=''
         DB2_PREFIX=""
         DB2_FILENAME=""
@@ -50,8 +52,13 @@ Vagrant.configure("2") do |config|
         INSTALL_DB3="no"
         DB3_NAME=""
         DB3_USER=""
+        DB3_PERM="SELECT, DELETE, INDEX, INSERT, UPDATE, EXECUTE"
         DB3_PASS=''
         DB3_FILENAME=""
+
+        DB_MAINT_USER=""
+        DB_MAINT_PASS=''
+        DB_MAINT_PERM="ALL"
 
         # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -148,7 +155,7 @@ Vagrant.configure("2") do |config|
             fi
             if [ "${DB_USER}" != "" ]; then
                 mysql -e "CREATE USER '${DB_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB_PASS})'"
-                mysql -e "GRANT ALL PRIVILEGES ON * . * TO '${DB_USER}'@'localhost'"
+                mysql -e "GRANT ${DB_PERM} ON ${DB_NAME}.* TO '${DB_USER}'@'localhost'"
             fi
             if [ "${DB_IS_MAGENTO}" == "1" ] || [ "${DB_IS_MAGENTO}" == "yes" ]; then
                 echo "Setting up Magento..."
@@ -192,7 +199,7 @@ Vagrant.configure("2") do |config|
             fi
             if [ "${DB2_USER}" != "" ]; then
                 mysql -e "CREATE USER '${DB2_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB2_PASS})'"
-                mysql -e "GRANT ALL PRIVILEGES ON * . * TO '${DB2_USER}'@'localhost'"
+                mysql -e "GRANT ${DB2_PERM} ON ${DB2_NAME}.* TO '${DB2_USER}'@'localhost'"
             fi
             if [ "${DB2_IS_MAGENTO}" == "1" ] || [ "${DB2_IS_MAGENTO}" == "yes" ]; then
                 echo "Setting up Magento..."
@@ -236,8 +243,13 @@ Vagrant.configure("2") do |config|
             fi
             if [ "${DB3_USER}" != "" ]; then
                 mysql -e "CREATE USER '${DB3_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB3_PASS})'"
-                mysql -e "GRANT ALL PRIVILEGES ON * . * TO '${DB3_USER}'@'localhost'"
+                mysql -e "GRANT ${DB3_PERM} ON ${DB3_NAME}.* TO '${DB3_USER}'@'localhost'"
             fi
+        fi
+
+        if [ "${DB_MAINT_USER}" != "" ]; then
+            mysql -e "CREATE USER '${DB_MAINT_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB_MAINT_PASS})'"
+            mysql -e "GRANT ${DB_MAINT_PERM} ON * . * TO '${DB_MAINT_USER}'@'localhost'"
         fi
 
         echo "Restart Services..."
