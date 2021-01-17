@@ -5,7 +5,7 @@
 # then run: bash box
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-HOSTNAME="tickettomato.com"
+HOSTNAME="lampready.com"
 SUB_DOMAIN="dev"
 MAIL_RELAY="root@${HOSTNAME}"
 PUBLIC_ROOT_DIRECTORY="public_html"
