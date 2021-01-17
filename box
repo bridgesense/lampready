@@ -1,0 +1,666 @@
+#!/usr/bin/env bash
+# Home: https://github.com/bridgesense/lampready
+# This script creates a LAMP stack with a single rhel8 container.
+# Customize the information below to suit your needs,
+# then run: bash box
+# # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+HOSTNAME="tickettomato.com"
+SUB_DOMAIN="dev"
+MAIL_RELAY="root@${HOSTNAME}"
+PUBLIC_ROOT_DIRECTORY="public_html"
+
+HTTP_PORT="80"
+SSL_PORT="443"
+
+PHP_VERSION="7.2" # 7.2 - 7.4
+PHP_MAX_EXEC_TIME="600"
+PHP_MEM_LIMIT="512M"
+
+XDEBUG_PORT="9041"
+XDEBUG_FORCE_ERROR_DISPLAY="yes"
+XDEBUG_SCREAM="yes"
+XDEBUG_MAX_DATA="512"
+XDEBUG_MAX_CHILDREN="128"
+XDEBUG_MAX_DEPTH="3"
+
+declare -A DB1=( 
+        [DB_NAME]=""
+        [DB_USER]=""
+        [DB_PERM]="SELECT, DELETE, INDEX, INSERT, UPDATE, EXECUTE"
+        [DB_PASS]='' # make sure to use single quotes here to compensate for special chars
+        [DB_PREFIX]="" # e.g. wp_
+        [DB_TYPE]="custom" # custom, wordpress, magento_1, magento_2
+        [DB_FILENAME]=""
+        [DB_CUSTOM_FUNCTIONS_FILENAME]=""
+)
+
+# declare -A DB2=(...
+
+# generally reserved for administrative access
+# for cron and backend applications
+DB_MAINT_USER=""
+DB_MAINT_PASS=''
+DB_MAINT_PERM="ALL"
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Don't edit below this point unless you really want to
+
+SITE_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ACTION="${1:-help}"
+if [ "$SUB_DOMAIN" != "" ]; then SITE_NAME="${SUB_DOMAIN}.${HOSTNAME}"; else SITE_NAME=$HOSTNAME; fi
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # functions
+
+# builds the container directory
+function build_container_directory {
+    message "Building container directory at ${SITE_HOME}/.container ..."
+    if [ -d "${SITE_HOME}/.container/log" ]; then
+        rm -rf "${SITE_HOME}/.container/log"
+    fi
+    if [ -d "${SITE_HOME}/.container/mariadb" ]; then
+        rm -rf "${SITE_HOME}/.container/mariadb"
+    fi
+    mkdir -p "${SITE_HOME}/.container/log"
+    mkdir -p "${SITE_HOME}/.container/mariadb"
+    if [ ! -d "${SITE_HOME}/.container/conf.d" ]; then
+        mkdir -p "${SITE_HOME}/.container/conf.d"
+    fi
+    if [ ! -d "${SITE_HOME}/${PUBLIC_ROOT_DIRECTORY}" ]; then
+        mkdir -p "${SITE_HOME}/${PUBLIC_ROOT_DIRECTORY}"
+        message "It worked!! Please do something about the missing files in ${SITE_HOME}/${PUBLIC_ROOT_DIRECTORY}" > "${SITE_HOME}/${PUBLIC_ROOT_DIRECTORY}/index.html"
+    fi
+}
+
+# build default httpd conf files
+function build_default_httpd_conf {
+    # default http file
+    _http_conf_file=/etc/httpd/conf.d/default.conf
+	echo "<VirtualHost *:${HTTP_PORT}>" > $_http_conf_file
+    echo "    ServerAdmin ${MAIL_RELAY}" >> $_http_conf_file
+    echo "    ServerName ${HOSTNAME}" >> $_http_conf_file
+    echo "    ServerAlias *.${HOSTNAME}" >> $_http_conf_file
+    echo "    DocumentRoot /var/www/${PUBLIC_ROOT_DIRECTORY}" >> $_http_conf_file
+    echo "    CustomLog \"/var/log/httpd/${HOSTNAME}.access.log\" common" >> $_http_conf_file
+    echo "    ErrorLog \"/var/log/httpd/${HOSTNAME}.error.log\"" >> $_http_conf_file
+    echo "    <Proxy \"unix:/run/php-fpm/www.sock|fcgi://php-fpm\">" >> $_http_conf_file
+    echo "         ProxySet disablereuse=off" >> $_http_conf_file
+    echo "    </Proxy>" >> $_http_conf_file
+    echo "    <FilesMatch \\.php\$>" >> $_http_conf_file
+    echo "         SetHandler proxy:fcgi://php-fpm" >> $_http_conf_file
+    echo "    </FilesMatch>" >> $_http_conf_file
+    echo "    <Directory \"/var/www\">" >> $_http_conf_file
+    echo "         Options Indexes FollowSymLinks" >> $_http_conf_file
+    echo "         AllowOverride All" >> $_http_conf_file
+    echo "         Require all granted" >> $_http_conf_file
+    echo "    </Directory>" >> $_http_conf_file
+	echo "    <Directory \"/var/www/html\">" >> $_http_conf_file
+    echo "         Options Indexes FollowSymLinks" >> $_http_conf_file
+    echo "         AllowOverride All" >> $_http_conf_file
+    echo "         Require all granted" >> $_http_conf_file
+	echo "    </Directory>" >> $_http_conf_file
+    echo "</VirtualHost>" >> $_http_conf_file
+
+    # default https file
+    _https_conf_file=/etc/httpd/conf.d/default-ssl.conf
+	echo "Listen ${SSL_PORT} https" > $_https_conf_file
+	echo "SSLPassPhraseDialog exec:/usr/libexec/httpd-ssl-pass-dialog" >> $_https_conf_file
+	echo "SSLSessionCache        shmcb:/run/httpd/sslcache(512000)" >> $_https_conf_file
+	echo "SSLSessionCacheTimeout 300" >> $_https_conf_file
+	echo "SSLCryptoDevice builtin" >> $_https_conf_file
+	echo "<VirtualHost _default_:${SSL_PORT}>" >> $_https_conf_file
+    echo "    ServerAdmin ${MAIL_RELAY}" >> $_https_conf_file
+    echo "    ServerName ${HOSTNAME}" >> $_https_conf_file
+    echo "    ServerAlias *.${HOSTNAME}" >> $_https_conf_file
+    echo "    DocumentRoot /var/www/${PUBLIC_ROOT_DIRECTORY}" >> $_https_conf_file
+    echo "    CustomLog \"/var/log/httpd/${HOSTNAME}.ssl-access.log\" common" >> $_https_conf_file
+    echo "    ErrorLog \"/var/log/httpd/${HOSTNAME}.ssl-error.log\"" >> $_https_conf_file
+    echo "    <Proxy \"unix:/run/php-fpm/www.sock|fcgi://php-fpm\">" >> $_https_conf_file
+    echo "         ProxySet disablereuse=off" >> $_https_conf_file
+    echo "    </Proxy>" >> $_https_conf_file
+    echo "    <FilesMatch \\.php\$>" >> $_https_conf_file
+    echo "         SetHandler proxy:fcgi://php-fpm" >> $_https_conf_file
+    echo "    </FilesMatch>" >> $_https_conf_file
+    echo "    SSLEngine on" >> $_https_conf_file
+    echo "    SSLHonorCipherOrder on" >> $_https_conf_file
+    echo "    SSLCipherSuite PROFILE=SYSTEM" >> $_https_conf_file
+    echo "    SSLProxyCipherSuite PROFILE=SYSTEM" >> $_https_conf_file
+    echo "    SSLCertificateFile /etc/pki/tls/certs/localhost.crt" >> $_https_conf_file
+    echo "    SSLCertificateKeyFile /etc/pki/tls/private/localhost.key" >> $_https_conf_file
+    echo "    <FilesMatch \"\\.(cgi|shtml|phtml|php)$\">" >> $_https_conf_file
+    echo "         SSLOptions +StdEnvVars" >> $_https_conf_file
+    echo "    </FilesMatch>" >> $_https_conf_file
+    echo "    <Directory \"/var/www/cgi-bin\">" >> $_https_conf_file
+    echo "         SSLOptions +StdEnvVars" >> $_https_conf_file
+    echo "    </Directory>" >> $_https_conf_file
+	echo "    <Directory \"/var/www\">" >> $_https_conf_file
+    echo "         Options Indexes FollowSymLinks" >> $_https_conf_file
+    echo "         AllowOverride All" >> $_https_conf_file
+    echo "         Require all granted" >> $_https_conf_file
+    echo "    </Directory>" >> $_https_conf_file
+	echo "    <Directory \"/var/www/html\">" >> $_https_conf_file
+    echo "         Options Indexes FollowSymLinks" >> $_https_conf_file
+    echo "         AllowOverride All" >> $_https_conf_file
+    echo "         Require all granted" >> $_https_conf_file
+	echo "    </Directory>" >> $_https_conf_file
+    echo "</VirtualHost>" >> $_https_conf_file
+}
+
+# builds the site image based on the information entered at
+# the top of this script
+function build_image {
+    # clean up anything that might exist in a failed state
+    # or left over from a previous session
+    if podman images | grep -q "$SITE_NAME"; then
+        message "Cleaning up an old image ..."
+        podman rm $SITE_NAME >/dev/null 2>&1
+        podman rmi "${SITE_NAME}:private" >/dev/null 2>&1
+    fi
+    # build the image in docker style
+    # podman build -t lampready:private -f Dockerfile.lampready
+    message "Building a custom iamge form ${SITE_NAME} ..."
+    _file="${SITE_HOME}/.container/Dockerfile.${SITE_NAME}"
+    echo "FROM registry.access.redhat.com/ubi8/ubi-init" > $_file
+    echo "LABEL maintainer='bridgesense llc" >> $_file
+    echo "LABEL description='Provides a full LAMP stack, xdebug and mail shield for PHP development.'" >> $_file
+    echo "LABEL io.k8s.display-name='An RHEL8 full LAMP stack'" >> $_file
+    echo "RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm" >> $_file
+    echo "RUN dnf module install -y php:${PHP_VERSION}" >> $_file
+    echo "RUN dnf install -y make httpd httpd-tools mod_ssl openssl crontabs cronie postfix mutt mariadb-server mariadb GraphicsMagick-devel php-devel libmcrypt-devel memcached libmemcached-devel zlib-devel php-pear php-gd php-curl php-mysqlnd php-pdo php-soap php-bcmath php-intl php-pecl-zip" >> $_file
+    echo "RUN rpm -Fvh --nodeps https://github.com/bridgesense/lampready/raw/master/httpd-ubi-init-2.4.37-99.el8.x86_64.rpm"  >> $_file
+    echo "RUN dnf clean all; pecl channel-update pecl.php.net" >> $_file
+    echo "RUN openssl req -newkey rsa:2048 -x509 -sha256 -days 999999 -nodes -subj '/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=${HOSTNAME}' -out /etc/pki/tls/certs/localhost.crt -keyout /etc/pki/tls/private/localhost.key" >> $_file
+    echo "RUN sed -i \"s@umask 002@umask 022@g\" /etc/bashrc; sed -i \"s@DocumentRoot.*@@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@short_open_tag.*@short_open_tag = On@g\" /etc/php.ini; sed -i \"s@max_execution_time.*@max_execution_time = ${PHP_MAX_EXEC_TIME}@g\" /etc/php.ini; sed -i \"s@max_input_vars.*@max_input_vars = 10000@g\" /etc/php.ini; sed -i \"s@max_memory_limit.*@max_memory_limit = ${PHP_MEM_LIMIT}@g\" /etc/php.ini; sed -i \"s@post_max_size.*@post_max_size = 16M@g\" /etc/php.ini; sed -i \"s@upload_max_filesize.*@upload_max_filesize = 16M@g\" /etc/php.ini; sed -i '/^[mysqld]/a innodb_file_per_table=1\ninnodb_file_format=barracuda\ninnodb_strict_mode=0\ninnodb_large_prefix=1\ninnodb_log_file_size=256M\ntmp_table_size=256MB\nmax_heap_table_size=256MB\nslow_query_log = 1\nslow_query_log_file = /var/log/mysql/mariadb-slow.log\nlong_query_time = 2' /etc/my.cnf.d/mariadb-server.cnf; echo \"smtpd_use_tls=no\nmyhostname = ${HOSTNAME}\nmynetworks = 127.0.0.1 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128\nvirtual_maps = regexp:/etc/postfix/virtual-regexp\" >> /etc/postfix/main.cf; echo \"#/.+@.+/ ${MAIL_RELAY}\" > /etc/postfix/virtual-regexp; sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@/usr/libexec/mysqld@/usr/libexec/mysqld --user=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@User apache@User root@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@group apache@group root@g\" /etc/httpd/conf/httpd.conf" >> $_file
+    echo "RUN printf \"\n\" | pecl install 'gmagick-beta'; echo 'extension=gmagick.so' > /etc/php.d/20-gmagick.ini; printf \"\n\" | pecl install memcached; echo 'extension=memcached.so' > /etc/php.d/50-memcached.ini; printf \"\n\" | pecl install mcrypt; echo 'extension=mcrypt.so' > /etc/php.d/30-mcrypt.ini; sed -i \"s@DirectoryIndex index.html@DirectoryIndex index.php index.html@g\" /etc/httpd/conf/httpd.conf" >> $_file
+    echo "RUN printf \"\n\" | pecl install 'xdebug'; printf \"zend_extension=/usr/lib64/php/modules/xdebug.so\n\nxdebug.default_enable=1\nxdebug.auto_trace=1\nxdebug.remote_enable=1\nxdebug_remote_host='127.0.0.1'\nxdebug.remote_port=${XDEBUG_PORT}\nxdebug.remote_handler='dbgp'\nxdebug.remote_mode=req\nxdebug.cli_color=1\nxdebug.overload_var_dump=1\nxdebug.remote_log='/tmp/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_ERROR_DISPLAY}\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.var_display_max_data=${XDEBUG_MAX_DATA}\nxdebug.var_display_max_depth=${XDEBUG_MAX_DEPTH}\nxdebug.var_display_max_children=${XDEBUG_MAX_CHILDREN}\" >> /etc/php.d/15-xdebug.ini" >> $_file
+    echo "RUN systemctl enable postfix" >> $_file
+	echo "RUN systemctl enable mariadb" >> $_file
+	echo "RUN systemctl enable httpd" >> $_file
+    echo "RUN systemctl enable php-fpm" >> $_file
+    echo "RUN systemctl enable memcached" >> $_file
+    podman build -t "${SITE_NAME}:private" -f $_file
+}
+
+# cleans the container directory
+function clean_container_directory {
+    message "Cleaning the container directory: ${SITE_HOME}/.container ..."
+    rm -rf "${SITE_HOME}/.container/mariadb"
+    rm -rf "${SITE_HOME}/.container/log"
+    rm -f "${SITE_HOME}/.container/Dockerfile*"
+    rm -f "${SITE_HOME}/.container/init.lock"
+}
+
+# cleans up the LAMP container
+function clean_lamp_container {
+    get_state 
+
+    if [ $STATE -eq 0 ]; then
+        message "stoping LAMP service..."
+        systemctl --user stop "container-${SITE_NAME}" >/dev/null 2>&1
+    fi
+
+    if [ $STATE -lt 2 ]; then
+        message "stoping container..."
+        podman stop $SITE_NAME >/dev/null 2>&1
+    fi 
+    
+    if [ $STATE -lt 3 ]; then
+        message "removing container..."
+        podman rm $SITE_NAME >/dev/null 2>&1
+    fi 
+
+    if [ $STATE -lt 4 ]; then
+        message "removing image..."
+        podman rmi "${SITE_NAME}:private" >/dev/null 2>&1
+    fi
+
+    if [ $STATE -gt 3 ]; then
+        message "no containers found"
+    fi
+
+    if [ -f "${HOME}/.config/systemd/user/container-${SITE_NAME}.service" ]; then
+        rm -rf "${HOME}/.config/systemd/user/container-${SITE_NAME}.service"
+        systemctl --user daemon-reload
+    fi
+}
+
+# a mini-man
+function display_help {
+    echo ""
+    echo "Lampready LAMP commands"
+    echo "--------------------------------------------------"
+    echo "bash box help        displays available commands"
+    echo "bash box up          downloads, builds and starts container"
+    echo "bash box halt        stops container"
+    echo "bash box import      imports database files"
+    echo "bash box export      exports database files"
+    echo "bash box destroy     halts and destroys all files affiliated with container"
+    echo "bash box mail        view mail in mail trap"
+    echo "bash box mysql       enter mysql prompt"
+    echo "bash box ssh         enter the container commandline"
+    echo ""
+    echo "NOTE ABOUT ROOTLESS CONTAINERS:"
+    echo "If you want to use any of the privileged ports below 1024, you will"
+    echo "need to run the following commands prior to running this script:"
+    echo ""
+    echo "sudo echo "net.ipv4.ip_unprivileged_port_start=0" > /etc/sysctl.d/05-expose-privileged.conf"
+    echo "sudo sysctl --system"
+    echo ""
+    echo "ADDING ADDITIONAL HOSTNAMES:"
+    echo "This script maintains the Aliashostname entered at the top of the file."
+    echo "Additional hostnames may be added to your local ~/.hosts file manually:"
+    echo ""
+    echo "echo \"dev.lampready.com localhost\" >> ~/.hosts"
+    echo ""
+    echo "INCLUDING ADDITIONAL APACHE SITE CONFIGURATION FILES:"
+    echo "This script is designed to work with the single hostname entered at the"
+    echo "top of this file.  Additional site configuration files may be copied to the"
+    echo "following directory"
+    echo ""
+    echo "mkdir -p .container/conf.d"
+    echo "cp my_site_config.conf .container/conf.d"
+    echo ""
+    echo "ACCESSING LOG FILES:"
+    echo "Log files may be accessed in the following directory after the script"
+    echo "has been launched:"
+    echo ""
+    echo "ls -l .container/logs"
+    echo ""
+    echo "NOTE ABOUT DESTROYING CONTAINERS:"
+    echo "The destroy command will not delete some shared content. The following directories"
+    echo "will not be affected:"
+    echo ""
+    echo "${SITE_HOME}/.container/conf.d"
+    echo "${SITE_HOME}/${PUBLIC_ROOT_DIRECTORY}"
+    echo ""
+    echo "CREDITS:"
+    echo "This script was based on Scott McCarty's contribution to this subject,"
+    echo "A Hacker's Guide to Moving LInux Services Into Containers:"
+    echo ""
+    echo "https://crunchtools.com/moving-linux-services-to-containers"
+    echo ""
+}
+
+function export_databases {
+    # import database
+    for (( i=1; i<50; i++ ))
+    do
+        if set|grep "^DB$i" >/dev/null 2>&1; then
+            declare -n var="DB$i"
+            if [ "${var[DB_FILENAME]}" != "" ]; then
+                mysqldump -u root --single-transaction --quick --lock-tables=false --skip-tz-utc ${var[DB_NAME]} | gzip -9 > "${SITE_HOME}\${var[DB_NAME]}.sql.gz"
+            fi
+        fi
+    done
+}
+
+
+# import databases
+function import_databases {
+    # import database
+    for (( i=1; i<50; i++ ))
+    do
+        if set|grep "^DB$i" >/dev/null 2>&1; then
+            declare -n var="DB$i"
+            if [ "${var[DB_NAME]}" != "" ] && [ "${var[DB_USER]}" != "" ]; then
+                # creating database
+                mysql -e "CREATE DATABASE ${var[DB_NAME]}"
+
+                # importing database file if exists
+                if [ "${var[DB_FILENAME]}" != "" ] && [ -f "/var/www/${var[DB_FILENAME]}" ]; then
+                    mysql -f ${var[DB_NAME]} < /var/www/${var[DB_FILENAME]}
+                fi
+
+                # importing functions if exists
+                if [ "${var[DB_CUSTOM_FUNCTIONS_FILENAME]}" != "" ] && [ -f "/var/www/${var[DB_CUSTOM_FUNCTIONS_FILENAME]}" ]; then
+                    mysql -f ${var[DB_NAME]} < /var/www/${var[DB_CUSTOM_FUNCTIONS_FILENAME]}
+                fi
+
+                # creating user
+                mysql -e "CREATE USER '${var[DB_USER]}'@'localhost' IDENTIFIED BY '$(echo ${var[DB_PASS]})'"
+
+                # granting permissions
+                mysql -e "GRANT ${var[DB_PERM]} ON ${var[DB_NAME]}.* TO '${var[DB_USER]}'@'localhost'; flush privileges"
+
+                # modifications for development site name designation
+                if [ "${var[DB_TYPE]}" == "wordpress" ]; then
+                    WPQ1=$(mysql -N -e "use ${var[DB_NAME]}; SELECT option_value FROM ${var[DB_PREFIX]}options WHERE option_name = 'siteurl'")
+                    WPA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${SITE_NAME}@" <<< $WPQ1)
+                    mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}options SET option_value = '${WPA1}' WHERE option_name = 'siteurl' OR option_name = 'home'"
+                    mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}posts SET guid = replace(guid, '${WPQ1}','${WPA1}')"
+                    mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}posts SET post_content = replace(post_content, '${WPQ1}', '${WPA1}')"
+                    mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}postmeta SET meta_value = replace(meta_value,'${WPQ1}','${WPA1}')"
+                fi
+                if [ "${var[DB_TYPE]}" == "magento_1" ]; then
+                    echo "Setting up Magento..."
+                    MGQ1=$(mysql -N -e "use ${var[DB_NAME]}; SELECT value FROM ${var[DB_PREFIX]}core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
+                    MGA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${SITE_NAME}/@" <<< $MGQ1)
+                    mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}core_config_data SET value = '$MGA1' WHERE path = 'web/unsecure/base_url'"
+                    MGQ2=$(mysql -N -e "use ${var[DB_NAME]}; SELECT value FROM ${var[DB_PREFIX]}core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
+                    MGA2=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${SITE_NAME}/@" <<< $MGQ2)
+                    mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}core_config_data SET value = '$MGA2' WHERE path = 'web/secure/base_url'"
+                    mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_cache"
+                    mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_cache_tag"
+                    mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_session"
+                    cd "/var/www/${PUBLIC_ROOT_DIRECTORY}"
+                    php -f shell/compiler.php -- disable
+                    php -f shell/indexer.php reindexall
+                fi
+                if [ "${var[DB_TYPE]}" == "magento_2" ]; then
+                    cd "/var/www/${PUBLIC_ROOT_DIRECTORY}"
+                    php bin/magento setup:store-config:set --base-url="http://${SITE_NAME}/"
+                    php bin/magento setup:store-config:set --base-url-secure="https://${SITE_NAME}/"
+                    php bin/magento cache:flush
+                    php bin/magento indexer:reindex
+                fi
+            fi
+        else
+            break
+        fi
+
+        if [ "${DB_MAINT_USER}" != "" ]; then
+            # set up maintenance account
+            mysql -e "CREATE USER '${DB_MAINT_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB_MAINT_PASS})'"
+            mysql -e "GRANT ${DB_MAINT_PERM} ON * . * TO '${DB_MAINT_USER}'@'localhost'; flush privileges"
+        fi
+    done
+}
+
+# get current state of container
+function get_state {
+    # 5 = failed validation of minimum requirements for the script
+    # 4 = ready to build file structure
+    # 3 = ready to build image
+    # 2 = ready to set up LAMP service
+    # 1 = ready to run LAMP service
+    # 0 = Lamp Service is Running
+
+    STATE=5
+    if grep -q -i "release 8" /etc/redhat-release && [ -x "$(command -v podman)" ]; then
+        STATE=4
+        if [ -d "${SITE_HOME}/.container/log" ]; then
+            STATE=3
+            if podman images | grep -q "$SITE_NAME"; then
+                STATE=2
+                if podman ps | grep -q $SITE_NAME && [ -f "${HOME}/.config/systemd/user/container-${SITE_NAME}.service" ]; then
+                    STATE=1
+                    if podman ps | grep -q "$SITE_NAME"; then
+                        STATE=0
+                    fi
+                fi
+            fi
+        fi
+    fi
+}
+
+# display messages
+function message {
+    echo ""
+    echo "${1}"
+}
+
+# warn there is no box running
+function no_box_running_message {
+    message "The box must be running first!"
+    message "Run 'bash box up' to start it"
+}
+
+# setup local systemd service
+function setup_systemd_service {
+    message "Setting up systemd service..."
+
+    # clean up any rogue processes
+    if podman ps | grep -q $SITE_NAME; then
+        podman stop $SITE_NAME
+    fi
+
+    # clean up any rogue processes
+    podman rm $SITE_NAME >/dev/null 2>&1
+
+    # remove the current container file if exists
+    if [ -f "${HOME}/.config/systemd/user/container-${SITE_NAME}.service" ]; then
+        rm -rf "${HOME}/.config/systemd/user/container-${SITE_NAME}.service"
+        systemctl --user daemon-reload
+    fi
+
+    # start the service with everything in place
+    RUN_PARAMS=(
+        -p $HTTP_PORT:80
+        -p $SSL_PORT:443
+        -p $XDEBUG_PORT:9000
+        --hostname $HOSTNAME
+        --name $SITE_NAME
+        -v "${SITE_HOME}:/var/www:Z"
+        -v "${SITE_HOME}/.container/conf.d:/etc/httpd/conf.d:Z"
+        -v "${SITE_HOME}/.container/log:/var/log/httpd:Z"
+		-v "${SITE_HOME}/.container/mariadb:/var/lib/mysql:Z"
+        --tmpfs /etc
+        --tmpfs /usr/lib/systemd/system
+        --tmpfs /var/lib
+        --tmpfs /var/run
+        --tmpfs /var/tmp
+        "localhost/${SITE_NAME}:private"
+    )
+    podman run -d ${RUN_PARAMS[@]}
+
+    # copy it to a service
+    podman generate systemd --name $SITE_NAME --new > "$HOME/.config/systemd/user/container-${SITE_NAME}.service"
+}
+
+# start local systemd service
+function start_systemd_service {
+    message "Starting..."
+    systemctl --user daemon-reload
+    sleep 2
+    systemctl --user start "container-${SITE_NAME}"
+}
+
+# validation warning
+function validation_warning {
+    echo ""
+    echo "This script is designed to be used Red Hat Linux and a valid subscription."
+    echo "Also please make sure that the following package is installed:"
+    echo ""
+    echo "sudo dnf module install container-tools"
+    echo ""
+}
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # routing
+if [ "$ACTION" == "help" ]; then
+    display_help | less
+fi
+
+# Download, build and start your LAMP with one commandline
+if [ "$ACTION" == "up" ]; then
+
+    # what is the current script state
+    get_state
+
+    # handle validation warning
+    if [ $STATE -eq 5 ]; then
+        validation_warning
+    fi
+
+    # builds the container directory
+    if [ $STATE -eq 4 ]; then
+        build_container_directory
+        # refresh state
+        get_state
+    fi
+
+    # build the image
+    if [ $STATE -eq 3 ]; then
+        build_image
+        # refresh state
+        get_state
+    fi
+
+    if [ $STATE -eq 2 ]; then
+        # refresh state
+        setup_systemd_service
+        get_state
+    fi
+
+    # ready to launch LAMP server
+    if [ $STATE -eq 1 ]; then
+        start_systemd_service
+        get_state
+    fi
+
+    # check if lamp has been initialized
+    if [ $STATE -eq 0 ] && [ ! -f "${SITE_HOME}/.container/init.lock" ]; then
+        message "Installing LAMP configuration..."
+        podman exec "${SITE_NAME}" bash /var/www/box init
+        _status=false
+        while $_status -eq false; do
+			if [ -f "/var/www/.container/init.lock" ]; then
+				_status=true
+			fi
+			sleep 1
+		done
+        systemctl --user daemon-reload
+        systemctl --user restart "container-${SITE_NAME}.service"
+		sleep 5
+        message "Importing databases..."
+        podman exec "${SITE_NAME}" bash /var/www/box import_db 
+    fi
+
+    # ready to launch LAMP server
+    if [ $STATE -eq 0 ]; then
+        SITE_ACCESS="HTTPS://${SITE_NAME}"
+        if [ "HTTP_PORT" != "443" ]; then SITE_ACCESS="${SITE_ACCESS}:${SSL_PORT}"; fi
+        echo ""
+        echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+        echo "+                                                          +"
+        echo "+  Your LAMP is ready...                                   +"
+        echo "+                                                          +"
+        echo "+  Please add the following line to your hosts file:       +"
+        echo "+  127.0.0.1   ${SITE_NAME}"
+        echo "+                                                          +"
+        echo "+  Xdebug has been set up on port: ${XDEBUG_PORT}"
+        echo "+  Memcached on: 11211                                     +"
+        echo "+                                                          +"
+        echo "+  All outbound mail will be trapped at                    +"
+        echo "+  ${MAIL_RELAY} which can be viewed with:"
+        echo "+  bash box mail                                           +"
+        echo "+                                                          +"
+        echo "+  See LAMPready.com for more information.                 +"
+        echo "+                                                          +"
+        echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+        echo ""
+        echo "" && exit >/dev/null 2>&1
+    fi
+fi
+
+# Halts the container, stopping all processes associated
+# with it.
+if [ "$ACTION" == "halt" ]; then
+    get_state
+
+    if [ $STATE -eq 0 ]; then
+        systemctl --user stop "container-${SITE_NAME}.service"
+        podman stop "${SITE_NAME}"
+        message "${SITE_NAME} has been halted!"
+        echo "" && exit >/dev/null 2>&1
+    else
+        no_box_running_message
+    fi
+fi
+
+# Halts and destroys any files created by this container.
+if [ "$ACTION" == "destroy" ]; then
+    get_state
+    clean_lamp_container
+    clean_container_directory
+    message "destroy request complete!"
+    echo "" && exit >/dev/null 2>&1
+fi
+
+# View Email Trap
+if [ "$ACTION" == "import" ]; then
+    get_state
+    if [ $STATE -eq 0 ]; then
+        message "Depending on the size of the database(s), this could take some time..."
+        podman exec "${SITE_NAME}" bash /var/www/box import_db
+        echo "" && exit >/dev/null 2>&1
+    else
+        no_box_running_message
+    fi
+fi
+
+# View Email Trap
+if [ "$ACTION" == "export" ]; then
+    get_state
+
+    if [ $STATE -eq 0 ]; then
+        message "Exporting databases in gz format"
+        message "Depending on the size of the database(s), this could take some time..."
+        podman exec "${SITE_NAME}" bash /var/www/box export_db
+        message "Export complete.  Check for the files in ${SITE_HOME}"
+        echo "" && exit >/dev/null 2>&1
+    else
+        no_box_running_message
+    fi
+fi
+
+# View Email Trap
+if [ "$ACTION" == "mail" ]; then
+    get_state
+
+    if [ $STATE -eq 0 ]; then
+        podman exec -it "${SITE_NAME}" /usr/bin/mutt
+        echo "" && exit >/dev/null 2>&1
+    else
+        no_box_running_message
+    fi
+fi
+
+# Enter Mysql Prompt
+if [ "$ACTION" == "mysql" ]; then
+    get_state
+
+    if [ $STATE -eq 0 ]; then
+        podman exec -it "${SITE_NAME}" /usr/bin/mysql
+        echo "" && exit >/dev/null 2>&1
+    else
+        no_box_running_message
+    fi
+fi
+
+
+# Enter lamp shell
+if [ "$ACTION" == "ssh" ]; then
+    get_state
+
+    if [ $STATE -eq 0 ]; then
+        podman exec -it "${SITE_NAME}" /bin/bash
+        echo "" && exit >/dev/null 2>&1
+    else
+        no_box_running_message
+    fi
+fi
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# This is reserved for box deployment from within the
+# container environment.
+
+# export db
+if [ "$ACTION" == "export_db" ]; then
+    export_databases
+    message "Export complete"
+fi
+
+# imports database files
+if [ "$ACTION" == "import_db" ]; then
+    import_databases
+    message "Import complete"
+fi
+
+# builds default httpd files
+if [ "$ACTION" == "init" ]; then
+ 	build_default_httpd_conf
+	touch "/var/www/.container/init.lock"
+fi
