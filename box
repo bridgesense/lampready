@@ -7,7 +7,6 @@
 
 HOSTNAME="lampready.com"
 SUB_DOMAIN="dev"
-MAIL_RELAY="root@${HOSTNAME}"
 PUBLIC_ROOT_DIRECTORY="public_html"
 
 HTTP_PORT="80"
@@ -27,7 +26,7 @@ XDEBUG_MAX_DEPTH="3"
 declare -A DB1=( 
         [DB_NAME]=""
         [DB_USER]=""
-        [DB_PERM]="SELECT, DELETE, INDEX, INSERT, UPDATE, EXECUTE"
+        [DB_PERM]="SELECT, DELETE, INDEX, INSERT, UPDATE, CREATE, EXECUTE"
         [DB_PASS]='' # make sure to use single quotes here to compensate for special chars
         [DB_PREFIX]="" # e.g. wp_
         [DB_TYPE]="custom" # custom, wordpress, magento_1, magento_2
@@ -78,7 +77,7 @@ function build_default_httpd_conf {
     # default http file
     _http_conf_file=/etc/httpd/conf.d/default.conf
 	echo "<VirtualHost *:${HTTP_PORT}>" > $_http_conf_file
-    echo "    ServerAdmin ${MAIL_RELAY}" >> $_http_conf_file
+    echo "    ServerAdmin root@${HOSTNAME}" >> $_http_conf_file
     echo "    ServerName ${HOSTNAME}" >> $_http_conf_file
     echo "    ServerAlias *.${HOSTNAME}" >> $_http_conf_file
     echo "    DocumentRoot /var/www/${PUBLIC_ROOT_DIRECTORY}" >> $_http_conf_file
@@ -110,7 +109,7 @@ function build_default_httpd_conf {
 	echo "SSLSessionCacheTimeout 300" >> $_https_conf_file
 	echo "SSLCryptoDevice builtin" >> $_https_conf_file
 	echo "<VirtualHost _default_:${SSL_PORT}>" >> $_https_conf_file
-    echo "    ServerAdmin ${MAIL_RELAY}" >> $_https_conf_file
+    echo "    ServerAdmin root@${HOSTNAME}" >> $_https_conf_file
     echo "    ServerName ${HOSTNAME}" >> $_https_conf_file
     echo "    ServerAlias *.${HOSTNAME}" >> $_https_conf_file
     echo "    DocumentRoot /var/www/${PUBLIC_ROOT_DIRECTORY}" >> $_https_conf_file
@@ -171,7 +170,7 @@ function build_image {
     echo "RUN rpm -Fvh --nodeps https://github.com/bridgesense/lampready/raw/master/httpd-ubi-init-2.4.37-99.el8.x86_64.rpm"  >> $_file
     echo "RUN dnf clean all; pecl channel-update pecl.php.net" >> $_file
     echo "RUN openssl req -newkey rsa:2048 -x509 -sha256 -days 999999 -nodes -subj '/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=${HOSTNAME}' -out /etc/pki/tls/certs/localhost.crt -keyout /etc/pki/tls/private/localhost.key" >> $_file
-    echo "RUN sed -i \"s@umask 002@umask 022@g\" /etc/bashrc; sed -i \"s@DocumentRoot.*@@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@short_open_tag.*@short_open_tag = On@g\" /etc/php.ini; sed -i \"s@max_execution_time.*@max_execution_time = ${PHP_MAX_EXEC_TIME}@g\" /etc/php.ini; sed -i \"s@max_input_vars.*@max_input_vars = 10000@g\" /etc/php.ini; sed -i \"s@max_memory_limit.*@max_memory_limit = ${PHP_MEM_LIMIT}@g\" /etc/php.ini; sed -i \"s@post_max_size.*@post_max_size = 16M@g\" /etc/php.ini; sed -i \"s@upload_max_filesize.*@upload_max_filesize = 16M@g\" /etc/php.ini; sed -i '/^[mysqld]/a innodb_file_per_table=1\ninnodb_file_format=barracuda\ninnodb_strict_mode=0\ninnodb_large_prefix=1\ninnodb_log_file_size=256M\ntmp_table_size=256MB\nmax_heap_table_size=256MB\nslow_query_log = 1\nslow_query_log_file = /var/log/mysql/mariadb-slow.log\nlong_query_time = 2' /etc/my.cnf.d/mariadb-server.cnf; echo \"smtpd_use_tls=no\nmyhostname = ${HOSTNAME}\nmynetworks = 127.0.0.1 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128\nvirtual_maps = regexp:/etc/postfix/virtual-regexp\" >> /etc/postfix/main.cf; echo \"#/.+@.+/ ${MAIL_RELAY}\" > /etc/postfix/virtual-regexp; sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@/usr/libexec/mysqld@/usr/libexec/mysqld --user=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@User apache@User root@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@group apache@group root@g\" /etc/httpd/conf/httpd.conf" >> $_file
+    echo "RUN sed -i \"s@umask 002@umask 022@g\" /etc/bashrc; sed -i \"s@DocumentRoot.*@@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@short_open_tag.*@short_open_tag = On@g\" /etc/php.ini; sed -i \"s@max_execution_time.*@max_execution_time = ${PHP_MAX_EXEC_TIME}@g\" /etc/php.ini; sed -i \"s@max_input_vars.*@max_input_vars = 10000@g\" /etc/php.ini; sed -i \"s@max_memory_limit.*@max_memory_limit = ${PHP_MEM_LIMIT}@g\" /etc/php.ini; sed -i \"s@post_max_size.*@post_max_size = 16M@g\" /etc/php.ini; sed -i \"s@upload_max_filesize.*@upload_max_filesize = 16M@g\" /etc/php.ini; sed -i '/^[mysqld]/a innodb_file_per_table=1\ninnodb_file_format=barracuda\ninnodb_strict_mode=0\ninnodb_large_prefix=1\ninnodb_log_file_size=256M\ntmp_table_size=256MB\nmax_heap_table_size=256MB\nslow_query_log = 1\nslow_query_log_file = /var/log/mysql/mariadb-slow.log\nlong_query_time = 2' /etc/my.cnf.d/mariadb-server.cnf; printf \"smtpd_use_tls=no\nmyhostname = ${HOSTNAME}\nmynetworks = 127.0.0.1 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128\nvirtual_maps = regexp:/etc/postfix/virtual-regexp\" >> /etc/postfix/main.cf; echo \"/.+@.+/ root\" >> /etc/postfix/virtual-regexp; sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@/usr/libexec/mysqld@/usr/libexec/mysqld --user=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@User apache@User root@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@group apache@group root@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@user = apache@user = root@g\" /etc/php-fpm.d/www.conf; sed -i \"s@group = apache@group = root@g\" /etc/php-fpm.d/www.conf; sed -i \"s@^listen\.acl_users.*@listen.acl_users = root@g\" /etc/php-fpm.d/www.conf; sed -i \"s@sbin/php-fpm@sbin/php-fpm -R@g\" /usr/lib/systemd/system/php-fpm.service" >> $_file
     echo "RUN printf \"\n\" | pecl install 'gmagick-beta'; echo 'extension=gmagick.so' > /etc/php.d/20-gmagick.ini; printf \"\n\" | pecl install memcached; echo 'extension=memcached.so' > /etc/php.d/50-memcached.ini; printf \"\n\" | pecl install mcrypt; echo 'extension=mcrypt.so' > /etc/php.d/30-mcrypt.ini; sed -i \"s@DirectoryIndex index.html@DirectoryIndex index.php index.html@g\" /etc/httpd/conf/httpd.conf" >> $_file
     echo "RUN printf \"\n\" | pecl install 'xdebug'; printf \"zend_extension=/usr/lib64/php/modules/xdebug.so\n\nxdebug.default_enable=1\nxdebug.auto_trace=1\nxdebug.remote_enable=1\nxdebug_remote_host='127.0.0.1'\nxdebug.remote_port=${XDEBUG_PORT}\nxdebug.remote_handler='dbgp'\nxdebug.remote_mode=req\nxdebug.cli_color=1\nxdebug.overload_var_dump=1\nxdebug.remote_log='/tmp/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_ERROR_DISPLAY}\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.var_display_max_data=${XDEBUG_MAX_DATA}\nxdebug.var_display_max_depth=${XDEBUG_MAX_DEPTH}\nxdebug.var_display_max_children=${XDEBUG_MAX_CHILDREN}\" >> /etc/php.d/15-xdebug.ini" >> $_file
     echo "RUN systemctl enable postfix" >> $_file
@@ -184,10 +183,26 @@ function build_image {
 
 # cleans the container directory
 function clean_container_directory {
+   
+    message "Database(s) may be reused in future builds."
+    echo ""
+    accept_clean=false
+    while true; do
+        read -p "Delete database storage? (y/n): " yn
+        case $yn in
+            [Yy]* ) accept_clean=true; break;;
+            [Nn]* ) break;;
+            * ) echo "Please answer y or n.";;
+        esac
+    done
+
     message "Cleaning the container directory: ${SITE_HOME}/.container ..."
-    rm -rf "${SITE_HOME}/.container/mariadb"
+    
+    if [ $accept_clean ]; then
+        rm -rf "${SITE_HOME}/.container/mariadb"
+    fi
     rm -rf "${SITE_HOME}/.container/log"
-    rm -f "${SITE_HOME}/.container/Dockerfile*"
+    rm -f "${SITE_HOME}/.container/Dockerfile.${SITE_NAME}"
     rm -f "${SITE_HOME}/.container/init.lock"
 }
 
@@ -383,7 +398,8 @@ function get_state {
             STATE=3
             if podman images | grep -q "$SITE_NAME"; then
                 STATE=2
-                if podman ps | grep -q $SITE_NAME && [ -f "${HOME}/.config/systemd/user/container-${SITE_NAME}.service" ]; then
+                # if podman ps | grep -q $SITE_NAME && [ -f "${HOME}/.config/systemd/user/container-${SITE_NAME}.service" ]; then
+                if [ -f "${HOME}/.config/systemd/user/container-${SITE_NAME}.service" ]; then
                     STATE=1
                     if podman ps | grep -q "$SITE_NAME"; then
                         STATE=0
@@ -410,21 +426,16 @@ function no_box_running_message {
 function setup_systemd_service {
     message "Setting up systemd service..."
 
-    # clean up any rogue processes
-    if podman ps | grep -q $SITE_NAME; then
-        podman stop $SITE_NAME
-    fi
+    # stop any rogue processes
+    podman stop $SITE_NAME >/dev/null 2>&1
 
-    # clean up any rogue processes
+    # clean up rogue data 
     podman rm $SITE_NAME >/dev/null 2>&1
 
     # remove the current container file if exists
-    if [ -f "${HOME}/.config/systemd/user/container-${SITE_NAME}.service" ]; then
-        rm -rf "${HOME}/.config/systemd/user/container-${SITE_NAME}.service"
-        systemctl --user daemon-reload
-    fi
+    rm -rf "${HOME}/.config/systemd/user/container-${SITE_NAME}.service"
 
-    # start the service with everything in place
+    # container run state parameters
     RUN_PARAMS=(
         -p $HTTP_PORT:80
         -p $SSL_PORT:443
@@ -442,10 +453,12 @@ function setup_systemd_service {
         --tmpfs /var/tmp
         "localhost/${SITE_NAME}:private"
     )
-    podman run -d ${RUN_PARAMS[@]}
 
-    # copy it to a service
-    podman generate systemd --name $SITE_NAME --new > "$HOME/.config/systemd/user/container-${SITE_NAME}.service"
+	# start the service with everything in place
+	podman run -d ${RUN_PARAMS[@]}
+
+	# copy it to a service
+	podman generate systemd --name $SITE_NAME --new > "$HOME/.config/systemd/user/container-${SITE_NAME}.service"
 }
 
 # start local systemd service
@@ -524,8 +537,21 @@ if [ "$ACTION" == "up" ]; then
         systemctl --user daemon-reload
         systemctl --user restart "container-${SITE_NAME}.service"
 		sleep 5
-        message "Importing databases..."
-        podman exec "${SITE_NAME}" bash /var/www/box import_db 
+
+        accept_import=false
+        while true; do
+            read -p "Import database(s) now? (y/n): " yn
+            case $yn in
+                [Yy]* ) accept_import=true; break;;
+                [Nn]* ) break;;
+                * ) echo "Please answer y or n.";;
+            esac
+        done
+
+        if [ $accept_import ]; then
+            message "Setting up and importing any databases using configuration..."
+            podman exec "${SITE_NAME}" bash /var/www/box import_db 
+        fi
     fi
 
     # ready to launch LAMP server
@@ -543,8 +569,7 @@ if [ "$ACTION" == "up" ]; then
         echo "+  Xdebug has been set up on port: ${XDEBUG_PORT}"
         echo "+  Memcached on: 11211                                     +"
         echo "+                                                          +"
-        echo "+  All outbound mail will be trapped at                    +"
-        echo "+  ${MAIL_RELAY} which can be viewed with:"
+        echo "+  All outbound mail is trapped and can be viewed with:    +"
         echo "+  bash box mail                                           +"
         echo "+                                                          +"
         echo "+  See LAMPready.com for more information.                 +"
@@ -562,7 +587,7 @@ if [ "$ACTION" == "halt" ]; then
 
     if [ $STATE -eq 0 ]; then
         systemctl --user stop "container-${SITE_NAME}.service"
-        podman stop "${SITE_NAME}"
+        podman stop "${SITE_NAME}" >/dev/null 2>&1
         message "${SITE_NAME} has been halted!"
         echo "" && exit >/dev/null 2>&1
     else
@@ -575,7 +600,7 @@ if [ "$ACTION" == "destroy" ]; then
     get_state
     clean_lamp_container
     clean_container_directory
-    message "destroy request complete!"
+    message "Destroy request complete!"
     echo "" && exit >/dev/null 2>&1
 fi
 
