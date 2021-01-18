@@ -1,20 +1,34 @@
-![screenshot](https://bridgesense.com/images/dotfiles/lampready.jpg)
-
-
-
 Why LAMPready?
 ---
 
 There are hundreds of great Vagrant boxes out there.  However, I wanted something I could spin up fast without a lot of manual intervention.
 
-Recently added here is the Box script based off of [Scott McCarty's](https://crunchtools.com/moving-linux-services-to-containers) thoughts on using a single podman container to build a LAMP stack.  If you have a rhel subscription, check that script out. More information to follow. 
-
 How it Works
 ---
 
-This script syncs your project's root folder inside the virtual machine.  That allows you to work on the code from either in or outside the box.  Most of these virtual environments do not have mail utilities set up because dealing with the fallout of development spam is never fun.  Sometimes those forms and crons need tested.  LAMPready uses Postfix to route all outbound mail to a single convenient box that can be accessed through Roundcube.
+This script syncs your project's root folder inside the virtual machine.  That allows you to work on the code from either in or outside the box.  Most of these virtual environments do not have mail utilities set up because dealing with the fallout of development spam is never fun.  Sometimes those forms and crons need tested.  LAMPready uses Postfix to route all outbound mail to a single convenient box that can be accessed through in the local mail client.
 
 
+The RHEL Box
+---
+
+I recently added a Box script based off of [Scott McCarty's](https://crunchtools.com/moving-linux-services-to-containers) thoughts on using a single podman container to build a LAMP stack.  If you are on [RHEL](https://www.redhat.com/en/enterprise-linux-8) or use [podman](https://podman.io/), you might want to test it out.
+
+Since CentOS has moved out of the production space, this is a good way to see websites working in the RHEL environment.  Thankfully, there's not much difference.
+
+How to Install the RHEL Box?
+---
+Download the box script into your project's root directory.  A pretty rough [video](https://bridgesense.com/blog/making-friends-with-podman) demonstration can be seen here.  Most of the notes on the Vagrant box below apply as this script closely models it.
+
+```
+curl https://raw.githubusercontent.com/bridgesense/lampready/master/box > box
+```
+
+Edit the top of the file to suit your needs.  To see a list of commands, just run:
+
+```
+bash box
+```
 
 What is a Vagrant Box?
 ---
@@ -22,7 +36,7 @@ Vagrant allows developers to distribute a consistant development environment wit
 
 This development environment includes:
 
-Apache, Bind, Dovecot, PHP7, Postfix, and Roundcube which are already setup and ready to run from your project directory. 
+Apache, PHP7 and Postfix which are already setup and ready to run from your project directory. 
 
 This box also includes a set of lightweight development tools to customize Vim and Tmux from [YADRLite](https://github.com/bridgesense/dotfiles).
 
