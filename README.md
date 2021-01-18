@@ -18,7 +18,7 @@ Since CentOS has moved out of the production space, this is a good way to see we
 
 How to Install the RHEL Box?
 ---
-Download the box script into your project's root directory.  A pretty rough video demonstration can be seen [here](https://bridgesense.com/blog/making-friends-with-podman).  Most of the notes on the Vagrant box below apply as this script closely models it.
+Download the box script into your project's root directory.  A pretty rough video demonstration can be seen [here](https://bridgesense.com/blog/making-friends-with-podman).  Most of the notes on the Vagrant box described below apply, as this script closely models it.
 
 ```
 curl https://raw.githubusercontent.com/bridgesense/lampready/master/box > box
