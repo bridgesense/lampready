@@ -12,13 +12,13 @@ PUBLIC_ROOT_DIRECTORY="public_html"
 HTTP_PORT="80"
 SSL_PORT="443"
 
-PHP_VERSION="7.2" # 7.2 - 7.4
+PHP_VERSION="7.4" # 7.2 - 7.4
 PHP_MAX_EXEC_TIME="600"
 PHP_MEM_LIMIT="512M"
 
 XDEBUG_PORT="9041"
-XDEBUG_FORCE_ERROR_DISPLAY="yes"
-XDEBUG_SCREAM="yes"
+XDEBUG_FORCE_ERROR_DISPLAY="no"
+XDEBUG_SCREAM="no"
 XDEBUG_MAX_DATA="512"
 XDEBUG_MAX_CHILDREN="128"
 XDEBUG_MAX_DEPTH="3"
@@ -254,6 +254,7 @@ function display_help {
     echo "bash box list        lists all installed images"
     echo "bash box mail        view mail in mail trap"
     echo "bash box mysql       enter mysql prompt"
+    echo "bash box reset       the emergency panic button - see notes below"
     echo "bash box ssh         enter the container commandline"
     echo ""
     echo "NOTE ABOUT ROOTLESS CONTAINERS:"
@@ -289,6 +290,16 @@ function display_help {
     echo ""
     echo "${SITE_HOME}/.container/conf.d"
     echo "${SITE_HOME}/${PUBLIC_ROOT_DIRECTORY}"
+    echo ""
+    echo "ABOUT THE RESET FEATURE"
+    echo "Building a box is a bit of a process. There are a lot of moving parts. If the build"
+    echo "process gets interrupted things might not as planned.  You might even get cool errors"
+    echo "like 'error copying layers' or 'error extracting image'.  It's time to reset.  Just a"
+    echo "a fair bit of warning though, this destroys everything you have stashed under podman."
+    echo ""
+    echo "WARNING! The reset option will run the following commands:"
+    echo "podman rm --all"
+    echo "podman rmi --all --force"
     echo ""
     echo "CREDITS:"
     echo "This script was based on Scott McCarty's contribution to this subject,"
@@ -337,7 +348,7 @@ function import_databases {
                 mysql -e "CREATE USER '${var[DB_USER]}'@'localhost' IDENTIFIED BY '$(echo ${var[DB_PASS]})'"
 
                 # granting permissions
-                mysql -e "GRANT ${var[DB_PERM]} ON ${var[DB_NAME]}.* TO '${var[DB_USER]}'@'localhost'; flush privileges"
+                mysql -e "GRANT ${var[DB_PERM]} ON ${var[DB_NAME]}.* TO '${var[DB_USER]}'@'localhost'"
 
                 # modifications for development site name designation
                 if [ "${var[DB_TYPE]}" == "wordpress" ]; then
@@ -377,9 +388,12 @@ function import_databases {
 
         if [ "${DB_MAINT_USER}" != "" ]; then
             # set up maintenance account
+            echo 
             mysql -e "CREATE USER '${DB_MAINT_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB_MAINT_PASS})'"
-            mysql -e "GRANT ${DB_MAINT_PERM} ON * . * TO '${DB_MAINT_USER}'@'localhost'; flush privileges"
+            mysql -e "GRANT ${DB_MAINT_PERM} ON * . * TO '${DB_MAINT_USER}'@'localhost'"
         fi
+
+        mysql -e "FLUSH PRIVILEGES"
     done
 }
 
@@ -661,6 +675,31 @@ if [ "$ACTION" == "mysql" ]; then
     fi
 fi
 
+# emergency reset
+if [ $ACTION == "reset" ]; then
+    accept_reset=false
+    while true; do
+        read -p "WARNING! This will destroy all podman images.  Do you wish to continue? (y/n): " yn
+        case $yn in
+            [Yy]* ) accept_reset=true; break;;
+            [Nn]* ) break;;
+            * ) echo "Please answer y or n.";;
+        esac
+    done
+
+    if [ $accept_reset ]; then
+        get_state
+        clean_lamp_container
+        clean_container_directory
+        podman rm --all 
+        podman rmi --all --force
+        message "You may need to manually clean any other podman projects with bash box destroy."
+        message "Everything has been reset"
+    else
+        message "nothing happened"
+    fi
+    echo "" && exit >/dev/null 2>&1
+fi
 
 # Enter lamp shell
 if [ "$ACTION" == "ssh" ]; then
