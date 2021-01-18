@@ -30,6 +30,7 @@ Edit the top of the file to suit your needs.  To see a list of commands, just ru
 bash box
 ```
 
+
 What is a Vagrant Box?
 ---
 Vagrant allows developers to distribute a consistant development environment with their code.  This box was built with CentOS 8.2. 
