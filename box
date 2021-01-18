@@ -198,7 +198,7 @@ function clean_container_directory {
 
     message "Cleaning the container directory: ${SITE_HOME}/.container ..."
     
-    if [ $accept_clean ]; then
+    if $accept_clean -eq true; then
         rm -rf "${SITE_HOME}/.container/mariadb"
     fi
     rm -rf "${SITE_HOME}/.container/log"
@@ -563,7 +563,7 @@ if [ "$ACTION" == "up" ]; then
             esac
         done
 
-        if [ $accept_import ]; then
+        if $accept_import -eq true; then
             message "Setting up and importing any databases using configuration..."
             podman exec "${SITE_NAME}" bash /var/www/box import_db 
         fi
@@ -687,7 +687,7 @@ if [ $ACTION == "reset" ]; then
         esac
     done
 
-    if [ $accept_reset ]; then
+    if $accept_reset -eq true; then
         get_state
         clean_lamp_container
         clean_container_directory
