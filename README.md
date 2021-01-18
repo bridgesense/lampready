@@ -5,18 +5,9 @@
 Why LAMPready?
 ---
 
-There are hundreds of great Vagrant boxes out there.  However, I wanted something I could spin up fast without a lot of manual intervention.  Some of the features include: 
+There are hundreds of great Vagrant boxes out there.  However, I wanted something I could spin up fast without a lot of manual intervention.
 
-* Working web server on first boot for most configurations
-* Database injection via script settings
-* Multiple versions of PHP selectable via script; 7.2, 7.3 and 7.4
-* Includes the most common PHP modules
-* Easily override error supression
-* Isolates outbound email
-
-    
-#### _What goes in the box -- Stays in the box._
-
+Recently added here is the Box script based off of [Scott McCarty's](https://crunchtools.com/moving-linux-services-to-containers) thoughts on using a single podman container to build a LAMP stack.  If you have a rhel subscription, check that script out. More information to follow. 
 
 How it Works
 ---
