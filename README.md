@@ -24,7 +24,16 @@ Download the box script into your project's root directory.  A pretty rough vide
 curl https://raw.githubusercontent.com/bridgesense/lampready/master/box > box
 ```
 
-Edit the top of the file to suit your needs.  To see a list of commands, just run:
+__PLEASE NOTE:__ Be sure to review the notes at the head of the box script.
+There are two modes, xdebug and honeytrap.  This box is designed to run
+container processes with root permission.  In order for xdebug to work as
+intended, some local network information is exposed with this selection.
+
+The honeytrap option isn't fleshed out yet, but it does build a container
+that more closely resembles the security measures you are familiar with in
+an VM environment.
+
+To see a list of commands, just run:
 
 ```
 bash box

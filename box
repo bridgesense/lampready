@@ -9,6 +9,16 @@ HOSTNAME="lampready.com"
 SUB_DOMAIN="dev"
 PUBLIC_ROOT_DIRECTORY="public_html"
 
+# WARNING! This box runs as root.  Therefore Apache has access to everything root has.
+# Setting the box mode to xdebug allows xdebug to function.  However, you will be
+# exposing private network information to the environment.
+
+# The honeytrap mode is more of a traditional VM box.  All private information about
+# your network is sheltered.
+
+# The two box modes are: xdebug, honeytrap
+BOX_MODE=xdebug
+
 HTTP_PORT="80"
 SSL_PORT="443"
 
@@ -16,12 +26,10 @@ PHP_VERSION="7.4" # 7.2 - 7.4
 PHP_MAX_EXEC_TIME="600"
 PHP_MEM_LIMIT="512M"
 
-XDEBUG_PORT="9041"
-XDEBUG_FORCE_ERROR_DISPLAY="no"
-XDEBUG_SCREAM="no"
-XDEBUG_MAX_DATA="512"
-XDEBUG_MAX_CHILDREN="128"
-XDEBUG_MAX_DEPTH="3"
+XDEBUG_IDEKEY="xdebug"
+XDEBUG_PORT="9003"
+XDEBUG_FORCE_DISPLAY_ERRORS="1"
+XDEBUG_SCREAM="0"
 
 declare -A DB1=( 
         [DB_NAME]=""
@@ -172,7 +180,7 @@ function build_image {
     echo "RUN openssl req -newkey rsa:2048 -x509 -sha256 -days 999999 -nodes -subj '/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=${HOSTNAME}' -out /etc/pki/tls/certs/localhost.crt -keyout /etc/pki/tls/private/localhost.key" >> $_file
     echo "RUN sed -i \"s@umask 002@umask 022@g\" /etc/bashrc; sed -i \"s@DocumentRoot.*@@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@short_open_tag.*@short_open_tag = On@g\" /etc/php.ini; sed -i \"s@max_execution_time.*@max_execution_time = ${PHP_MAX_EXEC_TIME}@g\" /etc/php.ini; sed -i \"s@max_input_vars.*@max_input_vars = 10000@g\" /etc/php.ini; sed -i \"s@max_memory_limit.*@max_memory_limit = ${PHP_MEM_LIMIT}@g\" /etc/php.ini; sed -i \"s@post_max_size.*@post_max_size = 16M@g\" /etc/php.ini; sed -i \"s@upload_max_filesize.*@upload_max_filesize = 16M@g\" /etc/php.ini; sed -i '/^[mysqld]/a innodb_file_per_table=1\ninnodb_file_format=barracuda\ninnodb_strict_mode=0\ninnodb_large_prefix=1\ninnodb_log_file_size=256M\ntmp_table_size=256MB\nmax_heap_table_size=256MB\nslow_query_log = 1\nslow_query_log_file = /var/log/mysql/mariadb-slow.log\nlong_query_time = 2' /etc/my.cnf.d/mariadb-server.cnf; printf \"smtpd_use_tls=no\nmyhostname = ${HOSTNAME}\nmynetworks = 127.0.0.1 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128\nvirtual_maps = regexp:/etc/postfix/virtual-regexp\" >> /etc/postfix/main.cf; echo \"/.+@.+/ root\" >> /etc/postfix/virtual-regexp; sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@/usr/libexec/mysqld@/usr/libexec/mysqld --user=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@User apache@User root@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@group apache@group root@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@user = apache@user = root@g\" /etc/php-fpm.d/www.conf; sed -i \"s@group = apache@group = root@g\" /etc/php-fpm.d/www.conf; sed -i \"s@^listen\.acl_users.*@listen.acl_users = root@g\" /etc/php-fpm.d/www.conf; sed -i \"s@sbin/php-fpm@sbin/php-fpm -R@g\" /usr/lib/systemd/system/php-fpm.service" >> $_file
     echo "RUN printf \"\n\" | pecl install 'gmagick-beta'; echo 'extension=gmagick.so' > /etc/php.d/20-gmagick.ini; printf \"\n\" | pecl install memcached; echo 'extension=memcached.so' > /etc/php.d/50-memcached.ini; printf \"\n\" | pecl install mcrypt; echo 'extension=mcrypt.so' > /etc/php.d/30-mcrypt.ini; sed -i \"s@DirectoryIndex index.html@DirectoryIndex index.php index.html@g\" /etc/httpd/conf/httpd.conf" >> $_file
-    echo "RUN printf \"\n\" | pecl install 'xdebug'; printf \"zend_extension=/usr/lib64/php/modules/xdebug.so\n\nxdebug.default_enable=1\nxdebug.auto_trace=1\nxdebug.remote_enable=1\nxdebug_remote_host='127.0.0.1'\nxdebug.remote_port=${XDEBUG_PORT}\nxdebug.remote_handler='dbgp'\nxdebug.remote_mode=req\nxdebug.cli_color=1\nxdebug.overload_var_dump=1\nxdebug.remote_log='/tmp/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_ERROR_DISPLAY}\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.var_display_max_data=${XDEBUG_MAX_DATA}\nxdebug.var_display_max_depth=${XDEBUG_MAX_DEPTH}\nxdebug.var_display_max_children=${XDEBUG_MAX_CHILDREN}\" >> /etc/php.d/15-xdebug.ini" >> $_file
+    echo "RUN printf \"\n\" | pecl install 'xdebug'; printf \"zend_extension=/usr/lib64/php/modules/xdebug.so\nxdebug.mode=develop,debug,trace\nxdebug.start_with_request=yes\nxdebug.host=127.0.0.1\nxdebug.port=9003\nxdebug.log=/var/log/httpd/xdebug.log\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\n\" >> /etc/php.d/15-xdebug.ini" >> $_file
     echo "RUN systemctl enable postfix" >> $_file
 	echo "RUN systemctl enable mariadb" >> $_file
 	echo "RUN systemctl enable httpd" >> $_file
@@ -183,24 +191,9 @@ function build_image {
 
 # cleans the container directory
 function clean_container_directory {
-   
-    message "Database(s) may be reused in future builds."
-    echo ""
-    accept_clean=false
-    while true; do
-        read -p "Delete database storage? (y/n): " yn
-        case $yn in
-            [Yy]* ) accept_clean=true; break;;
-            [Nn]* ) break;;
-            * ) echo "Please answer y or n.";;
-        esac
-    done
-
     message "Cleaning the container directory: ${SITE_HOME}/.container ..."
     
-    if $accept_clean -eq true; then
-        rm -rf "${SITE_HOME}/.container/mariadb"
-    fi
+    rm -rf "${SITE_HOME}/.container/mariadb"
     rm -rf "${SITE_HOME}/.container/log"
     rm -f "${SITE_HOME}/.container/Dockerfile.${SITE_NAME}"
     rm -f "${SITE_HOME}/.container/init.lock"
@@ -316,7 +309,7 @@ function export_databases {
         if set|grep "^DB$i" >/dev/null 2>&1; then
             declare -n var="DB$i"
             if [ "${var[DB_FILENAME]}" != "" ]; then
-                mysqldump -u root --single-transaction --quick --lock-tables=false --skip-tz-utc ${var[DB_NAME]} | gzip -9 > "${SITE_HOME}\${var[DB_NAME]}.sql.gz"
+                mysqldump -u root --single-transaction --quick --lock-tables=false --skip-tz-utc ${var[DB_NAME]} | gzip -9 > "/var/www/${var[DB_NAME]}.sql.gz"
             fi
         fi
     done
@@ -345,7 +338,7 @@ function import_databases {
                 fi
 
                 # creating user
-                mysql -e "CREATE USER '${var[DB_USER]}'@'localhost' IDENTIFIED BY '$(echo ${var[DB_PASS]})'"
+                mysql -e "CREATE USER '${var[DB_USER]}'@'localhost' IDENTIFIED BY '$(echo ${var[DB_PASS]})';" >/dev/null 2>&1 
 
                 # granting permissions
                 mysql -e "GRANT ${var[DB_PERM]} ON ${var[DB_NAME]}.* TO '${var[DB_USER]}'@'localhost'"
@@ -388,8 +381,7 @@ function import_databases {
 
         if [ "${DB_MAINT_USER}" != "" ]; then
             # set up maintenance account
-            echo 
-            mysql -e "CREATE USER '${DB_MAINT_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB_MAINT_PASS})'"
+            mysql -e "CREATE USER '${DB_MAINT_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB_MAINT_PASS})'" >/dev/null 2>&1
             mysql -e "GRANT ${DB_MAINT_PERM} ON * . * TO '${DB_MAINT_USER}'@'localhost'"
         fi
 
@@ -451,12 +443,17 @@ function setup_systemd_service {
     rm -rf "${HOME}/.config/systemd/user/container-${SITE_NAME}.service"
 
     # container run state parameters
-    RUN_PARAMS=(
+    RUN_PARAMS=()
+    if [ "${BOX_MODE}" == "xdebug" ]; then
+        RUN_PARAMS+=(--network host)
+    fi
+    RUN_PARAMS+=(
         -p $HTTP_PORT:80
         -p $SSL_PORT:443
-        -p $XDEBUG_PORT:9000
+        -p $XDEBUG_PORT:9003
         --hostname $HOSTNAME
         --name $SITE_NAME
+        --network host 
         -v "${SITE_HOME}:/var/www:Z"
         -v "${SITE_HOME}/.container/conf.d:/etc/httpd/conf.d:Z"
         -v "${SITE_HOME}/.container/log:/var/log/httpd:Z"
@@ -552,21 +549,12 @@ if [ "$ACTION" == "up" ]; then
         systemctl --user daemon-reload
         systemctl --user restart "container-${SITE_NAME}.service"
 		sleep 5
-
-        accept_import=false
-        while true; do
-            read -p "Import database(s) now? (y/n): " yn
-            case $yn in
-                [Yy]* ) accept_import=true; break;;
-                [Nn]* ) break;;
-                * ) echo "Please answer y or n.";;
-            esac
-        done
-
-        if $accept_import -eq true; then
-            message "Setting up and importing any databases using configuration..."
-            podman exec "${SITE_NAME}" bash /var/www/box import_db 
-        fi
+    
+        echo ""
+        echo "Setting up the databases based on the information"
+        echo "that was entered at the head of this file..."
+        echo ""
+        podman exec "${SITE_NAME}" bash /var/www/box import_db 
     fi
 
     # ready to launch LAMP server
@@ -601,6 +589,7 @@ if [ "$ACTION" == "halt" ]; then
     get_state
 
     if [ $STATE -eq 0 ]; then
+        message "Stopping the container-${SITE_NAME}.service..."
         systemctl --user stop "container-${SITE_NAME}.service"
         podman stop "${SITE_NAME}" >/dev/null 2>&1
         message "${SITE_NAME} has been halted!"
@@ -627,7 +616,7 @@ if [ "$ACTION" == "export" ]; then
         message "Exporting databases in gz format"
         message "Depending on the size of the database(s), this could take some time..."
         podman exec "${SITE_NAME}" bash /var/www/box export_db
-        message "Export complete.  Check for the files in ${SITE_HOME}"
+        message "Export complete.  Check for *.gz the files in ${SITE_HOME}"
         echo "" && exit >/dev/null 2>&1
     else
         no_box_running_message
