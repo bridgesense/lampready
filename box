@@ -78,7 +78,7 @@ function build_container_directory {
 function build_default_httpd_conf {
     # default http file
     _http_conf_file=/etc/httpd/conf.d/default.conf
-	echo "<VirtualHost *:${HTTP_PORT}>" > $_http_conf_file
+    echo "<VirtualHost *:${HTTP_PORT}>" > $_http_conf_file
     echo "    ServerAdmin root@${HOSTNAME}" >> $_http_conf_file
     echo "    ServerName ${HOSTNAME}" >> $_http_conf_file
     echo "    ServerAlias *.${HOSTNAME}" >> $_http_conf_file
@@ -96,21 +96,21 @@ function build_default_httpd_conf {
     echo "         AllowOverride All" >> $_http_conf_file
     echo "         Require all granted" >> $_http_conf_file
     echo "    </Directory>" >> $_http_conf_file
-	echo "    <Directory \"/var/www/html\">" >> $_http_conf_file
+    echo "    <Directory \"/var/www/html\">" >> $_http_conf_file
     echo "         Options Indexes FollowSymLinks" >> $_http_conf_file
     echo "         AllowOverride All" >> $_http_conf_file
     echo "         Require all granted" >> $_http_conf_file
-	echo "    </Directory>" >> $_http_conf_file
+    echo "    </Directory>" >> $_http_conf_file
     echo "</VirtualHost>" >> $_http_conf_file
 
     # default https file
     _https_conf_file=/etc/httpd/conf.d/default-ssl.conf
-	echo "Listen ${SSL_PORT} https" > $_https_conf_file
-	echo "SSLPassPhraseDialog exec:/usr/libexec/httpd-ssl-pass-dialog" >> $_https_conf_file
-	echo "SSLSessionCache        shmcb:/run/httpd/sslcache(512000)" >> $_https_conf_file
-	echo "SSLSessionCacheTimeout 300" >> $_https_conf_file
-	echo "SSLCryptoDevice builtin" >> $_https_conf_file
-	echo "<VirtualHost _default_:${SSL_PORT}>" >> $_https_conf_file
+    echo "Listen ${SSL_PORT} https" > $_https_conf_file
+    echo "SSLPassPhraseDialog exec:/usr/libexec/httpd-ssl-pass-dialog" >> $_https_conf_file
+    echo "SSLSessionCache        shmcb:/run/httpd/sslcache(512000)" >> $_https_conf_file
+    echo "SSLSessionCacheTimeout 300" >> $_https_conf_file
+    echo "SSLCryptoDevice builtin" >> $_https_conf_file
+    echo "<VirtualHost _default_:${SSL_PORT}>" >> $_https_conf_file
     echo "    ServerAdmin root@${HOSTNAME}" >> $_https_conf_file
     echo "    ServerName ${HOSTNAME}" >> $_https_conf_file
     echo "    ServerAlias *.${HOSTNAME}" >> $_https_conf_file
@@ -135,16 +135,16 @@ function build_default_httpd_conf {
     echo "    <Directory \"/var/www/cgi-bin\">" >> $_https_conf_file
     echo "         SSLOptions +StdEnvVars" >> $_https_conf_file
     echo "    </Directory>" >> $_https_conf_file
-	echo "    <Directory \"/var/www\">" >> $_https_conf_file
+    echo "    <Directory \"/var/www\">" >> $_https_conf_file
     echo "         Options Indexes FollowSymLinks" >> $_https_conf_file
     echo "         AllowOverride All" >> $_https_conf_file
     echo "         Require all granted" >> $_https_conf_file
     echo "    </Directory>" >> $_https_conf_file
-	echo "    <Directory \"/var/www/html\">" >> $_https_conf_file
+    echo "    <Directory \"/var/www/html\">" >> $_https_conf_file
     echo "         Options Indexes FollowSymLinks" >> $_https_conf_file
     echo "         AllowOverride All" >> $_https_conf_file
     echo "         Require all granted" >> $_https_conf_file
-	echo "    </Directory>" >> $_https_conf_file
+    echo "    </Directory>" >> $_https_conf_file
     echo "</VirtualHost>" >> $_https_conf_file
 }
 
@@ -176,8 +176,8 @@ function build_image {
     echo "RUN printf \"\n\" | pecl install 'gmagick-beta'; echo 'extension=gmagick.so' > /etc/php.d/20-gmagick.ini; printf \"\n\" | pecl install memcached; echo 'extension=memcached.so' > /etc/php.d/50-memcached.ini; printf \"\n\" | pecl install mcrypt; echo 'extension=mcrypt.so' > /etc/php.d/30-mcrypt.ini; sed -i \"s@DirectoryIndex index.html@DirectoryIndex index.php index.html@g\" /etc/httpd/conf/httpd.conf" >> $_file
     echo "RUN printf \"\n\" | pecl install 'xdebug'; printf \"zend_extension=/usr/lib64/php/modules/xdebug.so\nxdebug.mode=develop,debug,trace\nxdebug.start_with_request=yes\nxdebug.host=127.0.0.1\nxdebug.port=9003\nxdebug.log=/var/log/httpd/xdebug.log\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\n\" >> /etc/php.d/15-xdebug.ini" >> $_file
     echo "RUN systemctl enable postfix" >> $_file
-	echo "RUN systemctl enable mariadb" >> $_file
-	echo "RUN systemctl enable httpd" >> $_file
+    echo "RUN systemctl enable mariadb" >> $_file
+    echo "RUN systemctl enable httpd" >> $_file
     echo "RUN systemctl enable php-fpm" >> $_file
     echo "RUN systemctl enable memcached" >> $_file
     podman build -t "${SITE_NAME}:private" -f $_file
@@ -451,7 +451,7 @@ function setup_systemd_service {
         -v "${SITE_HOME}:/var/www:Z"
         -v "${SITE_HOME}/.container/conf.d:/etc/httpd/conf.d:Z"
         -v "${SITE_HOME}/.container/log:/var/log/httpd:Z"
-		-v "${SITE_HOME}/.container/mariadb:/var/lib/mysql:Z"
+        -v "${SITE_HOME}/.container/mariadb:/var/lib/mysql:Z"
         --tmpfs /etc
         --tmpfs /usr/lib/systemd/system
         --tmpfs /var/lib
@@ -460,11 +460,11 @@ function setup_systemd_service {
         "localhost/${SITE_NAME}:private"
     )
 
-	# start the service with everything in place
-	podman run -d ${RUN_PARAMS[@]}
+    # start the service with everything in place
+    podman run -d ${RUN_PARAMS[@]}
 
-	# copy it to a service
-	podman generate systemd --name $SITE_NAME --new > "$HOME/.config/systemd/user/container-${SITE_NAME}.service"
+    # copy it to a service
+    podman generate systemd --name $SITE_NAME --new > "$HOME/.config/systemd/user/container-${SITE_NAME}.service"
 }
 
 # start local systemd service
@@ -535,14 +535,14 @@ if [ "$ACTION" == "up" ]; then
         podman exec "${SITE_NAME}" bash /var/www/box init
         _status=false
         while $_status -eq false; do
-			if [ -f "/var/www/.container/init.lock" ]; then
-				_status=true
-			fi
-			sleep 1
-		done
+            if [ -f "/var/www/.container/init.lock" ]; then
+                _status=true
+            fi
+            sleep 1
+        done
         systemctl --user daemon-reload
         systemctl --user restart "container-${SITE_NAME}.service"
-		sleep 5
+        sleep 5
     
         echo ""
         echo "Setting up the databases based on the information"
@@ -714,6 +714,6 @@ fi
 
 # builds default httpd files
 if [ "$ACTION" == "init" ]; then
- 	build_default_httpd_conf
-	touch "/var/www/.container/init.lock"
+    build_default_httpd_conf
+    touch "/var/www/.container/init.lock"
 fi
