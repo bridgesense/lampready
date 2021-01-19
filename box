@@ -7,7 +7,7 @@
 
 HOSTNAME="lampready.com"
 SUB_DOMAIN="dev"
-PUBLIC_ROOT_DIRECTORY="public_html"
+PUBLIC_ROOT_PATH="public_html"
 
 HTTP_PORT="80"
 SSL_PORT="443"
@@ -68,9 +68,9 @@ function build_container_directory {
     if [ ! -d "${SITE_HOME}/.container/conf.d" ]; then
         mkdir -p "${SITE_HOME}/.container/conf.d"
     fi
-    if [ ! -d "${SITE_HOME}/${PUBLIC_ROOT_DIRECTORY}" ]; then
-        mkdir -p "${SITE_HOME}/${PUBLIC_ROOT_DIRECTORY}"
-        message "It worked!! Please do something about the missing files in ${SITE_HOME}/${PUBLIC_ROOT_DIRECTORY}" > "${SITE_HOME}/${PUBLIC_ROOT_DIRECTORY}/index.html"
+    if [ ! -d "${SITE_HOME}/${PUBLIC_ROOT_PATH}" ]; then
+        mkdir -p "${SITE_HOME}/${PUBLIC_ROOT_PATH}"
+        message "It worked!! Please do something about the missing files in ${SITE_HOME}/${PUBLIC_ROOT_PATH}" > "${SITE_HOME}/${PUBLIC_ROOT_PATH}/index.html"
     fi
 }
 
@@ -82,7 +82,7 @@ function build_default_httpd_conf {
     echo "    ServerAdmin root@${HOSTNAME}" >> $_http_conf_file
     echo "    ServerName ${HOSTNAME}" >> $_http_conf_file
     echo "    ServerAlias *.${HOSTNAME}" >> $_http_conf_file
-    echo "    DocumentRoot /var/www/${PUBLIC_ROOT_DIRECTORY}" >> $_http_conf_file
+    echo "    DocumentRoot /var/www/${PUBLIC_ROOT_PATH}" >> $_http_conf_file
     echo "    CustomLog \"/var/log/httpd/${HOSTNAME}.access.log\" common" >> $_http_conf_file
     echo "    ErrorLog \"/var/log/httpd/${HOSTNAME}.error.log\"" >> $_http_conf_file
     echo "    <Proxy \"unix:/run/php-fpm/www.sock|fcgi://php-fpm\">" >> $_http_conf_file
@@ -114,7 +114,7 @@ function build_default_httpd_conf {
     echo "    ServerAdmin root@${HOSTNAME}" >> $_https_conf_file
     echo "    ServerName ${HOSTNAME}" >> $_https_conf_file
     echo "    ServerAlias *.${HOSTNAME}" >> $_https_conf_file
-    echo "    DocumentRoot /var/www/${PUBLIC_ROOT_DIRECTORY}" >> $_https_conf_file
+    echo "    DocumentRoot /var/www/${PUBLIC_ROOT_PATH}" >> $_https_conf_file
     echo "    CustomLog \"/var/log/httpd/${HOSTNAME}.ssl-access.log\" common" >> $_https_conf_file
     echo "    ErrorLog \"/var/log/httpd/${HOSTNAME}.ssl-error.log\"" >> $_https_conf_file
     echo "    <Proxy \"unix:/run/php-fpm/www.sock|fcgi://php-fpm\">" >> $_https_conf_file
@@ -276,7 +276,7 @@ function display_help {
     echo "will not be affected:"
     echo ""
     echo "${SITE_HOME}/.container/conf.d"
-    echo "${SITE_HOME}/${PUBLIC_ROOT_DIRECTORY}"
+    echo "${SITE_HOME}/${PUBLIC_ROOT_PATH}"
     echo ""
     echo "ABOUT THE RESET FEATURE"
     echo "Building a box is a bit of a process. There are a lot of moving parts. If the build"
@@ -357,12 +357,12 @@ function import_databases {
                     mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_cache"
                     mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_cache_tag"
                     mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_session"
-                    cd "/var/www/${PUBLIC_ROOT_DIRECTORY}"
+                    cd "/var/www/${PUBLIC_ROOT_PATH}"
                     php -f shell/compiler.php -- disable
                     php -f shell/indexer.php reindexall
                 fi
                 if [ "${var[DB_TYPE]}" == "magento_2" ]; then
-                    cd "/var/www/${PUBLIC_ROOT_DIRECTORY}"
+                    cd "/var/www/${PUBLIC_ROOT_PATH}"
                     php bin/magento setup:store-config:set --base-url="http://${SITE_NAME}/"
                     php bin/magento setup:store-config:set --base-url-secure="https://${SITE_NAME}/"
                     php bin/magento cache:flush
