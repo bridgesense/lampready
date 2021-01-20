@@ -32,8 +32,8 @@ declare -A DB1=(
         [DB_PASS]='' # make sure to use single quotes here to compensate for special chars
         [DB_PREFIX]="" # e.g. wp_
         [DB_TYPE]="custom" # custom, wordpress, magento_1, magento_2
-        [DB_FILENAME]=""
-        [DB_CUSTOM_FUNCTIONS_FILENAME]=""
+        [DB_FILENAME]="" # my_db.sql
+        [DB_CUSTOM_FUNCTIONS_FILENAME]="" # my_custom_functions.sql
 )
 
 # declare -A DB2=(...
@@ -47,9 +47,14 @@ DB_MAINT_PERM="ALL"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Don't edit below this point unless you really want to
 
+# The default box parameters require a registry login
+# podman login registry.access.redhat.com
+IMAGE="registry.access.redhat.com/ubi8/ubi-init"
+
 SITE_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ACTION="${1:-help}"
 if [ "$SUB_DOMAIN" != "" ]; then SITE_NAME="${SUB_DOMAIN}.${HOSTNAME}"; else SITE_NAME=$HOSTNAME; fi
+MULTI_BOX=0
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # functions
@@ -81,7 +86,7 @@ function build_default_httpd_conf {
     echo "<VirtualHost *:${HTTP_PORT}>" > $_http_conf_file
     echo "    ServerAdmin root@${HOSTNAME}" >> $_http_conf_file
     echo "    ServerName ${HOSTNAME}" >> $_http_conf_file
-    echo "    ServerAlias *.${HOSTNAME}" >> $_http_conf_file
+    echo "    ServerAlias ${SUB_DOMAIN}.${HOSTNAME}" >> $_http_conf_file
     echo "    DocumentRoot /var/www/${PUBLIC_ROOT_PATH}" >> $_http_conf_file
     echo "    CustomLog \"/var/log/httpd/${HOSTNAME}.access.log\" common" >> $_http_conf_file
     echo "    ErrorLog \"/var/log/httpd/${HOSTNAME}.error.log\"" >> $_http_conf_file
@@ -113,7 +118,7 @@ function build_default_httpd_conf {
     echo "<VirtualHost _default_:${SSL_PORT}>" >> $_https_conf_file
     echo "    ServerAdmin root@${HOSTNAME}" >> $_https_conf_file
     echo "    ServerName ${HOSTNAME}" >> $_https_conf_file
-    echo "    ServerAlias *.${HOSTNAME}" >> $_https_conf_file
+    echo "    ServerAlias ${SUB_DOMAIN}.${HOSTNAME}" >> $_https_conf_file
     echo "    DocumentRoot /var/www/${PUBLIC_ROOT_PATH}" >> $_https_conf_file
     echo "    CustomLog \"/var/log/httpd/${HOSTNAME}.ssl-access.log\" common" >> $_https_conf_file
     echo "    ErrorLog \"/var/log/httpd/${HOSTNAME}.ssl-error.log\"" >> $_https_conf_file
@@ -162,7 +167,7 @@ function build_image {
     # podman build -t lampready:private -f Dockerfile.lampready
     message "Building a custom iamge form ${SITE_NAME} ..."
     _file="${SITE_HOME}/.container/Dockerfile.${SITE_NAME}"
-    echo "FROM registry.access.redhat.com/ubi8/ubi-init" > $_file
+    echo "FROM ${IMAGE}" > $_file
     echo "LABEL maintainer='bridgesense llc" >> $_file
     echo "LABEL description='Provides a full LAMP stack, xdebug and mail shield for PHP development.'" >> $_file
     echo "LABEL io.k8s.display-name='An RHEL8 full LAMP stack'" >> $_file
@@ -241,6 +246,7 @@ function display_help {
     echo "bash box list        lists all installed images"
     echo "bash box mail        view mail in mail trap"
     echo "bash box mysql       enter mysql prompt"
+    echo "bash box ps          list running containers"
     echo "bash box reset       the emergency panic button - see notes below"
     echo "bash box ssh         enter the container commandline"
     echo ""
@@ -319,7 +325,7 @@ function import_databases {
             declare -n var="DB$i"
             if [ "${var[DB_NAME]}" != "" ] && [ "${var[DB_USER]}" != "" ]; then
                 # creating database
-                mysql -e "CREATE DATABASE ${var[DB_NAME]}"
+                mysql -e "CREATE DATABASE ${var[DB_NAME]}" >/dev/null 2>&1 
 
                 # importing database file if exists
                 if [ "${var[DB_FILENAME]}" != "" ] && [ -f "/var/www/${var[DB_FILENAME]}" ]; then
@@ -385,25 +391,29 @@ function import_databases {
 
 # get current state of container
 function get_state {
-    # 5 = failed validation of minimum requirements for the script
+    # 6 = failed validation of minimum requirements for the script
+    # 5 = box is already running
     # 4 = ready to build file structure
     # 3 = ready to build image
     # 2 = ready to set up LAMP service
     # 1 = ready to run LAMP service
     # 0 = Lamp Service is Running
 
-    STATE=5
-    if grep -q -i "release 8" /etc/redhat-release && [ -x "$(command -v podman)" ]; then
-        STATE=4
-        if [ -d "${SITE_HOME}/.container/log" ]; then
-            STATE=3
-            if podman images | grep -q "$SITE_NAME"; then
-                STATE=2
-                # if podman ps | grep -q $SITE_NAME && [ -f "${HOME}/.config/systemd/user/container-${SITE_NAME}.service" ]; then
-                if [ -f "${HOME}/.config/systemd/user/container-${SITE_NAME}.service" ]; then
-                    STATE=1
-                    if podman ps | grep -q "$SITE_NAME"; then
-                        STATE=0
+    STATE=6
+    if [ -x "$(command -v podman)" ]; then
+        STATE=5
+        if ! podman container list | grep -q "localhost" || podman container list | grep -q "${SITE_NAME}" || MULTI_BOX -eq 1; then
+            STATE=4
+            if [ -d "${SITE_HOME}/.container/log" ]; then
+                STATE=3
+                if podman images | grep -q "$SITE_NAME"; then
+                    STATE=2
+                    # if podman ps | grep -q $SITE_NAME && [ -f "${HOME}/.config/systemd/user/container-${SITE_NAME}.service" ]; then
+                    if [ -f "${HOME}/.config/systemd/user/container-${SITE_NAME}.service" ]; then
+                        STATE=1
+                        if podman ps | grep -q "$SITE_NAME"; then
+                            STATE=0
+                        fi
                     fi
                 fi
             fi
@@ -475,17 +485,6 @@ function start_systemd_service {
     systemctl --user start "container-${SITE_NAME}"
 }
 
-# validation warning
-function validation_warning {
-    echo ""
-    echo "This script is designed to be used Red Hat Linux and a valid subscription."
-    echo "Also please make sure that the following package is installed:"
-    echo ""
-    echo "sudo dnf module install container-tools"
-    echo ""
-}
-
-
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # routing
 if [ "$ACTION" == "help" ]; then
@@ -499,8 +498,32 @@ if [ "$ACTION" == "up" ]; then
     get_state
 
     # handle validation warning
+    if [ $STATE -eq 6 ]; then
+        echo ""
+        echo "This script is designed to be used with Red Hat Linux"
+        echo "Please make sure that the following package is installed:"
+        echo ""
+        echo "sudo dnf module install container-tools"
+        echo ""
+    fi
+
+    # already running? 
     if [ $STATE -eq 5 ]; then
-        validation_warning
+        echo "" 
+        echo "WARNING! Another instance of this script may already be running." 
+        echo "" 
+        podman container list 
+        echo "" 
+        echo "" 
+        while true; do
+            read -p "Do you wish to proceed? (y/n): " yn
+            case $yn in
+                [Yy]* ) MULTI_BOX=1; break;;
+                [Nn]* ) break;;
+                * ) echo "Please answer y or n.";;
+            esac
+        done
+        get_state
     fi
 
     # builds the container directory
@@ -656,6 +679,11 @@ if [ "$ACTION" == "mysql" ]; then
     else
         no_box_running_message
     fi
+fi
+
+# Enter Mysql Prompt
+if [ "$ACTION" == "ps" ]; then
+   podman container list 
 fi
 
 # emergency reset

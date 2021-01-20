@@ -12,13 +12,20 @@ This script syncs your project's root folder inside the virtual machine.  That a
 The RHEL Box
 ---
 
-I recently added a Box script based off of [Scott McCarty's](https://crunchtools.com/moving-linux-services-to-containers) thoughts on using a single podman container to build a LAMP stack.  If you are on [RHEL](https://www.redhat.com/en/enterprise-linux-8) or use [podman](https://podman.io/), you might want to test it out.
+I recently added a Box script based off of [Scott McCarty's](https://crunchtools.com/moving-linux-services-to-containers)
+thoughts on using a single podman container to build a LAMP stack.  If you use
+[podman](https://podman.io/), you might want to test it out.  Podman will need
+to be logged into registry.access.redhat.com in this example.
 
-Since CentOS has moved out of the production space, this is a good way to see websites working in the RHEL environment.  Thankfully, there's not much difference.
+Since CentOS has moved out of the production space, this is a good way to see
+websites working in the RHEL environment.  Thankfully, there's not much difference.
 
 How to Install the RHEL Box?
 ---
-Download the box script into your project's root directory.  A pretty rough video demonstration can be seen [here](https://bridgesense.com/blog/making-friends-with-podman).  Most of the notes on the Vagrant box described below apply, as this script closely models it.
+Download the box script into your project's root directory.  A pretty rough
+video demonstration can be seen [here](https://bridgesense.com/blog/making-friends-with-podman).
+Most of the notes on the Vagrant box described below apply, as this script
+closely models it.
 
 ```
 curl https://raw.githubusercontent.com/bridgesense/lampready/master/box > box
