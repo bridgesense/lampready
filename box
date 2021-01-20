@@ -96,7 +96,7 @@ function build_default_httpd_conf {
     echo "         AllowOverride All" >> $_http_conf_file
     echo "         Require all granted" >> $_http_conf_file
     echo "    </Directory>" >> $_http_conf_file
-    echo "    <Directory \"/var/www/html\">" >> $_http_conf_file
+    echo "    <Directory \"/var/www/${PUBLIC_ROOT_PATH}\">" >> $_http_conf_file
     echo "         Options Indexes FollowSymLinks" >> $_http_conf_file
     echo "         AllowOverride All" >> $_http_conf_file
     echo "         Require all granted" >> $_http_conf_file
@@ -140,7 +140,7 @@ function build_default_httpd_conf {
     echo "         AllowOverride All" >> $_https_conf_file
     echo "         Require all granted" >> $_https_conf_file
     echo "    </Directory>" >> $_https_conf_file
-    echo "    <Directory \"/var/www/html\">" >> $_https_conf_file
+    echo "    <Directory \"/var/www/${PUBLIC_ROOT_PATH}\">" >> $_https_conf_file
     echo "         Options Indexes FollowSymLinks" >> $_https_conf_file
     echo "         AllowOverride All" >> $_https_conf_file
     echo "         Require all granted" >> $_https_conf_file
