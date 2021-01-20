@@ -16,9 +16,9 @@ PHP_VERSION="7.4" # 7.2 - 7.4
 PHP_MAX_EXEC_TIME="600"
 PHP_MEM_LIMIT="512M"
 
-# WARNING! This box runs as root.  Therefore Apache has access to everything root has.
-# Setting the box mode to xdebug allows xdebug to function.  However, you will be
-# exposing private network information to the conatiner environment -- not much else though.
+# WARNING! Apache runs as root in this container to handle permissions as you would
+# expect.  Therefore Apache has access to everything root has. When enabling xdebug 
+# you will be exposing private network information to the container environment.
 XDEBUG_ENABLE="0" 
 XDEBUG_IDEKEY="xdebug"
 XDEBUG_PORT="9003"
