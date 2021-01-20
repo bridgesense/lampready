@@ -402,7 +402,7 @@ function get_state {
     STATE=6
     if [ -x "$(command -v podman)" ]; then
         STATE=5
-        if ! podman container list | grep -q "localhost" || podman container list | grep -q "${SITE_NAME}" || MULTI_BOX -eq 1; then
+        if ! podman container list | grep -q "localhost" || podman container list | grep -q "${SITE_NAME}" || [ $MULTI_BOX -eq 1 ]; then
             STATE=4
             if [ -d "${SITE_HOME}/.container/log" ]; then
                 STATE=3
