@@ -18,7 +18,7 @@ thoughts on using a single podman container to build a LAMP stack.  If you use
 familiar with podman, hopefully a quick scan through this script will
 demystify the process. 
 
-In this example Podman will need to be logged into the _registry.access.redhat.com_.  
+In this example Podman will need to be logged into the _registry.access.redhat.com_.
 However you may find something suitable on one of the non-subscription repositories.
 In either case, this script is designed to work with Red Hat Enterprise Linux (RHEL).
 
