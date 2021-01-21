@@ -171,7 +171,7 @@ function build_image {
     _modules="nodejs python36 ruby"
 
     # yarn
-    _yarn="npm install -g npm@latest; npm install --global yarn;"
+    _yarn="npm install -g npm@latest; npm install --global yarn gulp-cli typescript;"
 
     # composer
     _composer="curl https://getcomposer.org/composer-stable.phar >> /usr/local/bin/composer; \
