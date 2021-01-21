@@ -6,7 +6,7 @@ There are hundreds of great Vagrant boxes out there.  However, I wanted somethin
 How it Works
 ---
 
-This script syncs your project's root folder inside the virtual machine.  That allows you to work on the code from either in or outside the box.  Most of these virtual environments do not have mail utilities set up because dealing with the fallout of development spam is never fun.  Sometimes those forms and crons need tested.  LAMPready uses Postfix to route all outbound mail to a single convenient box that can be accessed through in the local mail client.
+This script syncs your project's root folder inside the virtual machine.  That allows you to work on the code from either in or outside the box.  Most of these virtual environments do not have mail utilities set up because dealing with the fallout of development spam is never fun.  Sometimes those forms and crons need tested.  LAMPready uses Postfix to route all outbound mail to a single convenient box that can be accessed with the local mail client.
 
 
 The RHEL Box
