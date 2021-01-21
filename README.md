@@ -12,13 +12,27 @@ This script syncs your project's root folder inside the virtual machine.  That a
 The RHEL Box
 ---
 
-I recently added a Box script based off of [Scott McCarty's](https://crunchtools.com/moving-linux-services-to-containers)
+I recently added the _box_ script which is based off [Scott McCarty's](https://crunchtools.com/moving-linux-services-to-containers)
 thoughts on using a single podman container to build a LAMP stack.  If you use
-[podman](https://podman.io/), you might want to test it out.  Podman will need
-to be logged into registry.access.redhat.com in this example.
+[podman](https://podman.io/), you might want to test this out.  If you aren't
+familiar with podman, hopefully a quick scan through this script will
+demystify the process. 
 
-Since CentOS has moved out of the production space, this is a good way to see
+In this example Podman will need to be logged into the _registry.access.redhat.com_.  
+However you may find something suitable on one of the non-subscription repositories.
+In either case, this script is designed to work with Red Hat Enterprise Linux (RHEL).
+
+```
+podman login registry.access.redhat.com
+```
+
+Right now, Red Hat is allowing access to this repository at no charge.  All you need
+to do is [register](https://developers.redhat.com/#assembly-field-sections-7105) as a 
+developer.  Since CentOS has moved out of the production space, this is a good way to see
 websites working in the RHEL environment.  Thankfully, there's not much difference.
+
+By default a container does not use up one of your deployment slots.  Inside the
+container you already have access to the main repository.
 
 How to Install the RHEL Box?
 ---
