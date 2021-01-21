@@ -170,8 +170,8 @@ function build_image {
     # modules
     _modules="nodejs python36 ruby"
 
-    # yarn
-    _yarn="npm install -g npm@latest; npm install --global yarn gulp-cli typescript;"
+    # npm globals
+    _npm_globals="npm install -g npm@latest; npm install --global yarn gulp-cli typescript;"
 
     # composer
     _composer="curl https://getcomposer.org/composer-stable.phar >> /usr/local/bin/composer; \
@@ -263,7 +263,7 @@ function build_image {
     echo "RUN dnf clean all;" >> $_file
     echo "RUN ${_openssl}" >> $_file
     echo "RUN ${_perm} ${_apache_config} ${_php_config} ${_fpm_config} ${_mariadb_config} ${_postfix_config}" >> $_file
-    echo "RUN ${_pecl} ${_yarn} ${_composer} ${_xdebug} " >> $_file
+    echo "RUN ${_pecl} ${_npm_globals} ${_composer} ${_xdebug} " >> $_file
     echo "RUN systemctl enable postfix" >> $_file
     echo "RUN systemctl enable mariadb" >> $_file
     echo "RUN systemctl enable httpd" >> $_file
