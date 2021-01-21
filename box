@@ -115,6 +115,7 @@ function build_default_httpd_conf {
     echo "SSLSessionCache        shmcb:/run/httpd/sslcache(512000)" >> $_https_conf_file
     echo "SSLSessionCacheTimeout 300" >> $_https_conf_file
     echo "SSLCryptoDevice builtin" >> $_https_conf_file
+    echo "Timeout ${PHP_MAX_EXEC_TIME}"
     echo "<VirtualHost _default_:${SSL_PORT}>" >> $_https_conf_file
     echo "    ServerAdmin root@${HOSTNAME}" >> $_https_conf_file
     echo "    ServerName ${HOSTNAME}" >> $_https_conf_file
