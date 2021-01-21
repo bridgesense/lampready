@@ -17,15 +17,15 @@ PHP_MAX_EXEC_TIME="600"
 PHP_MEM_LIMIT="512M"
 
 # WARNING! Apache runs as root in this container to handle permissions as you would
-# expect.  Therefore Apache has access to everything root has. When enabling xdebug 
+# expect.  Therefore Apache has access to everything root has. When enabling xdebug
 # you will be exposing private network information to the container environment.
-XDEBUG_ENABLE="0" 
+XDEBUG_ENABLE="0"
 XDEBUG_IDEKEY="xdebug"
 XDEBUG_PORT="9003"
 XDEBUG_FORCE_DISPLAY_ERRORS="1"
 XDEBUG_SCREAM="0"
 
-declare -A DB1=( 
+declare -A DB1=(
         [DB_NAME]=""
         [DB_USER]=""
         [DB_PERM]="SELECT, DELETE, INDEX, INSERT, UPDATE, CREATE, EXECUTE"
@@ -163,6 +163,91 @@ function build_image {
         podman rm $SITE_NAME >/dev/null 2>&1
         podman rmi "${SITE_NAME}:private" >/dev/null 2>&1
     fi
+
+    # tools
+    _tools="make crontabs cronie postfix mutt iputils net-tools git"
+
+    # modules
+    _modules="nodejs python36 ruby"
+
+    # yarn
+    _yarn="npm install -g npm@latest; npm install --global yarn;"
+
+    # composer
+    _composer="curl https://getcomposer.org/composer-stable.phar >> /usr/local/bin/composer; \
+        chmod +x /usr/local/bin/composer; \
+        echo \"alias composer='env COMPOSER_ALLOW_SUPERUSER=1 composer'\" >> /root/.bashrc; \
+        "
+
+    # permissions handling
+    _perm="sed -i \"s@umask 002@umask 022@g\" /etc/bashrc;"
+
+    # apache
+    _apache="httpd httpd-tools mod_ssl openssl"
+
+    # Apache config
+    _apache_config="sed -i \"s@DocumentRoot.*@@g\" /etc/httpd/conf/httpd.conf; \
+        sed -i \"s@User apache@User root@g\" /etc/httpd/conf/httpd.conf; \
+        sed -i \"s@group apache@group root@g\" /etc/httpd/conf/httpd.conf; \
+        sed -i \"s@DirectoryIndex index.html@DirectoryIndex index.php index.html@g\" /etc/httpd/conf/httpd.conf; \
+        "
+
+    # openssl
+    _openssl="openssl req -newkey rsa:2048 -x509 -sha256 -days 999999 \
+        -nodes -subj '/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=${HOSTNAME}' \
+        -out /etc/pki/tls/certs/localhost.crt -keyout /etc/pki/tls/private/localhost.key; \
+        "
+
+    # Mariadb
+    _mariadb="mariadb-server mariadb"
+
+    # mariadb config
+    _mariadb_config="sed -i '/^[mysqld]/a innodb_file_per_table=1\ninnodb_file_format=barracuda\ninnodb_strict_mode=0\ninnodb_large_prefix=1\ninnodb_log_file_size=256M\ntmp_table_size=256MB\nmax_heap_table_size=256MB\nslow_query_log = 1\nslow_query_log_file = /var/log/mysql/mariadb-slow.log\nlong_query_time = 2' /etc/my.cnf.d/mariadb-server.cnf; \
+        sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; \
+        sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; \
+        sed -i \"s@/usr/libexec/mysqld@/usr/libexec/mysqld --user=root@g\" /usr/lib/systemd/system/mariadb.service; \
+        "
+
+    # PHP modules
+    _php="GraphicsMagick-devel php-devel libmcrypt-devel memcached \
+        libmemcached-devel zlib-devel php-pear php-gd php-curl \
+        php-mysqlnd php-pdo php-soap php-bcmath php-intl php-pecl-zip \
+        "
+
+    # php config
+    _php_config="sed -i \"s@short_open_tag.*@short_open_tag=On@g\" /etc/php.ini; \
+        sed -i \"s@max_execution_time.*@max_execution_time=${PHP_MAX_EXEC_TIME}@g\" /etc/php.ini; \
+        sed -i \"s@max_input_vars.*@max_input_vars=10000@g\" /etc/php.ini; \
+        sed -i \"s@max_memory_limit.*@max_memory_limit=${PHP_MEM_LIMIT}@g\" /etc/php.ini; \
+        sed -i \"s@post_max_size.*@post_max_size=16M@g\" /etc/php.ini; \
+        sed -i \"s@upload_max_filesize.*@upload_max_filesize=16M@g\" /etc/php.ini; \
+        "
+
+    # pecl
+    _pecl="pecl channel-update pecl.php.net; \
+        printf \"\n\" | pecl install 'gmagick-beta'; \
+        echo 'extension=gmagick.so' > /etc/php.d/20-gmagick.ini; \
+        printf \"\n\" | pecl install memcached; \
+        echo 'extension=memcached.so' > /etc/php.d/50-memcached.ini; \
+        printf \"\n\" | pecl install mcrypt; \
+        echo 'extension=mcrypt.so' > /etc/php.d/30-mcrypt.ini; \
+        "
+
+    # xdebug
+    _xdebug="printf \"\n\" | pecl install 'xdebug'; \
+        printf \"zend_extension=/usr/lib64/php/modules/xdebug.so\nxdebug.mode=develop,debug,trace\nxdebug.start_with_request=trigger\nxdebug.host=127.0.0.1\nxdebug.port=9003\nxdebug.log=/var/log/httpd/xdebug.log\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\n\" >> /etc/php.d/15-xdebug.ini \
+        "
+
+    # php-fpm config
+    _fpm_config="sed -i \"s@user = apache@user = root@g\" /etc/php-fpm.d/www.conf; \
+        sed -i \"s@group = apache@group = root@g\" /etc/php-fpm.d/www.conf; \
+        sed -i \"s@^listen\.acl_users.*@listen.acl_users = root@g\" /etc/php-fpm.d/www.conf; \
+        sed -i \"s@sbin/php-fpm@sbin/php-fpm -R@g\" /usr/lib/systemd/system/php-fpm.service; \
+        "
+    # postfix config
+    _postfix_config="printf \"smtpd_use_tls=no\nmyhostname = ${HOSTNAME}\nmynetworks = 127.0.0.1 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128\nvirtual_maps = regexp:/etc/postfix/virtual-regexp\" >> /etc/postfix/main.cf; \
+        echo \"/.+@.+/ root\" >> /etc/postfix/virtual-regexp; \
+        "
     # build the image in docker style
     # podman build -t lampready:private -f Dockerfile.lampready
     message "Building a custom iamge form ${SITE_NAME} ..."
@@ -172,14 +257,13 @@ function build_image {
     echo "LABEL description='Provides a full LAMP stack, xdebug and mail shield for PHP development.'" >> $_file
     echo "LABEL io.k8s.display-name='An RHEL8 full LAMP stack'" >> $_file
     echo "RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm" >> $_file
-    echo "RUN dnf module install -y php:${PHP_VERSION}" >> $_file
-    echo "RUN dnf install -y make httpd httpd-tools mod_ssl openssl crontabs cronie postfix mutt mariadb-server mariadb GraphicsMagick-devel php-devel libmcrypt-devel memcached libmemcached-devel zlib-devel php-pear php-gd php-curl php-mysqlnd php-pdo php-soap php-bcmath php-intl php-pecl-zip" >> $_file
+    echo "RUN dnf module install -y php:${PHP_VERSION} ${_modules}" >> $_file
+    echo "RUN dnf install -y ${_tools} ${_apache} ${_mariadb} ${_php}" >> $_file
     echo "RUN rpm -Fvh --nodeps https://github.com/bridgesense/lampready/raw/master/httpd-ubi-init-2.4.37-99.el8.x86_64.rpm"  >> $_file
-    echo "RUN dnf clean all; pecl channel-update pecl.php.net" >> $_file
-    echo "RUN openssl req -newkey rsa:2048 -x509 -sha256 -days 999999 -nodes -subj '/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=${HOSTNAME}' -out /etc/pki/tls/certs/localhost.crt -keyout /etc/pki/tls/private/localhost.key" >> $_file
-    echo "RUN sed -i \"s@umask 002@umask 022@g\" /etc/bashrc; sed -i \"s@DocumentRoot.*@@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@short_open_tag.*@short_open_tag = On@g\" /etc/php.ini; sed -i \"s@max_execution_time.*@max_execution_time = ${PHP_MAX_EXEC_TIME}@g\" /etc/php.ini; sed -i \"s@max_input_vars.*@max_input_vars = 10000@g\" /etc/php.ini; sed -i \"s@max_memory_limit.*@max_memory_limit = ${PHP_MEM_LIMIT}@g\" /etc/php.ini; sed -i \"s@post_max_size.*@post_max_size = 16M@g\" /etc/php.ini; sed -i \"s@upload_max_filesize.*@upload_max_filesize = 16M@g\" /etc/php.ini; sed -i '/^[mysqld]/a innodb_file_per_table=1\ninnodb_file_format=barracuda\ninnodb_strict_mode=0\ninnodb_large_prefix=1\ninnodb_log_file_size=256M\ntmp_table_size=256MB\nmax_heap_table_size=256MB\nslow_query_log = 1\nslow_query_log_file = /var/log/mysql/mariadb-slow.log\nlong_query_time = 2' /etc/my.cnf.d/mariadb-server.cnf; printf \"smtpd_use_tls=no\nmyhostname = ${HOSTNAME}\nmynetworks = 127.0.0.1 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128\nvirtual_maps = regexp:/etc/postfix/virtual-regexp\" >> /etc/postfix/main.cf; echo \"/.+@.+/ root\" >> /etc/postfix/virtual-regexp; sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@/usr/libexec/mysqld@/usr/libexec/mysqld --user=root@g\" /usr/lib/systemd/system/mariadb.service; sed -i \"s@User apache@User root@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@group apache@group root@g\" /etc/httpd/conf/httpd.conf; sed -i \"s@user = apache@user = root@g\" /etc/php-fpm.d/www.conf; sed -i \"s@group = apache@group = root@g\" /etc/php-fpm.d/www.conf; sed -i \"s@^listen\.acl_users.*@listen.acl_users = root@g\" /etc/php-fpm.d/www.conf; sed -i \"s@sbin/php-fpm@sbin/php-fpm -R@g\" /usr/lib/systemd/system/php-fpm.service" >> $_file
-    echo "RUN printf \"\n\" | pecl install 'gmagick-beta'; echo 'extension=gmagick.so' > /etc/php.d/20-gmagick.ini; printf \"\n\" | pecl install memcached; echo 'extension=memcached.so' > /etc/php.d/50-memcached.ini; printf \"\n\" | pecl install mcrypt; echo 'extension=mcrypt.so' > /etc/php.d/30-mcrypt.ini; sed -i \"s@DirectoryIndex index.html@DirectoryIndex index.php index.html@g\" /etc/httpd/conf/httpd.conf" >> $_file
-    echo "RUN printf \"\n\" | pecl install 'xdebug'; printf \"zend_extension=/usr/lib64/php/modules/xdebug.so\nxdebug.mode=develop,debug,trace\nxdebug.start_with_request=yes\nxdebug.host=127.0.0.1\nxdebug.port=9003\nxdebug.log=/var/log/httpd/xdebug.log\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\n\" >> /etc/php.d/15-xdebug.ini" >> $_file
+    echo "RUN dnf clean all;" >> $_file
+    echo "RUN ${_openssl}" >> $_file
+    echo "RUN ${_perm} ${_apache_config} ${_php_config} ${_fpm_config} ${_mariadb_config} ${_postfix_config}" >> $_file
+    echo "RUN ${_pecl} ${_yarn} ${_composer} ${_xdebug} " >> $_file
     echo "RUN systemctl enable postfix" >> $_file
     echo "RUN systemctl enable mariadb" >> $_file
     echo "RUN systemctl enable httpd" >> $_file
@@ -191,7 +275,7 @@ function build_image {
 # cleans the container directory
 function clean_container_directory {
     message "Cleaning the container directory: ${SITE_HOME}/.container ..."
-    
+
     rm -rf "${SITE_HOME}/.container/mariadb"
     rm -rf "${SITE_HOME}/.container/log"
     rm -f "${SITE_HOME}/.container/Dockerfile.${SITE_NAME}"
@@ -200,7 +284,7 @@ function clean_container_directory {
 
 # cleans up the LAMP container
 function clean_lamp_container {
-    get_state 
+    get_state
 
     if [ $STATE -eq 0 ]; then
         message "stoping LAMP service..."
@@ -210,12 +294,12 @@ function clean_lamp_container {
     if [ $STATE -lt 2 ]; then
         message "stoping container..."
         podman stop $SITE_NAME >/dev/null 2>&1
-    fi 
-    
+    fi
+
     if [ $STATE -lt 3 ]; then
         message "removing container..."
         podman rm $SITE_NAME >/dev/null 2>&1
-    fi 
+    fi
 
     if [ $STATE -lt 4 ]; then
         message "removing image..."
@@ -284,11 +368,12 @@ function display_help {
     echo "${SITE_HOME}/.container/conf.d"
     echo "${SITE_HOME}/${PUBLIC_ROOT_PATH}"
     echo ""
-    echo "ABOUT THE RESET FEATURE"
+    echo "BEFORE USING THE RESE PARAMTER:"
     echo "Building a box is a bit of a process. There are a lot of moving parts. If the build"
-    echo "process gets interrupted things might not as planned.  You might even get cool errors"
-    echo "like 'error copying layers' or 'error extracting image'.  It's time to reset.  Just a"
-    echo "a fair bit of warning though, this destroys everything you have stashed under podman."
+    echo "process gets interrupted things might not go as planned.  You might even get cool errors"
+    echo "like 'error copying layers' or 'error extracting image'.  That just means that it's time"
+    echo "to reset.  Just a fair bit of warning though, this destroys everything you have built"
+    echo "under podman."
     echo ""
     echo "WARNING! The reset option will run the following commands:"
     echo "podman rm --all"
@@ -325,7 +410,7 @@ function import_databases {
             declare -n var="DB$i"
             if [ "${var[DB_NAME]}" != "" ] && [ "${var[DB_USER]}" != "" ]; then
                 # creating database
-                mysql -e "CREATE DATABASE ${var[DB_NAME]}" >/dev/null 2>&1 
+                mysql -e "CREATE DATABASE ${var[DB_NAME]}" >/dev/null 2>&1
 
                 # importing database file if exists
                 if [ "${var[DB_FILENAME]}" != "" ] && [ -f "/var/www/${var[DB_FILENAME]}" ]; then
@@ -338,7 +423,7 @@ function import_databases {
                 fi
 
                 # creating user
-                mysql -e "CREATE USER '${var[DB_USER]}'@'localhost' IDENTIFIED BY '$(echo ${var[DB_PASS]})';" >/dev/null 2>&1 
+                mysql -e "CREATE USER '${var[DB_USER]}'@'localhost' IDENTIFIED BY '$(echo ${var[DB_PASS]})';" >/dev/null 2>&1
 
                 # granting permissions
                 mysql -e "GRANT ${var[DB_PERM]} ON ${var[DB_NAME]}.* TO '${var[DB_USER]}'@'localhost'"
@@ -440,7 +525,7 @@ function setup_systemd_service {
     # stop any rogue processes
     podman stop $SITE_NAME >/dev/null 2>&1
 
-    # clean up rogue data 
+    # clean up rogue data
     podman rm $SITE_NAME >/dev/null 2>&1
 
     # remove the current container file if exists
@@ -457,7 +542,7 @@ function setup_systemd_service {
         -p $XDEBUG_PORT:9003
         --hostname $HOSTNAME
         --name $SITE_NAME
-        --network host 
+        --network host
         -v "${SITE_HOME}:/var/www:Z"
         -v "${SITE_HOME}/.container/conf.d:/etc/httpd/conf.d:Z"
         -v "${SITE_HOME}/.container/log:/var/log/httpd:Z"
@@ -507,14 +592,14 @@ if [ "$ACTION" == "up" ]; then
         echo ""
     fi
 
-    # already running? 
+    # already running?
     if [ $STATE -eq 5 ]; then
-        echo "" 
-        echo "WARNING! Another instance of this script may already be running." 
-        echo "" 
-        podman container list 
-        echo "" 
-        echo "" 
+        echo ""
+        echo "WARNING! Another instance of this script may already be running."
+        echo ""
+        podman container list
+        echo ""
+        echo ""
         while true; do
             read -p "Do you wish to proceed? (y/n): " yn
             case $yn in
@@ -566,12 +651,12 @@ if [ "$ACTION" == "up" ]; then
         systemctl --user daemon-reload
         systemctl --user restart "container-${SITE_NAME}.service"
         sleep 5
-    
+
         echo ""
         echo "Setting up the databases based on the information"
         echo "that was entered at the head of this file..."
         echo ""
-        podman exec "${SITE_NAME}" bash /var/www/box import_db 
+        podman exec "${SITE_NAME}" bash /var/www/box import_db
     fi
 
     # ready to launch LAMP server
@@ -683,14 +768,17 @@ fi
 
 # Enter Mysql Prompt
 if [ "$ACTION" == "ps" ]; then
-   podman container list 
+   podman container list
 fi
 
 # emergency reset
 if [ $ACTION == "reset" ]; then
+    podman images 2>/dev/null
+    echo ""
+    echo "WARNING! This will destroy all images listed above and their associated containers."
     accept_reset=false
     while true; do
-        read -p "WARNING! This will destroy all podman images.  Do you wish to continue? (y/n): " yn
+        read -p "Do you wish to continue? (y/n): " yn
         case $yn in
             [Yy]* ) accept_reset=true; break;;
             [Nn]* ) break;;
@@ -702,9 +790,12 @@ if [ $ACTION == "reset" ]; then
         get_state
         clean_lamp_container
         clean_container_directory
-        podman rm --all 
+        podman rm --all
         podman rmi --all --force
-        message "You may need to manually clean any other podman projects with bash box destroy."
+        echo ""
+        echo "You may need to manually clean any other deployments of this script"
+        echo "with 'bash box destory', or manually remove the .container directory."
+        echo ""
         message "Everything has been reset"
     else
         message "nothing happened"
