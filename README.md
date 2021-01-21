@@ -31,8 +31,8 @@ to do is [register](https://developers.redhat.com/#assembly-field-sections-7105)
 developer.  Since CentOS has moved out of the production space, this is a good way to see
 websites working in the RHEL environment.  Thankfully, there's not much difference.
 
-By default a container does not use up one of your deployment slots.  Inside the
-container you already have access to the main repository.
+*By default a container does not use up one of your deployment slots.  Inside the
+container you already have access to the main repository.*
 
 How to Install the RHEL Box?
 ---
