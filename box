@@ -541,7 +541,7 @@ function setup_systemd_service {
 
     # container run state parameters
     RUN_PARAMS=()
-    if [ "${XDEBUG_ENABLE}" == "0" ]; then
+    if [ "${XDEBUG_ENABLE}" == "1" ]; then
         RUN_PARAMS+=(--network host)
     fi
     RUN_PARAMS+=(
