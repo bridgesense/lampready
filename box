@@ -168,7 +168,7 @@ function build_image {
     fi
 
     # tools
-    _tools="make crontabs cronie postfix mutt iputils net-tools git" 
+    _tools="make crontabs cronie postfix mutt iputils net-tools git unzip" 
 
     # modules
     _modules="nodejs python36 ruby"
@@ -262,7 +262,10 @@ function build_image {
     echo "LABEL maintainer='bridgesense llc" >> $_file
     echo "LABEL description='Provides a full LAMP stack, xdebug and mail shield for PHP development.'" >> $_file
     echo "LABEL io.k8s.display-name='An RHEL8 full LAMP stack'" >> $_file
+    
+    # included epel for mcrypt and graphicsmagick libraries
     echo "RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm" >> $_file
+    
     echo "RUN dnf module install -y php:${PHP_VERSION} ${_modules}" >> $_file
     echo "RUN dnf install -y ${_tools} ${_apache} ${_mariadb} ${_php}" >> $_file
     echo "RUN rpm -Fvh --nodeps https://github.com/bridgesense/lampready/raw/master/httpd-ubi-init-2.4.37-99.el8.x86_64.rpm"  >> $_file
@@ -650,28 +653,22 @@ if [ "$ACTION" == "up" ]; then
         message "Installing LAMP configuration..."
         podman exec "${SITE_NAME}" bash /var/www/box init
         _status=false
-        while $_status -eq false; do
+        _timeout=0
+        while $_status -eq false && [ $_timeout -lt 5 ]; do
             if [ -f "/var/www/.container/init.lock" ]; then
                 _status=true
             fi
             sleep 2
+            let "_timeout+=1"
         done
 
         message "Resetting service..."
         systemctl --user daemon-reload
         sleep 2
         systemctl --user restart "container-${SITE_NAME}.service"  >/dev/null 2>&1
-        sleep 4
 
         # give plenty of time for Maria to waken
-        _dbready=false
-        while $_dbready -eq false; do
-            if podman exec "${SITE_NAME}" systemctl status mariadb | grep -q "(running)"; then
-                _dbready=true
-            fi
-            sleep 2
-        done
-        sleep 5
+        sleep 10
         
         echo ""
         echo "Setting up the databases based on the information"
@@ -738,10 +735,10 @@ if [ "$ACTION" == "export" ]; then
     get_state
 
     if [ $STATE -eq 0 ]; then
-        message "Exporting databases in gz format"
+        message "Exporting databases"
         message "Depending on the size of the database(s), this could take some time..."
         podman exec "${SITE_NAME}" bash /var/www/box export_db
-        message "Export complete.  Check for *.gz the files in ${SITE_HOME}"
+        message "Export complete.  Check for *.gz files in ${SITE_HOME}"
         echo "" && exit >/dev/null 2>&1
     else
         no_box_running_message
