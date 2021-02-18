@@ -259,7 +259,7 @@ function build_image {
     message "Building a custom iamge form ${SITE_NAME} ..."
     _file="${SITE_HOME}/.container/Dockerfile.${SITE_NAME}"
     echo "FROM ${IMAGE}" > $_file
-    echo "LABEL maintainer='bridgesense llc" >> $_file
+    echo "LABEL maintainer='bridgesense llc'" >> $_file
     echo "LABEL description='Provides a full LAMP stack, xdebug and mail shield for PHP development.'" >> $_file
     echo "LABEL io.k8s.display-name='An RHEL8 full LAMP stack'" >> $_file
     
