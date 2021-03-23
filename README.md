@@ -34,11 +34,10 @@ websites working in the RHEL environment.  Thankfully, there's not much differen
 *By default a container does not use up one of your deployment slots.  Inside the
 container you already have access to the main repository.*
 
-IF you plan on using the standard ports 80 and 443, you will need to expose priviliged 
-ports to system users.
+If you plan on using the standard ports 80 and 443, you will need to expose priviliged 
+ports to users.  Run the following commands under root:
 
 ```
-sudo -i
 echo "net.ipv4.ip_unprivileged_port_start=0" > /etc/sysctl.d/05-expose-privileged.conf
 sysctl --system 
 ``` 
