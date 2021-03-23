@@ -3,6 +3,16 @@
 # This script creates a LAMP stack with a single rhel8 container.
 # Customize the information below to suit your needs,
 # then run: bash box
+#
+# Before you begin:
+# 1. Make sure to log into registry.redhat.io
+# > podman login registry.redhat.io
+# 
+# 2. Make sure to expose priviledged ports 
+# > sudo -i 
+# > echo "net.ipv4.ip_unprivileged_port_start=0" > /etc/sysctl.d/05-expose-privileged.conf
+# > sysctl --system 
+#
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 HOSTNAME="lampready.com"
