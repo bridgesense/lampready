@@ -550,6 +550,9 @@ function no_box_running_message {
 function setup_systemd_service {
     message "Setting up systemd service..."
 
+    # create directory if it doesn't exist
+    mkdir -p "${HOME}/.config/systemd/user"
+
     # stop any rogue processes
     podman stop $SITE_NAME >/dev/null 2>&1
 
