@@ -72,7 +72,7 @@ To see a list of commands, just run:
 bash box
 ```
 
-A quick not about RHEL8 and Buildah:
+A quick note about RHEL8 and Buildah:
 ---
 In the recent Buildah release (as of March 29th), the Rhel8 container module
 appears to have a [reoccuring issue](https://github.com/containers/buildah/issues/2521).
