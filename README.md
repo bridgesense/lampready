@@ -1,12 +1,18 @@
 Why LAMPready?
 ---
 
-There are hundreds of great Vagrant boxes out there.  However, I wanted something I could spin up fast without a lot of manual intervention.
+There are hundreds of great Vagrant boxes out there.  However, I wanted
+something I could spin up fast without a lot of manual intervention.
 
 How it Works
 ---
 
-This script syncs your project's root folder inside the virtual machine.  That allows you to work on the code from either in or outside the box.  Most of these virtual environments do not have mail utilities set up because dealing with the fallout of development spam is never fun.  Sometimes those forms and crons need tested.  LAMPready uses Postfix to route all outbound mail to a single convenient box that can be accessed with the local mail client.
+This script syncs your project's root folder inside the virtual machine.  That
+allows you to work on the code from either in or outside the box.  Most of
+these virtual environments do not have mail utilities set up because dealing
+with the fallout of development spam is never fun.  Sometimes those forms
+and crons need tested.  LAMPready uses Postfix to route all outbound mail to
+a single convenient box that can be accessed with the local mail client.
 
 
 The RHEL Box
@@ -16,7 +22,7 @@ I recently added the _box_ script which is based off [Scott McCarty's](https://c
 thoughts on using a single podman container to build a LAMP stack.  If you use
 [podman](https://podman.io/), you might want to test this out.  If you aren't
 familiar with podman, hopefully a quick scan through this script will
-demystify the process. 
+demystify the process.
 
 In this example Podman will need to be logged into the _registry.access.redhat.com_.
 However you may find something suitable on one of the non-subscription repositories.
@@ -27,20 +33,21 @@ podman login registry.access.redhat.com
 ```
 
 Right now, Red Hat is allowing access to this repository at no charge.  All you need
-to do is [register](https://developers.redhat.com/#assembly-field-sections-7105) as a 
-developer.  Since CentOS has moved out of the production space, this is a good way to see
-websites working in the RHEL environment.  Thankfully, there's not much difference.
+to do is [register](https://developers.redhat.com/#assembly-field-sections-7105)
+as a developer.  Since CentOS has moved out of the production space, this is a
+good way to see websites working in the RHEL environment.  Thankfully, there's
+not much difference.
 
 *By default a container does not use up one of your deployment slots.  Inside the
 container you already have access to the main repository.*
 
-If you plan on using the standard ports 80 and 443, you will need to expose priviliged 
+If you plan on using the standard ports 80 and 443, you will need to expose priviliged
 ports to users.  Run the following commands under root:
 
 ```
 echo "net.ipv4.ip_unprivileged_port_start=0" > /etc/sysctl.d/05-expose-privileged.conf
-sysctl --system 
-``` 
+sysctl --system
+```
 
 How to Install the RHEL Box?
 ---
@@ -65,17 +72,32 @@ To see a list of commands, just run:
 bash box
 ```
 
+A quick not about RHEL8 and Buildah:
+---
+In the recent Buildah release (as of March 29th), the Rhel8 container module
+appears to have a [reoccuring issue](https://github.com/containers/buildah/issues/2521).
+Downgrading to the latest stable release the container tools module 2.0 seems to
+be the best solution for running this script.  If you already installed the
+rhel8 module, try backing down with the following steps.
+```
+dnf rm buildah
+dnf module reset container-tools:rhel8
+dnf module enable container-tools:2.0
+dnf install buildah
+```
 
 What is a Vagrant Box?
 ---
-Vagrant allows developers to distribute a consistant development environment with their code.  This box was built with CentOS 8.2.
+Vagrant allows developers to distribute a consistant development environment
+with their code.  This box was built with CentOS 8.2.
 
 This development environment includes:
 
-Apache, PHP7 and Postfix which are already setup and ready to run from your project directory.
+Apache, PHP7 and Postfix which are already setup and ready to run from your
+project directory.
 
-This box also includes a set of lightweight development tools to customize Vim and Tmux from [YADRLite](https://github.com/bridgesense/dotfiles).
-
+This box also includes a set of lightweight development tools to customize
+Vim and Tmux from [YADRLite](https://github.com/bridgesense/dotfiles).
 
 
 How to Install this Vagrant Box?
@@ -104,32 +126,43 @@ vagrant up
 vagrant ssh
 ```
 
-* Access the website via https://192.168.33.10 or use your custom domain settings (see below)
+* Access the website via https://192.168.33.10 or use your custom domain
+settings (see below)
 
 * Access outbound mail from https://192.168.33.10/webmail (user: vagrant, pass: vagrant)
 
 
 How to Configure this Script for Your Project
 ---
-The very first time you run the "vagrant up" command, the config.vm.hostname and "User Defined Settings" will be used to set up Bind, Apache, Xdebug, the SSL certificate, mail relay and up to three databases without further intervention.
+The very first time you run the "vagrant up" command, the config.vm.hostname and
+"User Defined Settings" will be used to set up Bind, Apache, Xdebug, the SSL
+certificate, mail relay and up to three databases without further intervention.
 
 
 **config.vm.hostname and SUB_DOMAIN**
-The config.vm.hostname should contain your domain name.  It is recommended that you choose a unique sub domain for your virtual machine.  This way your public domain is active for comparison.  Next, alter your hosts file to allow the new domain to be accessed from any of your browsers and via command-line.
+The config.vm.hostname should contain your domain name.  It is recommended that
+you choose a unique sub domain for your virtual machine.  This way your public
+domain is active for comparison.  Next, alter your hosts file to allow the new
+domain to be accessed from any of your browsers and via command-line.
 ```
 192.168.33.10   dev.lampready.com
 ```
 
 
 **DOCUMENT_ROOT and DB_FILENAME**
-This Vagrant script should be placed in your project's root directory.  If your root directory contains an index file, you'll need to leave this setting blank.  Otherwise, you'll include the local path to your index file.  The example default entries in this script assume the following directory structure:
+This Vagrant script should be placed in your project's root directory.  If your
+root directory contains an index file, you'll need to leave this setting blank.
+Otherwise, you'll include the local path to your index file.  The example
+default entries in this script assume the following directory structure:
 ```
 Vagraingfile
 user_database.sql
 public_html/index.php
 ```
 
-In another example, let's say a Magento store resides within a subdirectory of an existing website, you might change DOCUMENT_ROOT to "public_html/store" assuming your directory structure is as follows:
+In another example, let's say a Magento store resides within a subdirectory of
+an existing website, you might change DOCUMENT_ROOT to "public_html/store"
+assuming your directory structure is as follows:
 ```
 Vagrantfile
 user_database.sql
@@ -138,25 +171,35 @@ public_html/store/index.php
 public_html/store/app
 ```
 
-The above examples should demonstrate the fact that this Vagrant script is designed to set up one website with one corresponding URL.
+The above examples should demonstrate the fact that this Vagrant script is
+designed to set up one website with one corresponding URL.
 
 
 **MAIL_RELAY**
-This line shouldn't need to be modified. Roundcube is already set up and ready to go. With exception of direct connection to a remote SMTP service through an API, all other outgoing mail will be diverted to a local box.  This should prevent any developer spam from harassing your colleagues.  You can access this box from your browser:
+This line shouldn't need to be modified. Roundcube is already set up and ready
+to go. With exception of direct connection to a remote SMTP service through an
+API, all other outgoing mail will be diverted to a local box.  This should
+prevent any developer spam from harassing your colleagues.  You can access this
+box from your browser:
 ```
 https://dev.lampready.com/webmail
 ```
 
 **PHP_VERSION**
-This option is intended to provide easier debugging during PHP upgrades.  PHP versions 7.2, 7.3 and 7.4 are ready to use.  Each version has access to the most common modules.
+This option is intended to provide easier debugging during PHP upgrades.  PHP
+versions 7.2, 7.3 and 7.4 are ready to use.  Each version has access to the
+most common modules.
 
 
 **XDEBUG_PORT**
-This is the default port normally allocated for Xdebug.  You'll want to be sure to open up your firewall to allow communication between Xdebug and your browser.
+This is the default port normally allocated for Xdebug.  You'll want to be sure
+to open up your firewall to allow communication between Xdebug and your browser.
 
 
 **XDEBUG_FORCE_ERROR_DISPLAY**
-For sites constructed from many packages with different settings, it is nice to be able to easily override error suppression.  Set this option to "yes" to override individual error settings throughout the code.
+For sites constructed from many packages with different settings, it is nice to
+be able to easily override error suppression.  Set this option to "yes" to
+override individual error settings throughout the code.
 
 
 **XDEBUG_MAX_DATA, CHILDREN, DEPTH**
@@ -164,15 +207,24 @@ Set limitations on the variables returned by Xdebug.
 
 
 **INSTALL_DB**
-The script can automatically set up and install up to three MySQL databases.  By setting the INSTALL message to "yes"  and filling out the rest of the information, the script will create the database and inject your data from a sql file you place in the project's root directory.
+The script can automatically set up and install up to three MySQL databases.
+By setting the INSTALL message to "yes"  and filling out the rest of the
+information, the script will create the database and inject your data from a
+sql file you place in the project's root directory.
 
 
 **DB_IS_MAGENTO or DB_IS_WORDPRESS**
-If the database is Magento or Wordpress, you will want to set this option to "yes".  For Magento 2 set this option to "2".  The script will update the appropriate tables to match this script's config.vm.hostname and SUB_DOMAIN settings.  For typical installations no manual fiddling should be necessary.
+If the database is Magento or Wordpress, you will want to set this option to
+"yes".  For Magento 2 set this option to "2".  The script will update the
+appropriate tables to match this script's config.vm.hostname and SUB_DOMAIN
+settings.  For typical installations no manual fiddling should be necessary.
 
 
 **DB_NAME, DB_USER and DB_PASS**
-These settings should mirror the same database name and user credentials written in the website's database configuration file.  Notice the single quotes used for the password.  This is an important work-around to allow the bash script to insert certain special characters correctly.
+These settings should mirror the same database name and user credentials
+written in the website's database configuration file.  Notice the single quotes
+used for the password.  This is an important work-around to allow the bash
+script to insert certain special characters correctly.
 
 
 **DB_PERM**
@@ -180,7 +232,10 @@ Assign DB permissions to specific users.
 
 
 **DB_FILENAME**
-This option is not neccessary if there is no database to import.  While the DB_NAME option will create an empty database, this option populates that database.  The script will look for the sql file in your projects root directory (one directory below document root).
+This option is not neccessary if there is no database to import.  While the
+DB_NAME option will create an empty database, this option populates that
+database.  The script will look for the sql file in your projects root
+directory (one directory below document root).
 
 
 **DB_CUSTOM_FUNCTIONS**
@@ -189,7 +244,8 @@ This option is used for importing an additional script or custom functions.
 
 How to Use this Box?
 ---
-After installing, Vagrant will not run from being launced in VirtualBox. Vagrant must be started and managed from the terminal:
+After installing, Vagrant will not run from being launced in VirtualBox. Vagrant
+must be started and managed from the terminal:
 
 **initialize LAMPready without the script**
 ```
@@ -232,7 +288,8 @@ vagrant box update
 ```
 
 
-**Note:** If you run Vagrant destroy, the box will be built from scratch again -- which may be a good thing.
+**Note:** If you run Vagrant destroy, the box will be built from scratch again
+-- which may be a good thing.
 
 
 
@@ -256,7 +313,10 @@ USER: vagrant<br />
 PASS: vagrant<br />
 
 
-**NOTE:** In order to manage your databases with Navicat or other software, enter your SSH credentials and access MySQL like you would any other remote server.  If you have an issue logging in, try using 127.0.0.1 as the host instead of localhost.
+**NOTE:** In order to manage your databases with Navicat or other software,
+enter your SSH credentials and access MySQL like you would any other remote
+server.  If you have an issue logging in, try using 127.0.0.1 as the host
+instead of localhost.
 
 
 Xdebug Settings
@@ -264,9 +324,12 @@ Xdebug Settings
 
 Xdebug port: 9041 (*see script setting*)
 
-Xdebug is preconfigured and ready to go.  There are a few things to be aware of when working with Xdebug within an IDE.
+Xdebug is preconfigured and ready to go.  There are a few things to be aware of
+when working with Xdebug within an IDE.
 
-**FIREWALL NOTICE:**  If you're blocking all inbound connections, Xdebug will NOT interface with your local IDE.  Be sure to open port 9041 or which ever port was entered in the Vagrantfile script.
+**FIREWALL NOTICE:**  If you're blocking all inbound connections, Xdebug will
+NOT interface with your local IDE.  Be sure to open port 9041 or which ever
+port was entered in the Vagrantfile script.
 
 
 VIM & Vdebug Settings
@@ -281,7 +344,11 @@ if filereadable('.vimrc.local')
     endif
 ```
 
-Create a file called .vimrc.local and place it in the root directory of your project -- the same one as your Vagrantfile script. Be sure that the path mapping matches the project's <b>root directory</b> or your break points will not work.  The /var/www will stay the same as it is the synced location of your project.
+Create a file called .vimrc.local and place it in the root directory of your
+project -- the same one as your Vagrantfile script. Be sure that the path
+mapping matches the project's <b>root directory</b> or your break points will
+not work.  The /var/www will stay the same as it is the synced location of
+your project.
 
 ```
 " Project Specific Settings for Vdebug
@@ -351,7 +418,9 @@ Here is a sample user configuration from SublimeText.
 }
 ```
 
-You also add a setup specific to the account via a SublimeText project file. Unlike the Vim settings above, be sure that the path mapping points to your project's *public* root directory.
+You also add a setup specific to the account via a SublimeText project file.
+Unlike the Vim settings above, be sure that the path mapping points to your
+project's *public* root directory.
 
 ```
 {
@@ -378,7 +447,9 @@ You also add a setup specific to the account via a SublimeText project file. Unl
 Emacs & Geben Settings
 ---
 
-All Geben needs is the correct path mapping to the project's root directory (not the public directory unless they are both the same).  See here for operational details: [GIT: ahungry/geben](https://github.com/ahungry/geben#vms)
+All Geben needs is the correct path mapping to the project's root directory (not
+the public directory unless they are both the same).  See here for operational
+details: [GIT: ahungry/geben](https://github.com/ahungry/geben#vms)
 
 M-x customize-variable geben-path-mappings
 
