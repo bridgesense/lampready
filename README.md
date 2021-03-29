@@ -49,7 +49,7 @@ echo "net.ipv4.ip_unprivileged_port_start=0" > /etc/sysctl.d/05-expose-privilege
 sysctl --system
 ```
 
-How to Install the RHEL Box?
+How to Install the RHEL Box? (development version of lampready)
 ---
 Download the box script into your project's root directory.  A pretty rough
 video demonstration can be seen [here](https://bridgesense.com/blog/making-friends-with-podman).
@@ -100,7 +100,7 @@ This box also includes a set of lightweight development tools to customize
 Vim and Tmux from [YADRLite](https://github.com/bridgesense/dotfiles).
 
 
-How to Install this Vagrant Box?
+How to Install this Vagrant Box? (previous version of lampready)
 ---
 * Download and Install VirtualBox from https://www.virtualbox.org
 
