@@ -222,7 +222,7 @@ function build_image {
         "
 
     # PHP modules
-    _php="GraphicsMagick-devel php-devel libmcrypt-devel memcached \
+    _php="php-devel libmcrypt-devel memcached ImageMagick \
         libmemcached-devel zlib-devel php-pear php-gd php-curl \
         php-mysqlnd php-pdo php-soap php-bcmath php-intl php-pecl-zip \
         "
@@ -239,8 +239,8 @@ function build_image {
 
     # pecl
     _pecl="pecl channel-update pecl.php.net; \
-        printf \"\n\" | pecl install 'gmagick-beta'; \
-        echo 'extension=gmagick.so' > /etc/php.d/20-gmagick.ini; \
+        printf \"\n\" | pecl install 'imagick'; \
+        echo 'extension=imagick.so' > /etc/php.d/20-imagick.ini; \
         printf \"\n\" | pecl install memcached; \
         echo 'extension=memcached.so' > /etc/php.d/50-memcached.ini; \
         printf \"\n\" | pecl install mcrypt; \
@@ -273,8 +273,9 @@ function build_image {
     echo "LABEL description='Provides a full LAMP stack, xdebug and mail shield for PHP development.'" >> $_file
     echo "LABEL io.k8s.display-name='An RHEL8 full LAMP stack'" >> $_file
     
-    # included epel for mcrypt and graphicsmagick libraries
+    # included epel for mcrypt and imagick libraries
     echo "RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm" >> $_file
+    echo "RUN rpm -ivh https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/i/ImageMagick-devel-6.9.10.86-1.el8.x86_64.rpm --nodeps" >> $_file
     
     echo "RUN dnf module install -y php:${PHP_VERSION} ${_modules}" >> $_file
     echo "RUN dnf install -y ${_tools} ${_apache} ${_mariadb} ${_php}" >> $_file
@@ -406,7 +407,7 @@ function display_help {
     echo "${SITE_HOME}/.container/conf.d"
     echo "${SITE_HOME}/${PUBLIC_ROOT_PATH}"
     echo ""
-    echo "BEFORE USING THE RESE PARAMTER:"
+    echo "BEFORE USING THE RESET PARAMTER:"
     echo "Building a box is a bit of a process. There are a lot of moving parts. If the build"
     echo "process gets interrupted things might not go as planned.  You might even get cool errors"
     echo "like 'error copying layers' or 'error extracting image'.  That just means that it's time"
