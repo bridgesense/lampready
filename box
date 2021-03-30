@@ -178,7 +178,7 @@ function build_image {
     fi
 
     # tools
-    _tools="make crontabs cronie postfix mutt iputils net-tools git unzip" 
+    _tools="make crontabs cronie postfix mutt iputils net-tools git unzip xz" 
 
     # modules
     _modules="nodejs python36 ruby"
@@ -275,8 +275,9 @@ function build_image {
     
     # included epel for mcrypt and imagick libraries
     echo "RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm" >> $_file
-    echo "RUN rpm -ivh https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/i/ImageMagick-devel-6.9.10.86-1.el8.x86_64.rpm --nodeps" >> $_file
-    
+    echo "RUN rpm -ivh --nodeps https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/i/ImageMagick-devel-6.9.10.86-1.el8.x86_64.rpm" >> $_file
+    echo "RUN rpm -ivh --nodeps --nosignature https://rpmfind.net/linux/centos/8.3.2011/PowerTools/x86_64/os/Packages/xz-lzma-compat-5.2.4-3.el8.x86_64.rpm" >> $_file
+  
     echo "RUN dnf module install -y php:${PHP_VERSION} ${_modules}" >> $_file
     echo "RUN dnf install -y ${_tools} ${_apache} ${_mariadb} ${_php}" >> $_file
     echo "RUN rpm -Fvh --nodeps https://github.com/bridgesense/lampready/raw/master/httpd-ubi-init-2.4.37-99.el8.x86_64.rpm"  >> $_file
