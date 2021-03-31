@@ -169,6 +169,10 @@ function build_default_httpd_conf {
 # builds the site image based on the information entered at
 # the top of this script
 function build_image {
+    # clean up dangling images
+    buildah rm --all    
+    podman rmi -f $(podman images --filter "dangling=true" -q --no-trunc) >/dev/null 2>&1
+
     # clean up anything that might exist in a failed state
     # or left over from a previous session
     if podman images | grep -q "$SITE_NAME"; then
@@ -409,13 +413,10 @@ function display_help {
     echo "${SITE_HOME}/${PUBLIC_ROOT_PATH}"
     echo ""
     echo "BEFORE USING THE RESET PARAMTER:"
-    echo "Building a box is a bit of a process. There are a lot of moving parts. If the build"
-    echo "process gets interrupted things might not go as planned.  You might even get cool errors"
-    echo "like 'error copying layers' or 'error extracting image'.  That just means that it's time"
-    echo "to reset.  Just a fair bit of warning though, this destroys everything you have built"
-    echo "under podman."
+    echo "Just a fair bit of warning about the reset command, this destroys everything you"
+    echo "have built under podman."
     echo ""
-    echo "WARNING! The reset option will run the following commands:"
+    echo "The reset option will run the following commands:"
     echo "podman system prune --all --force"
     echo "podman rmi --all --force"
     echo ""
@@ -714,22 +715,26 @@ if [ "$ACTION" == "up" ]; then
         SITE_ACCESS="HTTPS://${SITE_NAME}"
         if [ "HTTP_PORT" != "443" ]; then SITE_ACCESS="${SITE_ACCESS}:${SSL_PORT}"; fi
         echo ""
-        echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-        echo "+                                                          +"
-        echo "+  Your LAMP is ready...                                   +"
-        echo "+                                                          +"
-        echo "+  Please add the following line to your hosts file:       +"
+        echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+        echo "+                                                                 +"
+        echo "+  Your LAMP is ready...                                          +"
+        echo "+                                                                 +"
+        echo "+  Please add the following line to your hosts file:              +"
         echo "+  127.0.0.1   ${SITE_NAME}"
-        echo "+                                                          +"
+        echo "+                                                                 +"
         echo "+  Xdebug has been set up on port: ${XDEBUG_PORT}"
-        echo "+  Memcached on: 11211                                     +"
-        echo "+                                                          +"
-        echo "+  All outbound mail is trapped and can be viewed with:    +"
-        echo "+  bash box mail                                           +"
-        echo "+                                                          +"
-        echo "+  See LAMPready.com for more information.                 +"
-        echo "+                                                          +"
-        echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+        echo "+  Memcached on: 11211                                            +"
+        echo "+                                                                 +"
+        echo "+  For Xdebug to work, make sure to open the port (example):      +"
+        echo "+  firewall-cmd --permanent --zone=webserver --add-port=9003/tcp  +"
+        echo "+  semanage port -a -t http_port -p tcp 9003                      +"
+        echo "+                                                                 +"
+        echo "+  All outbound mail is trapped and can be viewed with:           +"
+        echo "+  bash box mail                                                  +"
+        echo "+                                                                 +"
+        echo "+  See LAMPready.com for more information.                        +"
+        echo "+                                                                 +"
+        echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
         echo ""
         echo "" && exit >/dev/null 2>&1
     fi

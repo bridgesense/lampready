@@ -72,20 +72,6 @@ To see a list of commands, just run:
 bash box
 ```
 
-A quick note about RHEL8 and Buildah:
----
-In the recent Buildah release (as of March 29th), the Rhel8 container module
-appears to have a [reoccuring issue](https://github.com/containers/buildah/issues/2521).
-Downgrading to the latest stable release the container tools module 2.0 seems to
-be the best solution for running this script.  If you already installed the
-rhel8 module, try backing down with the following steps.
-```
-dnf rm buildah
-dnf module reset container-tools:rhel8
-dnf module enable container-tools:2.0
-dnf install buildah
-```
-
 What is a Vagrant Box?
 ---
 Vagrant allows developers to distribute a consistant development environment
