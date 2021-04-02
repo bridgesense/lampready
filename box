@@ -235,7 +235,7 @@ function build_image {
     _php_config="sed -i \"s@short_open_tag.*@short_open_tag=On@g\" /etc/php.ini; \
         sed -i \"s@max_execution_time.*@max_execution_time=${PHP_MAX_EXEC_TIME}@g\" /etc/php.ini; \
         sed -i \"s@max_input_vars.*@max_input_vars=10000@g\" /etc/php.ini; \
-        sed -i \"s@max_memory_limit.*@max_memory_limit=${PHP_MEM_LIMIT}@g\" /etc/php.ini; \
+        sed -i \"s@memory_limit.*@memory_limit=${PHP_MEM_LIMIT}@g\" /etc/php.ini; \
         sed -i \"s@post_max_size.*@post_max_size=16M@g\" /etc/php.ini; \
         sed -i \"s@upload_max_filesize.*@upload_max_filesize=16M@g\" /etc/php.ini; \
         sed -i \"s@;date.timezone =@date.timezone = ${TIMEZONE}@g\" /etc/php.ini; \
