@@ -7,11 +7,11 @@
 # Before you begin:
 # 1. Make sure to log into registry.redhat.io
 # > podman login registry.redhat.io
-# 
-# 2. Make sure to expose priviledged ports 
-# > sudo -i 
+#
+# 2. Make sure to expose priviledged ports
+# > sudo -i
 # > echo "net.ipv4.ip_unprivileged_port_start=0" > /etc/sysctl.d/05-expose-privileged.conf
-# > sysctl --system 
+# > sysctl --system
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -170,7 +170,7 @@ function build_default_httpd_conf {
 # the top of this script
 function build_image {
     # clean up dangling images
-    buildah rm --all    
+    buildah rm --all
     podman rmi -f $(podman images --filter "dangling=true" -q --no-trunc) >/dev/null 2>&1
 
     # clean up anything that might exist in a failed state
@@ -182,7 +182,7 @@ function build_image {
     fi
 
     # tools
-    _tools="make crontabs cronie postfix mutt iputils net-tools git unzip xz" 
+    _tools="make crontabs cronie postfix mutt iputils net-tools git unzip xz"
 
     # modules
     _modules="nodejs python36 ruby"
@@ -276,12 +276,12 @@ function build_image {
     echo "LABEL maintainer='bridgesense llc'" >> $_file
     echo "LABEL description='Provides a full LAMP stack, xdebug and mail shield for PHP development.'" >> $_file
     echo "LABEL io.k8s.display-name='An RHEL8 full LAMP stack'" >> $_file
-    
+
     # included epel for mcrypt and imagick libraries
     echo "RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm" >> $_file
     echo "RUN rpm -ivh --nodeps https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/i/ImageMagick-devel-6.9.10.86-1.el8.x86_64.rpm" >> $_file
     echo "RUN rpm -ivh --nodeps --nosignature https://rpmfind.net/linux/centos/8.3.2011/PowerTools/x86_64/os/Packages/xz-lzma-compat-5.2.4-3.el8.x86_64.rpm" >> $_file
-  
+
     echo "RUN dnf module install -y php:${PHP_VERSION} ${_modules}" >> $_file
     echo "RUN dnf install -y ${_tools} ${_apache} ${_mariadb} ${_php}" >> $_file
     echo "RUN rpm -Fvh --nodeps https://github.com/bridgesense/lampready/raw/master/httpd-ubi-init-2.4.37-99.el8.x86_64.rpm"  >> $_file
@@ -366,7 +366,7 @@ function display_help {
     echo "system's environment.  This provides an incredible boost in system"
     echo "performance over a traditional VM.  Any limitations discovered in the"
     echo "container are limitations of the host system."
-    echo "" 
+    echo ""
     echo "As an example, if you want to use any of the privileged ports below 1024,"
     echo "you will need to run the following commands on the host system prior to"
     echo "running this script:"
@@ -379,8 +379,8 @@ function display_help {
     echo ""
     echo "EXPANDING INOTIFY WATCH LIMIT"
     echo "In another example, popular tools like Angular or Gulp can reload and"
-    echo "compile code on the fly.  Increasing the inotify watch limit needs to be "
-    echo "performed on the host system."
+    echo "compile code on the fly.  These processes might fail for no reason at all. Increasing the"
+    echo "inotify max_user_watches value might help certain situations for larger projects."
     echo ""
     echo "echo 'fs.inotify.max_user_watches=524288' > /etc/sysctl.d/10-increase-inotify-watch-limit.conf"
     echo "sysctl --system"
@@ -412,13 +412,19 @@ function display_help {
     echo "${SITE_HOME}/.container/conf.d"
     echo "${SITE_HOME}/${PUBLIC_ROOT_PATH}"
     echo ""
-    echo "BEFORE USING THE RESET PARAMTER:"
-    echo "Just a fair bit of warning about the reset command, this destroys everything you"
-    echo "have built under podman."
+    echo "WHY DO I USE THE RESET OPTION FOR?"
+    echo "Don't confuse the reset option with the destroy command.  Destroy wipes a project clean."
+    echo "Reset wipes out everything you've done with podman. It essentially destroys all projects"
+    echo "including the master image, so be careful with it. You might have other projects that are"
+    echo "not related to this script that will also be removed."
     echo ""
-    echo "The reset option will run the following commands:"
-    echo "podman system prune --all --force"
-    echo "podman rmi --all --force"
+    echo "From time to time, a reoccurring error appears during the build phase, 'error copying"
+    echo "layers and metadata for container'.  This error is not based on any dangling processes"
+    echo "or bad images. The reset option is just a quick way around the issue, allowing you to"
+    echo "move forward quickly in setting up a new project -- at the cost of trashing any existing"
+    echo "projects that are working.  In most cases, this script doesn't take long spinning up new"
+    echo "images.  A quick reset is not that much of a disadvantage when considering time and"
+    echo "deadlines."
     echo ""
     echo "CREDITS:"
     echo "This script was based on Scott McCarty's contribution to this subject,"
@@ -702,7 +708,7 @@ if [ "$ACTION" == "up" ]; then
 
         # give plenty of time for Maria to waken
         sleep 10
-        
+
         echo ""
         echo "Setting up the databases based on the information"
         echo "that was entered at the head of this file..."
@@ -727,7 +733,7 @@ if [ "$ACTION" == "up" ]; then
         echo "+                                                                 +"
         echo "+  For Xdebug to work, make sure to open the port (example):      +"
         echo "+  firewall-cmd --permanent --zone=webserver --add-port=${XDEBUG_PORT}/tcp"
-        echo "+  semanage port -a -t http_port -p tcp ${XDEBUG_PORT}"                    
+        echo "+  semanage port -a -t http_port -p tcp ${XDEBUG_PORT}"
         echo "+                                                                 +"
         echo "+  All outbound mail is trapped and can be viewed with:           +"
         echo "+  bash box mail                                                  +"
