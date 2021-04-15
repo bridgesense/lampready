@@ -160,10 +160,10 @@ Vagrant.configure("2") do |config|
             if [ "${DB_IS_MAGENTO}" == "1" ] || [ "${DB_IS_MAGENTO}" == "yes" ]; then
                 echo "Setting up Magento..."
                 MGQ1=$(mysql -N -e "use ${DB_NAME}; SELECT value FROM ${DB_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
-                MGA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ1)
+                MGA1=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ1)
                 mysql -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}core_config_data SET value = '$MGA1' WHERE path = 'web/unsecure/base_url'"
                 MGQ2=$(mysql -N -e "use ${DB_NAME}; SELECT value FROM ${DB_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
-                MGA2=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ2)
+                MGA2=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ2)
                 mysql -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}core_config_data SET value = '$MGA2' WHERE path = 'web/secure/base_url'"
                 mysql -e "USE ${DB_NAME}; TRUNCATE ${DB_PREFIX}core_cache"
                 mysql -e "USE ${DB_NAME}; TRUNCATE ${DB_PREFIX}core_cache_tag"
@@ -179,7 +179,7 @@ Vagrant.configure("2") do |config|
             fi
             if [ "${DB_IS_WORDPRESS}" == "yes" ]; then
                 WPQ1=$(mysql -N -e "use ${DB_NAME}; SELECT option_value FROM ${DB_PREFIX}options WHERE option_name = 'siteurl'")
-                WPA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}@" <<< $WPQ1)
+                WPA1=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${FULL_DOMAIN}@" <<< $WPQ1)
                 mysql -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}options SET option_value = '${WPA1}' WHERE option_name = 'siteurl' OR option_name = 'home'"
                 mysql -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}posts SET guid = replace(guid, '${WPQ1}','${WPA1}')"
                 mysql -e "USE ${DB_NAME}; UPDATE ${DB_PREFIX}posts SET post_content = replace(post_content, '${WPQ1}', '${WPA1}')"
@@ -204,10 +204,10 @@ Vagrant.configure("2") do |config|
             if [ "${DB2_IS_MAGENTO}" == "1" ] || [ "${DB2_IS_MAGENTO}" == "yes" ]; then
                 echo "Setting up Magento..."
                 MGQ3=$(mysql -N -e "use ${DB2_NAME}; SELECT value FROM ${DB2_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
-                MGA3=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ3)
+                MGA3=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ3)
                 mysql -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}core_config_data SET value = '$MGA3' WHERE path = 'web/unsecure/base_url'"
                 MGQ4=$(mysql -N -e "use ${DB2_NAME}; SELECT value FROM ${DB@_PREFIX}core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
-                MGA4=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ4)
+                MGA4=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${FULL_DOMAIN}/@" <<< $MGQ4)
                 mysql -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}core_config_data SET value = '$MGA4' WHERE path = 'web/secure/base_url'"
                 mysql -e "USE ${DB2_NAME}; TRUNCATE ${DB2_PREFIX}core_cache"
                 mysql -e "USE ${DB2_NAME}; TRUNCATE ${DB2_PREFIX}core_cache_tag"
@@ -223,7 +223,7 @@ Vagrant.configure("2") do |config|
             fi
             if [ "${DB2_IS_WORDPRESS}" == "yes" ]; then
                 WPQ2=$(mysql -N -e "use ${DB2_NAME}; SELECT option_value FROM ${DB2_PREFIX}options WHERE option_name = 'siteurl'")
-                WPA2=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${FULL_DOMAIN}@" <<< $WPQ2)
+                WPA2=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${FULL_DOMAIN}@" <<< $WPQ2)
                 mysql -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}options SET option_value = '${WPA2}' WHERE option_name = 'siteurl' OR option_name = 'home'"
                 mysql -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}posts SET guid = replace(guid, '${WPQ2}','${WPA2}')"
                 mysql -e "USE ${DB2_NAME}; UPDATE ${DB2_PREFIX}posts SET post_content = replace(post_content, '${WPQ2}', '${WPA2}')"

@@ -478,7 +478,7 @@ function import_databases {
                 # modifications for development site name designation
                 if [ "${var[DB_TYPE]}" == "wordpress" ]; then
                     WPQ1=$(mysql -N -e "use ${var[DB_NAME]}; SELECT option_value FROM ${var[DB_PREFIX]}options WHERE option_name = 'siteurl'")
-                    WPA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${SITE_NAME}@" <<< $WPQ1)
+                    WPA1=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${SITE_NAME}@" <<< $WPQ1)
                     mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}options SET option_value = '${WPA1}' WHERE option_name = 'siteurl' OR option_name = 'home'"
                     mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}posts SET guid = replace(guid, '${WPQ1}','${WPA1}')"
                     mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}posts SET post_content = replace(post_content, '${WPQ1}', '${WPA1}')"
@@ -487,10 +487,10 @@ function import_databases {
                 if [ "${var[DB_TYPE]}" == "magento_1" ]; then
                     echo "Setting up Magento..."
                     MGQ1=$(mysql -N -e "use ${var[DB_NAME]}; SELECT value FROM ${var[DB_PREFIX]}core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
-                    MGA1=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${SITE_NAME}/@" <<< $MGQ1)
+                    MGA1=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${SITE_NAME}/@" <<< $MGQ1)
                     mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}core_config_data SET value = '$MGA1' WHERE path = 'web/unsecure/base_url'"
                     MGQ2=$(mysql -N -e "use ${var[DB_NAME]}; SELECT value FROM ${var[DB_PREFIX]}core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
-                    MGA2=$(sed -E "s@(:\/\/([a-zA-Z\-]*\.)?([a-zA-Z\-]*)\.([a-zA-Z\-]*))(\.[a-zA-Z\-]*)?\/?@://${SITE_NAME}/@" <<< $MGQ2)
+                    MGA2=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${SITE_NAME}/@" <<< $MGQ2)
                     mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}core_config_data SET value = '$MGA2' WHERE path = 'web/secure/base_url'"
                     mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_cache"
                     mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_cache_tag"
