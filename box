@@ -462,11 +462,44 @@ function import_databases {
                 # importing database file if exists
                 if [ "${var[DB_FILENAME]}" != "" ] && [ -f "/var/www/${var[DB_FILENAME]}" ]; then
                     mysql -f ${var[DB_NAME]} < /var/www/${var[DB_FILENAME]}
-                fi
+                   
+                    # importing functions if exists
+                    if [ "${var[DB_CUSTOM_FUNCTIONS_FILENAME]}" != "" ] && [ -f "/var/www/${var[DB_CUSTOM_FUNCTIONS_FILENAME]}" ]; then
+                        mysql -f ${var[DB_NAME]} < /var/www/${var[DB_CUSTOM_FUNCTIONS_FILENAME]}
+                    fi
 
-                # importing functions if exists
-                if [ "${var[DB_CUSTOM_FUNCTIONS_FILENAME]}" != "" ] && [ -f "/var/www/${var[DB_CUSTOM_FUNCTIONS_FILENAME]}" ]; then
-                    mysql -f ${var[DB_NAME]} < /var/www/${var[DB_CUSTOM_FUNCTIONS_FILENAME]}
+                    # modifications for development site name designation
+                    if [ "${var[DB_TYPE]}" == "wordpress" ]; then
+                        WPQ1=$(mysql -N -e "use ${var[DB_NAME]}; SELECT option_value FROM ${var[DB_PREFIX]}options WHERE option_name = 'siteurl'")
+                        WPA1=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${SITE_NAME}@" <<< $WPQ1)
+                        mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}options SET option_value = '${WPA1}' WHERE option_name = 'siteurl' OR option_name = 'home'"
+                        mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}posts SET guid = replace(guid, '${WPQ1}','${WPA1}')"
+                        mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}posts SET post_content = replace(post_content, '${WPQ1}', '${WPA1}')"
+                        mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}postmeta SET meta_value = replace(meta_value,'${WPQ1}','${WPA1}')"
+                    fi
+                    if [ "${var[DB_TYPE]}" == "magento_1" ]; then
+                        echo "Setting up Magento..."
+                        MGQ1=$(mysql -N -e "use ${var[DB_NAME]}; SELECT value FROM ${var[DB_PREFIX]}core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
+                        MGA1=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${SITE_NAME}/@" <<< $MGQ1)
+                        mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}core_config_data SET value = '$MGA1' WHERE path = 'web/unsecure/base_url'"
+                        MGQ2=$(mysql -N -e "use ${var[DB_NAME]}; SELECT value FROM ${var[DB_PREFIX]}core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
+                        MGA2=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${SITE_NAME}/@" <<< $MGQ2)
+                        mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}core_config_data SET value = '$MGA2' WHERE path = 'web/secure/base_url'"
+                        mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_cache"
+                        mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_cache_tag"
+                        mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_session"
+                        cd "/var/www/${PUBLIC_ROOT_PATH}"
+                        php -f shell/compiler.php -- disable
+                        php -f shell/indexer.php reindexall
+                    fi
+                    if [ "${var[DB_TYPE]}" == "magento_2" ]; then
+                        cd "/var/www/${PUBLIC_ROOT_PATH}"
+                        php bin/magento setup:store-config:set --base-url="http://${SITE_NAME}/"
+                        php bin/magento setup:store-config:set --base-url-secure="https://${SITE_NAME}/"
+                        php bin/magento cache:flush
+                        php bin/magento indexer:reindex
+                    fi
+
                 fi
 
                 # creating user
@@ -475,37 +508,6 @@ function import_databases {
                 # granting permissions
                 mysql -e "GRANT ${var[DB_PERM]} ON ${var[DB_NAME]}.* TO '${var[DB_USER]}'@'localhost'"
 
-                # modifications for development site name designation
-                if [ "${var[DB_TYPE]}" == "wordpress" ]; then
-                    WPQ1=$(mysql -N -e "use ${var[DB_NAME]}; SELECT option_value FROM ${var[DB_PREFIX]}options WHERE option_name = 'siteurl'")
-                    WPA1=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${SITE_NAME}@" <<< $WPQ1)
-                    mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}options SET option_value = '${WPA1}' WHERE option_name = 'siteurl' OR option_name = 'home'"
-                    mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}posts SET guid = replace(guid, '${WPQ1}','${WPA1}')"
-                    mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}posts SET post_content = replace(post_content, '${WPQ1}', '${WPA1}')"
-                    mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}postmeta SET meta_value = replace(meta_value,'${WPQ1}','${WPA1}')"
-                fi
-                if [ "${var[DB_TYPE]}" == "magento_1" ]; then
-                    echo "Setting up Magento..."
-                    MGQ1=$(mysql -N -e "use ${var[DB_NAME]}; SELECT value FROM ${var[DB_PREFIX]}core_config_data WHERE scope = 'default' AND path = 'web/unsecure/base_url'")
-                    MGA1=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${SITE_NAME}/@" <<< $MGQ1)
-                    mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}core_config_data SET value = '$MGA1' WHERE path = 'web/unsecure/base_url'"
-                    MGQ2=$(mysql -N -e "use ${var[DB_NAME]}; SELECT value FROM ${var[DB_PREFIX]}core_config_data WHERE scope = 'default' AND path = 'web/secure/base_url'")
-                    MGA2=$(sed -E "s@(:\/\/([a-zA-Z0-9\-]*\.)?([a-zA-Z0-9\-]*)\.([a-zA-Z0-9\-]*))(\.[a-zA-Z0-9\-]*)?\/?@://${SITE_NAME}/@" <<< $MGQ2)
-                    mysql -e "USE ${var[DB_NAME]}; UPDATE ${var[DB_PREFIX]}core_config_data SET value = '$MGA2' WHERE path = 'web/secure/base_url'"
-                    mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_cache"
-                    mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_cache_tag"
-                    mysql -e "USE ${var[DB_NAME]}; TRUNCATE ${var[DB_PREFIX]}core_session"
-                    cd "/var/www/${PUBLIC_ROOT_PATH}"
-                    php -f shell/compiler.php -- disable
-                    php -f shell/indexer.php reindexall
-                fi
-                if [ "${var[DB_TYPE]}" == "magento_2" ]; then
-                    cd "/var/www/${PUBLIC_ROOT_PATH}"
-                    php bin/magento setup:store-config:set --base-url="http://${SITE_NAME}/"
-                    php bin/magento setup:store-config:set --base-url-secure="https://${SITE_NAME}/"
-                    php bin/magento cache:flush
-                    php bin/magento indexer:reindex
-                fi
             fi
         else
             break
