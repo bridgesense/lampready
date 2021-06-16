@@ -182,7 +182,7 @@ function build_image {
     fi
 
     # tools
-    _tools="make crontabs cronie postfix mutt iputils net-tools git unzip xz"
+    _tools="make crontabs cronie postfix mutt iputils net-tools git unzip xz sqlite"
 
     # modules
     _modules="nodejs python36 ruby"
