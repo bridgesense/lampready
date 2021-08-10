@@ -24,7 +24,7 @@ SSL_PORT="443"
 
 TIMEZONE="America/Los_Angeles"
 
-PHP_VERSION="7.4" # 7.2 - 7.4
+PHP_VERSION="7.4" # 7.2 - 7.4, 8.0
 PHP_MAX_EXEC_TIME="600"
 PHP_MEM_LIMIT="512M"
 
@@ -182,7 +182,7 @@ function build_image {
     fi
 
     # tools
-    _tools="make crontabs cronie postfix mutt iputils net-tools git unzip xz sqlite"
+    _tools="make crontabs cronie postfix mutt iputils net-tools git unzip xz"
 
     # modules
     _modules="nodejs python36 ruby"
@@ -219,18 +219,17 @@ function build_image {
     _mariadb="mariadb-server mariadb"
 
     # mariadb config
-    _mariadb_config="sed -i '/^[mysqld]/a innodb_file_per_table=1\ninnodb_file_format=barracuda\ninnodb_strict_mode=0\ninnodb_large_prefix=1\ninnodb_log_file_size=256M\ntmp_table_size=256MB\nmax_heap_table_size=256MB\nsql_mode=NO_ENGINE_SUBSTITUTION\nslow_query_log = 1\nslow_query_log_file = /var/log/mysql/mariadb-slow.log\nlong_query_time = 2' /etc/my.cnf.d/mariadb-server.cnf; \
+    _mariadb_config="sed -i '/^[mysqld]/a innodb_file_per_table=1\ninnodb_file_format=barracuda\ninnodb_strict_mode=0\ninnodb_large_prefix=1\ninnodb_log_file_size=256M\ntmp_table_size=256MB\nmax_heap_table_size=256MB\nslow_query_log = 1\nslow_query_log_file = /var/log/mysql/mariadb-slow.log\nlong_query_time = 2' /etc/my.cnf.d/mariadb-server.cnf; \
         sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; \
         sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; \
         sed -i \"s@/usr/libexec/mysqld@/usr/libexec/mysqld --user=root@g\" /usr/lib/systemd/system/mariadb.service; \
         "
 
     # PHP modules
-    _php="php-devel libmcrypt-devel memcached ImageMagick \
-        libmemcached-devel zlib-devel php-pear php-gd php-curl \
-        php-mysqlnd php-pdo php-soap php-bcmath php-intl php-pecl-zip \
+    _php="memcached aspell-en lzip xz\
+        php-pear php-opcache php-gd php-pdo php-soap php-bcmath php-intl php-pspell php-imap php-xz php-mysqlnd \
+        php-pecl-memcached php-pecl-xdebug3 php-pecl-imagick php-pecl-zip \
         "
-
     # php config
     _php_config="sed -i \"s@short_open_tag.*@short_open_tag=On@g\" /etc/php.ini; \
         sed -i \"s@max_execution_time.*@max_execution_time=${PHP_MAX_EXEC_TIME}@g\" /etc/php.ini; \
@@ -239,21 +238,6 @@ function build_image {
         sed -i \"s@post_max_size.*@post_max_size=16M@g\" /etc/php.ini; \
         sed -i \"s@upload_max_filesize.*@upload_max_filesize=16M@g\" /etc/php.ini; \
         sed -i \"s@;date.timezone =@date.timezone = ${TIMEZONE}@g\" /etc/php.ini; \
-        "
-
-    # pecl
-    _pecl="pecl channel-update pecl.php.net; \
-        printf \"\n\" | pecl install 'imagick'; \
-        echo 'extension=imagick.so' > /etc/php.d/20-imagick.ini; \
-        printf \"\n\" | pecl install memcached; \
-        echo 'extension=memcached.so' > /etc/php.d/50-memcached.ini; \
-        printf \"\n\" | pecl install mcrypt; \
-        echo 'extension=mcrypt.so' > /etc/php.d/30-mcrypt.ini; \
-        "
-
-    # xdebug
-    _xdebug="printf \"\n\" | pecl install 'xdebug'; \
-        printf \"zend_extension=/usr/lib64/php/modules/xdebug.so\nxdebug.mode=develop,debug,trace\nxdebug.start_with_request=trigger\nxdebug.host=127.0.0.1\nxdebug.port=9003\nxdebug.log=/var/log/httpd/xdebug.log\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\n\" >> /etc/php.d/15-xdebug.ini \
         "
 
     # php-fpm config
@@ -268,6 +252,9 @@ function build_image {
         echo \"/.+@.+/ root\" >> /etc/postfix/virtual-regexp; \
         "
 
+    _xdebug_config="printf \"xdebug.mode=develop,debug,trace\nxdebug.start_with_request=trigger\nxdebug.host=127.0.0.1\nxdebug.port=9003\nxdebug.log=/var/log/httpd/xdebug.log\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\n\" >> /etc/php.d/15-xdebug.ini; \
+        "
+
     # build the image in docker style
     # podman build -t lampready:private -f Dockerfile.lampready
     message "Building a custom iamge form ${SITE_NAME} ..."
@@ -279,16 +266,16 @@ function build_image {
 
     # included epel for mcrypt and imagick libraries
     echo "RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm" >> $_file
-    echo "RUN rpm -ivh --nodeps https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/i/ImageMagick-devel-6.9.10.86-1.el8.x86_64.rpm" >> $_file
     echo "RUN rpm -ivh --nodeps --nosignature https://rpmfind.net/linux/centos/8.3.2011/PowerTools/x86_64/os/Packages/xz-lzma-compat-5.2.4-3.el8.x86_64.rpm" >> $_file
+    echo "RUN dnf install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm" >> $_file
 
-    echo "RUN dnf module install -y php:${PHP_VERSION} ${_modules}" >> $_file
+    echo "RUN dnf module install -y php:remi-${PHP_VERSION} ${_modules}" >> $_file
     echo "RUN dnf install -y ${_tools} ${_apache} ${_mariadb} ${_php}" >> $_file
     echo "RUN rpm -Fvh --nodeps https://github.com/bridgesense/lampready/raw/master/httpd-ubi-init-2.4.37-99.el8.x86_64.rpm"  >> $_file
     echo "RUN dnf clean all;" >> $_file
     echo "RUN ${_openssl}" >> $_file
-    echo "RUN ${_perm} ${_apache_config} ${_php_config} ${_fpm_config} ${_mariadb_config} ${_postfix_config}" >> $_file
-    echo "RUN ${_pecl} ${_npm_globals} ${_composer} ${_xdebug} " >> $_file
+    echo "RUN ${_perm} ${_apache_config} ${_php_config} ${_fpm_config} ${_mariadb_config} ${_postfix_config} ${_xdebug_config}" >> $_file
+    echo "RUN ${_npm_globals} ${_composer} " >> $_file
     echo "RUN ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime" >> $_file
     echo "RUN systemctl enable postfix" >> $_file
     echo "RUN systemctl enable mariadb" >> $_file
@@ -640,7 +627,7 @@ if [ "$ACTION" == "up" ]; then
         echo "This script is designed to be used with Red Hat Linux"
         echo "Please make sure that the following package is installed:"
         echo ""
-        echo "sudo dnf module install container-tools"
+        echo "sudo dnf module install -y container-tools:3.0"
         echo ""
     fi
 
