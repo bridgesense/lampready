@@ -219,7 +219,7 @@ function build_image {
     _mariadb="mariadb-server mariadb"
 
     # mariadb config
-    _mariadb_config="sed -i '/^[mysqld]/a innodb_file_per_table=1\ninnodb_file_format=barracuda\ninnodb_strict_mode=0\nsql_mode=''\ninnodb_large_prefix=1\ninnodb_log_file_size=256M\ntmp_table_size=256MB\nmax_heap_table_size=256MB\nslow_query_log = 1\nslow_query_log_file = /var/log/httpd/mariadb-slow.log\nlong_query_time = 2\nlog-error=/var/log/httpd/mariadb.log' /etc/my.cnf.d/mariadb-server.cnf; \
+    _mariadb_config="sed -i '/^[mysqld]/a innodb_file_per_table=1\ninnodb_file_format=barracuda\ninnodb_strict_mode=0\nsql_mode=''\ninnodb_large_prefix=1\ninnodb_log_file_size=256M\ntmp_table_size=256MB\nmax_heap_table_size=256MB\nslow_query_log = 1\nslow_query_log_file = /var/log/httpd/mariadb-slow.log\nlong_query_time = 2\nlog_error=/var/log/httpd/mariadb.log' /etc/my.cnf.d/mariadb-server.cnf; \
         sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; \
         sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; \
         sed -i \"s@/usr/libexec/mysqld@/usr/libexec/mysqld --user=root@g\" /usr/lib/systemd/system/mariadb.service; \
