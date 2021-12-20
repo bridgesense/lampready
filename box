@@ -211,7 +211,7 @@ function build_image {
 
     # openssl
     _openssl="openssl req -newkey rsa:2048 -x509 -sha256 -days 999999 \
-        -nodes -subj '/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=${HOSTNAME}' \
+        -nodes -subj '/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=${SITE_NAME}' \
         -out /etc/pki/tls/certs/localhost.crt -keyout /etc/pki/tls/private/localhost.key; \
         "
 
@@ -248,7 +248,7 @@ function build_image {
         "
 
     # postfix config
-    _postfix_config="printf \"smtpd_use_tls=no\nmyhostname = ${HOSTNAME}\nmynetworks = 127.0.0.1 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128\nvirtual_maps = regexp:/etc/postfix/virtual-regexp\" >> /etc/postfix/main.cf; \
+    _postfix_config="printf \"smtpd_use_tls=no\nmyhostname = ${SITE_NAME}\nmynetworks = 127.0.0.1 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128\nvirtual_maps = regexp:/etc/postfix/virtual-regexp\" >> /etc/postfix/main.cf; \
         echo \"/.+@.+/ root\" >> /etc/postfix/virtual-regexp; \
         "
 
