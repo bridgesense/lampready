@@ -40,7 +40,7 @@ XDEBUG_SCREAM="0"
 declare -A DB1=(
         [DB_NAME]=""
         [DB_USER]=""
-        [DB_PERM]="SELECT, DELETE, INDEX, INSERT, UPDATE, CREATE, EXECUTE, ALTER, DROP"
+        [DB_PERM]="SELECT, DELETE, INDEX, INSERT, UPDATE, EXECUTE, ALTER, DROP, CREATE, CREATE TEMPORARY TABLES, CREATE VIEW, CREATE ROUTINE, TRIGGER"
         [DB_PASS]='' # make sure to use single quotes here to compensate for special chars
         [DB_PREFIX]="" # e.g. wp_
         [DB_TYPE]="custom" # custom, wordpress, magento_1, magento_2
@@ -446,6 +446,12 @@ function import_databases {
                 # creating database
                 mysql -e "CREATE DATABASE ${var[DB_NAME]}" >/dev/null 2>&1
 
+                # creating user
+                mysql -e "CREATE USER '${var[DB_USER]}'@'localhost' IDENTIFIED BY '$(echo ${var[DB_PASS]})';" >/dev/null 2>&1
+
+                # granting permissions
+                mysql -e "GRANT ${var[DB_PERM]} ON ${var[DB_NAME]}.* TO '${var[DB_USER]}'@'localhost'"
+
                 # importing database file if exists
                 if [ "${var[DB_FILENAME]}" != "" ] && [ -f "/var/www/${var[DB_FILENAME]}" ]; then
                     mysql -f ${var[DB_NAME]} < /var/www/${var[DB_FILENAME]}
@@ -488,13 +494,6 @@ function import_databases {
                     fi
 
                 fi
-
-                # creating user
-                mysql -e "CREATE USER '${var[DB_USER]}'@'localhost' IDENTIFIED BY '$(echo ${var[DB_PASS]})';" >/dev/null 2>&1
-
-                # granting permissions
-                mysql -e "GRANT ${var[DB_PERM]} ON ${var[DB_NAME]}.* TO '${var[DB_USER]}'@'localhost'"
-
             fi
         else
             break
