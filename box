@@ -40,7 +40,7 @@ XDEBUG_SCREAM="0"
 declare -A DB1=(
         [DB_NAME]=""
         [DB_USER]=""
-        [DB_PERM]="SELECT, DELETE, INDEX, INSERT, UPDATE, EXECUTE, ALTER, DROP, CREATE, CREATE TEMPORARY TABLES, CREATE VIEW, CREATE ROUTINE, TRIGGER"
+        [DB_PERM]="ALL"
         [DB_PASS]='' # make sure to use single quotes here to compensate for special chars
         [DB_PREFIX]="" # e.g. wp_
         [DB_TYPE]="custom" # custom, wordpress, magento_1, magento_2
@@ -49,12 +49,6 @@ declare -A DB1=(
 )
 
 # declare -A DB2=(...
-
-# generally reserved for administrative access
-# for cron and backend applications
-DB_MAINT_USER=""
-DB_MAINT_PASS=''
-DB_MAINT_PERM="ALL"
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Don't edit below this point unless you really want to
@@ -182,7 +176,7 @@ function build_image {
     fi
 
     # tools
-    _tools="make crontabs cronie postfix mutt iputils net-tools git unzip xz"
+    _tools="make crontabs cronie postfix mutt iputils net-tools git unzip xz elasticsearch"
 
     # modules
     _modules="nodejs python36 ruby"
@@ -216,9 +210,9 @@ function build_image {
         "
 
     # Mariadb
-    _mariadb="mariadb-server mariadb"
+    _mariadb="mariadb-server mariadb \
+        "
 
-    # mariadb config
     _mariadb_config="sed -i '/^[mysqld]/a innodb_file_per_table=1\ninnodb_file_format=barracuda\ninnodb_strict_mode=0\nsql_mode=''\ninnodb_large_prefix=1\ninnodb_log_file_size=256M\ntmp_table_size=256MB\nmax_heap_table_size=256MB\nslow_query_log = 1\nslow_query_log_file = /var/log/httpd/mariadb-slow.log\nlong_query_time = 2\nlog_error=/var/log/httpd/mariadb.log' /etc/my.cnf.d/mariadb-server.cnf; \
         sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; \
         sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; \
@@ -226,10 +220,20 @@ function build_image {
         "
 
     # PHP modules
-    _php="memcached aspell-en lzip xz\
-        php-pear php-opcache php-gd php-pdo php-soap php-bcmath php-intl php-pspell php-imap php-xz php-mysqlnd \
-        php-pecl-memcached php-pecl-xdebug3 php-pecl-imagick php-pecl-zip \
+    _php="memcached aspell-en lzip xz \
+        php-devel php-pear php-opcache php-gd php-pdo php-soap php-bcmath php-intl php-pspell php-imap php-xz php-mysqlnd \
+        php-pecl-memcached php-pecl-xdebug3 php-pecl-imagick php-pecl-zip libsodium libsodium-devel \
         "
+  
+    # pecl
+    _pecl="libsodium \
+        "
+
+    # elasticsearch
+    _elasticsearch="rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch; \
+        printf \"[Elasticsearch-7]\\nname=Elasticsearch repository for 7.x packages\\nbaseurl=https://artifacts.elastic.co/packages/7.x/yum\\ngpgcheck=1\\ngpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch\\nenabled=1\\nautorefresh=1\\ntype=rpm-md\\n\" > /etc/yum.repos.d/elasticsearch.repo; \
+        "
+
     # php config
     _php_config="sed -i \"s@short_open_tag.*@short_open_tag=On@g\" /etc/php.ini; \
         sed -i \"s@max_execution_time.*@max_execution_time=${PHP_MAX_EXEC_TIME}@g\" /etc/php.ini; \
@@ -238,6 +242,7 @@ function build_image {
         sed -i \"s@post_max_size.*@post_max_size=16M@g\" /etc/php.ini; \
         sed -i \"s@upload_max_filesize.*@upload_max_filesize=16M@g\" /etc/php.ini; \
         sed -i \"s@;date.timezone =@date.timezone = ${TIMEZONE}@g\" /etc/php.ini; \
+        echo \"extension=sodium.so\" > /etc/php.d/20-sodium.ini; \
         "
 
     # php-fpm config
@@ -268,12 +273,13 @@ function build_image {
     echo "RUN dnf install -y https://dl.fedoraproject.org/pub/epel/8/Everything/aarch64/Packages/e/epel-release-8-13.el8.noarch.rpm" >> $_file
     echo "RUN rpm -ivh --nodeps --nosignature https://rpmfind.net/linux/centos/8.4.2105/PowerTools/x86_64/os/Packages/xz-lzma-compat-5.2.4-3.el8.x86_64.rpm" >> $_file
     echo "RUN dnf install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm" >> $_file
-
+    echo "RUN ${_elasticsearch}" >> $_file
     echo "RUN dnf module install -y php:remi-${PHP_VERSION} ${_modules}" >> $_file
     echo "RUN dnf install -y ${_tools} ${_apache} ${_mariadb} ${_php}" >> $_file
     echo "RUN rpm -Fvh --nodeps https://github.com/bridgesense/lampready/raw/master/httpd-ubi-init-2.4.37-99.el8.x86_64.rpm"  >> $_file
     echo "RUN dnf clean all;" >> $_file
     echo "RUN ${_openssl}" >> $_file
+    echo "RUN pecl install ${_pecl}" >> $_file
     echo "RUN ${_perm} ${_apache_config} ${_php_config} ${_fpm_config} ${_mariadb_config} ${_postfix_config} ${_xdebug_config}" >> $_file
     echo "RUN ${_npm_globals} ${_composer} " >> $_file
     echo "RUN ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime" >> $_file
@@ -282,6 +288,7 @@ function build_image {
     echo "RUN systemctl enable httpd" >> $_file
     echo "RUN systemctl enable php-fpm" >> $_file
     echo "RUN systemctl enable memcached" >> $_file
+    echo "RUN systemctl enable elasticsearch" >> $_file
     podman build -t "${SITE_NAME}:private" -f $_file
 }
 
@@ -497,12 +504,6 @@ function import_databases {
             fi
         else
             break
-        fi
-
-        if [ "${DB_MAINT_USER}" != "" ]; then
-            # set up maintenance account
-            mysql -e "CREATE USER '${DB_MAINT_USER}'@'localhost' IDENTIFIED BY '$(echo ${DB_MAINT_PASS})'" >/dev/null 2>&1
-            mysql -e "GRANT ${DB_MAINT_PERM} ON * . * TO '${DB_MAINT_USER}'@'localhost'"
         fi
 
         mysql -e "FLUSH PRIVILEGES"
