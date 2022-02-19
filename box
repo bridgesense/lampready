@@ -270,8 +270,8 @@ function build_image {
     echo "LABEL io.k8s.display-name='An RHEL8 full LAMP stack'" >> $_file
 
     # included epel for mcrypt and imagick libraries
-    echo "RUN dnf install -y https://dl.fedoraproject.org/pub/epel/8/Everything/aarch64/Packages/e/epel-release-8-13.el8.noarch.rpm" >> $_file
-    echo "RUN rpm -ivh --nodeps --nosignature https://rpmfind.net/linux/centos/8.4.2105/PowerTools/x86_64/os/Packages/xz-lzma-compat-5.2.4-3.el8.x86_64.rpm" >> $_file
+    echo "RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm" >> $_file
+    echo "RUN rpm -ivh --nodeps --nosignature https://rpmfind.net/linux/centos/8-stream/PowerTools/x86_64/os/Packages/xz-lzma-compat-5.2.4-3.el8.x86_64.rpm" >> $_file
     echo "RUN dnf install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm" >> $_file
     echo "RUN ${_elasticsearch}" >> $_file
     echo "RUN dnf module install -y php:remi-${PHP_VERSION} ${_modules}" >> $_file
