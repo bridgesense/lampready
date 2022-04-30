@@ -722,7 +722,7 @@ if [ "$ACTION" == "up" ]; then
         echo "+                                                                 +"
         echo "+  For Xdebug to work, make sure to open the port (example):      +"
         echo "+  firewall-cmd --permanent --zone=webserver --add-port=${XDEBUG_PORT}/tcp"
-        echo "+  semanage port -a -t http_port -p tcp ${XDEBUG_PORT}"
+        echo "+  semanage port -a -t http_port_t -p tcp ${XDEBUG_PORT}"
         echo "+                                                                 +"
         echo "+  All outbound mail is trapped and can be viewed with:           +"
         echo "+  bash box mail                                                  +"

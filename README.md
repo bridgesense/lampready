@@ -308,13 +308,13 @@ instead of localhost.
 Xdebug Settings
 ---
 
-Xdebug port: 9041 (*see script setting*)
+Xdebug port: 9003 (*see script setting*)
 
 Xdebug is preconfigured and ready to go.  There are a few things to be aware of
 when working with Xdebug within an IDE.
 
 **FIREWALL NOTICE:**  If you're blocking all inbound connections, Xdebug will
-NOT interface with your local IDE.  Be sure to open port 9041 or which ever
+NOT interface with your local IDE.  Be sure to open port 9003 or which ever
 port was entered in the Vagrantfile script.
 
 
@@ -339,7 +339,7 @@ your project.
 ```
 " Project Specific Settings for Vdebug
 let g:vdebug_options = {
-\    "port" : 9041,
+\    "port" : 9003,
 \    "timeout" : 20,
 \    "server" : '',
 \    "on_close" : 'stop',
@@ -375,7 +375,7 @@ Here is a sample user configuration from SublimeText.
 
 ```
 {
-    "port": 9041,
+    "port": 9003,
     "max_depth": 5,
     "max_children": 128,
     "break_on_exception": [
