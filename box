@@ -222,9 +222,9 @@ function build_image {
     # PHP modules
     _php="memcached aspell-en lzip xz \
         php-devel php-pear php-opcache php-gd php-pdo php-soap php-bcmath php-intl php-pspell php-imap php-xz php-mysqlnd \
-        php-pecl-memcached php-pecl-xdebug3 php-pecl-imagick php-pecl-zip libsodium libsodium-devel \
+        php-pecl-memcached php-pecl-xdebug php-pecl-imagick php-pecl-zip libsodium libsodium-devel \
         "
-  
+
     # pecl
     _pecl="libsodium \
         "
@@ -257,7 +257,7 @@ function build_image {
         echo \"/.+@.+/ root\" >> /etc/postfix/virtual-regexp; \
         "
 
-    _xdebug_config="printf \"xdebug.mode=develop,debug,trace\nxdebug.start_with_request=trigger\nxdebug.host=127.0.0.1\nxdebug.port=9003\nxdebug.log=/var/log/httpd/xdebug.log\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\n\" >> /etc/php.d/15-xdebug.ini; \
+    _xdebug_config="printf \"xdebug.default_enable=1\nxdebug.auto_trace=1\nxdebug.remote_enable=1\nxdebug.remote_host=127.0.0.1\nxdebug.remote_port=${XDEBUG_PORT}\nxdebug.remote_handler=dbgp\nxdebug.remote_mode=req\nxdebug.idekey=${XDEBUG_IDEKEY}\nxdebug.remote_autostart=1\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.remote_connect_back=1\nxdebug.cli_color=1\nxdebug.overload_var_dump=1\nxdebug.remote_log='/tmp/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\" >> /etc/php.d/15-xdebug.ini; \
         "
 
     # build the image in docker style
@@ -462,7 +462,7 @@ function import_databases {
                 # importing database file if exists
                 if [ "${var[DB_FILENAME]}" != "" ] && [ -f "/var/www/${var[DB_FILENAME]}" ]; then
                     mysql -f ${var[DB_NAME]} < /var/www/${var[DB_FILENAME]}
-                   
+
                     # importing functions if exists
                     if [ "${var[DB_CUSTOM_FUNCTIONS_FILENAME]}" != "" ] && [ -f "/var/www/${var[DB_CUSTOM_FUNCTIONS_FILENAME]}" ]; then
                         mysql -f ${var[DB_NAME]} < /var/www/${var[DB_CUSTOM_FUNCTIONS_FILENAME]}
@@ -722,7 +722,7 @@ if [ "$ACTION" == "up" ]; then
         echo "+                                                                 +"
         echo "+  For Xdebug to work, make sure to open the port (example):      +"
         echo "+  firewall-cmd --permanent --zone=webserver --add-port=${XDEBUG_PORT}/tcp"
-        echo "+  semanage port -a -t http_port_t -p tcp ${XDEBUG_PORT}"
+        echo "+  semanage port -a -t http_port -p tcp ${XDEBUG_PORT}"
         echo "+                                                                 +"
         echo "+  All outbound mail is trapped and can be viewed with:           +"
         echo "+  bash box mail                                                  +"
