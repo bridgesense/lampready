@@ -307,12 +307,6 @@ bash box ps
 bash box reset 
 ```
 
-Xdebug Settings
----
-
-Xdebug port: 9003 (*see script setting*)
-
-
 Emacs and Dap-Mode 
 ---
 
