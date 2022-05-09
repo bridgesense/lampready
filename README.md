@@ -21,7 +21,7 @@ such that provides a stable environment for testing code.
 How it Works
 ---
 
-This script syncs your project's root folder inside a virtual machine.  That
+This script syncs your project's root folder inside a container.  That
 allows you to work on and debug code in a working Web server environment.
 Most of these virtual environments do not have mail utilities set up because
 dealing with the fallout of development spam is never fun.  Sometimes those
