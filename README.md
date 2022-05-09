@@ -129,10 +129,10 @@ The very first time you run the "bash box up" command, the hostname and
 certificate, mail relay and any databases without further intervention.
 
 
-**HOSTNAME**
+**HOSTNAME:**
 The hostname should contain your domain name. 
 
-**SUB_DOMAIN**
+**SUB_DOMAIN:**
 It is recommended that you choose a unique sub domain for your virtual machine.
 This way your public domain is active for comparison.  Next, alter your system's
 hosts file to allow the new domain to be accessed from any of your browsers.  On
@@ -142,7 +142,7 @@ access to add the following line or something similar:
 127.0.0.1   dev.lampready.com
 ```
 
-**PUBLIC_ROOT_PATH**
+**PUBLIC_ROOT_PATH:**
 This script should be placed in your project's root directory.  If your
 root directory contains an index file, you'll need to leave this setting blank.
 Otherwise, you'll include the local path to your index file.  The example
@@ -171,13 +171,13 @@ directory  You can add more URLS by adding the appropriate configuration
 files to: .container/conf.d
 
 
-**HTTP_PORT**
+**HTTP_PORT:**
 The this port generally defaults to 80.  If you have root access, you are
 encouraged to use this port for full compatibility of the code that
 is now running in a virtual environment.
 
 
-**SSL_PORT**
+**SSL_PORT:**
 This port defaults to 443, but may be changed.  Remember though, if the
 port is different, it should be part of the URL entered into the browser:
 
@@ -185,17 +185,17 @@ port is different, it should be part of the URL entered into the browser:
 https://dev.lampready.com:443
 ```
 
-**PHP_VERSION**
+**PHP_VERSION:**
 This option is intended to provide easier debugging during PHP upgrades.  PHP
 versions 7.2, 7.3 and 7.4 are ready to use.  Each version has access to the
 most common modules.
 
 
-**PHP_MAX_EXEC_TIME**
+**PHP_MAX_EXEC_TIME:**
 This is the maximum execution time a PHP script runs before it times out.
 
 
-**PHP_MEM_LIMIT**
+**PHP_MEM_LIMIT:**
 This is the maximum amount of memory a single PHP script can use.  Remember,
 this is not a virtual environment per se.  This is a rootless container where
 memory is not reserved, only used during the course of the Web server's
@@ -203,13 +203,13 @@ operations.  This makes for a more efficient environment for testing
 software.
 
 
-**XDEBUG_ENABLE**
+**XDEBUG_ENABLE:**
 Xdebug is not enabled by default. Xdebug must be enabled before the initial
 setup process begins.  If Xdebug is not enabled during the first initialization
 of the LAMP stack it will have to be destroyed and recreated.
 
 
-**XDEBUG_PORT**
+**XDEBUG_PORT:**
 This is the default port normally allocated for Xdebug.  You'll want to be sure
 to open up your firewall to allow communication between Xdebug and your browser.
 Think about the following changes that will need to be made with the root user
@@ -219,39 +219,39 @@ firewall-cmd --permanent --zone=webserver --add-port=9003/tcp
 semanage port -a -t http_port -p tcp 9003
 ```
 
-**XDEBUG_FORCE_ERROR_DISPLAY**
+**XDEBUG_FORCE_ERROR_DISPLAY:**
 For sites constructed from many packages with different settings, it is nice to
 be able to easily override error suppression.  Set this option to 1 to
 override individual error settings throughout the code.
 
 
-**XDEBUG_SCREAM**
+**XDEBUG_SCREAM:**
 This is another setting that can help ensure all PHP errors are described
 in the browser.
 
 
-**DB1**
+**DB1:**
 The script can automatically set up and install up to three MySQL databases.
 By filling out this information, the script will create the database and inject
 your data from a sql file you have placed in the project's root directory.
 
-**DB_NAME, DB_USER and DB_PASS**
+**DB_NAME, DB_USER and DB_PASS:**
 These settings should mirror the same database name and user credentials
 written in the website's database configuration file.  Notice the single quotes
 used for the password.  This is an important work-around to allow the bash
 script to insert certain special characters correctly.
 
 
-**DB_PERM**
+**DB_PERM:**
 Assign DB permissions to specific users.
 
 
-**DB_PREFIX**
+**DB_PREFIX:**
 If there are any prefixes associated with your database as commonly is the case
 with Wordpress, this should be entered here.  An example would be: wp_
 
 
-**DB_TYPE**
+**DB_TYPE:**
 If the database is Magento or Wordpress, you will want to set this option to say
 so.  The following arguments are valid: custom, wordpress, magento_1 or
 magento_2.  The script will update the appropriate tables to match this
@@ -259,14 +259,14 @@ script's HOSTNAME and SUB_DOMAIN settings.  For typical installations no manual
 fiddling should be necessary.
 
 
-**DB_FILENAME**
+**DB_FILENAME:**
 This option is not neccessary if there is no database to import.  While the
 DB_NAME option will create an empty database, this option populates that
 database.  The script will look for the sql file in your projects root
 directory (one directory below document root).
 
 
-**DB_CUSTOM_FUNCTIONS**
+**DB_CUSTOM_FUNCTIONS:**
 This option is used for importing an additional script or custom functions.
 
 
