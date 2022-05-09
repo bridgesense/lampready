@@ -124,7 +124,7 @@ bash box mail
 
 How to Configure this Script for Your Project
 ---
-The very first time you run the "vagrant up" command, the hostname and
+The very first time you run the "bash box up" command, the hostname and
 "User Defined Settings" will be used to set up Apache, Xdebug, the SSL
 certificate, mail relay and any databases without further intervention.
 
@@ -288,7 +288,7 @@ bash box halt
 ```
 bash box destroy
 ```
-**Note:** If you run Vagrant destroy, the box will be built from scratch again
+**Note:** If you run bash box destroy, the box will be built from scratch again
 -- which may be a good thing.
 
 
@@ -299,12 +299,12 @@ bash box ssh
 
 **check if you are running any other LAMPReady instances:**
 ```
-vagrant box ps 
+bash box ps 
 ```
 
 **to destroy all LAMPReady installations:**
 ```
-vagrant box reset 
+bash box reset 
 ```
 
 Xdebug Settings
@@ -368,7 +368,7 @@ if filereadable('.vimrc.local')
 ```
 
 Create a file called .vimrc.local and place it in the root directory of your
-project -- the same one as your Vagrantfile script. Be sure that the path
+project -- the same one as your box script. Be sure that the path
 mapping matches the project's <b>root directory</b> or your break points will
 not work.  The /var/www will stay the same as it is the synced location of
 your project.
