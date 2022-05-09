@@ -32,7 +32,6 @@ PHP_MEM_LIMIT="512M"
 # expect.  Therefore Apache has access to everything root has. When enabling xdebug
 # you will be exposing private network information to the container environment.
 XDEBUG_ENABLE="0"
-XDEBUG_IDEKEY="xdebug"
 XDEBUG_PORT="9003"
 XDEBUG_FORCE_DISPLAY_ERRORS="1"
 XDEBUG_SCREAM="0"
@@ -40,8 +39,8 @@ XDEBUG_SCREAM="0"
 declare -A DB1=(
         [DB_NAME]=""
         [DB_USER]=""
-        [DB_PERM]="ALL"
         [DB_PASS]='' # make sure to use single quotes here to compensate for special chars
+        [DB_PERM]="ALL"
         [DB_PREFIX]="" # e.g. wp_
         [DB_TYPE]="custom" # custom, wordpress, magento_1, magento_2
         [DB_FILENAME]="" # my_db.sql
@@ -52,6 +51,18 @@ declare -A DB1=(
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Don't edit below this point unless you really want to
+
+# The default box parameters require a registry login
+# podman login registry.access.redhat.com
+IMAGE="registry.access.redhat.com/ubi8/ubi-init"
+
+SITE_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ACTION="${1:-help}"
+if [ "$SUB_DOMAIN" != "" ]; then SITE_NAME="${SUB_DOMAIN}.${HOSTNAME}"; else SITE_NAME=$HOSTNAME; fi
+MULTI_BOX=0
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # functions
 
 # The default box parameters require a registry login
 # podman login registry.access.redhat.com
@@ -222,7 +233,7 @@ function build_image {
     # PHP modules
     _php="memcached aspell-en lzip xz \
         php-devel php-pear php-opcache php-gd php-pdo php-soap php-bcmath php-intl php-pspell php-imap php-xz php-mysqlnd \
-        php-pecl-memcached php-pecl-xdebug php-pecl-imagick php-pecl-zip libsodium libsodium-devel \
+        php-pecl-memcached php-pecl-xdebug3 php-pecl-imagick php-pecl-zip libsodium libsodium-devel \
         "
 
     # pecl
@@ -257,7 +268,7 @@ function build_image {
         echo \"/.+@.+/ root\" >> /etc/postfix/virtual-regexp; \
         "
 
-    _xdebug_config="printf \"xdebug.default_enable=1\nxdebug.auto_trace=1\nxdebug.remote_enable=1\nxdebug.remote_host=127.0.0.1\nxdebug.remote_port=${XDEBUG_PORT}\nxdebug.remote_handler=dbgp\nxdebug.remote_mode=req\nxdebug.idekey=${XDEBUG_IDEKEY}\nxdebug.remote_autostart=1\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.remote_connect_back=1\nxdebug.cli_color=1\nxdebug.overload_var_dump=1\nxdebug.remote_log='/tmp/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\" >> /etc/php.d/15-xdebug.ini; \
+    _xdebug_config="printf \"xdebug.mode=debug\nxdebug.start_with_request=yes\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.cli_color=1\nxdebug.remote_log='/tmp/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\" >> /etc/php.d/15-xdebug.ini; \
         "
 
     # build the image in docker style
