@@ -11,8 +11,7 @@ tested for production (professional) deployment.
 There are a lot of great LAMP packages out there.  However, I wanted something
 I could spin up fast without a lot of manual intervention.  Each website is
 unique in the way it is served and maintained.  This script takes away a lot
-of the heavy lifting and complexity of setting up a LAMP (or virtual
-environment).  This is also referred to VM for short, meaning virtual machine.
+of the heavy lifting and complexity of setting up a LAMP stack.
 
 This LAMP stack is not too different from an actual working production Web
 server.  As a general warning though, this environment is only intended to be
@@ -207,7 +206,7 @@ software.
 **XDEBUG_ENABLE**
 Xdebug is not enabled by default. Xdebug must be enabled before the initial
 setup process begins.  If Xdebug is not enabled during the first initialization
-of this VM will have to be destroyed and recreated.
+of the LAMP stack it will have to be destroyed and recreated.
 
 
 **XDEBUG_PORT**
