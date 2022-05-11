@@ -185,6 +185,12 @@ port is different, it should be part of the URL entered into the browser:
 https://dev.lampready.com:443
 ```
 
+
+**TIMEZONE**
+Set the timezone for Apache using one of 
+[these options](https://www.php.net/manual/en/timezones.php).
+
+
 **PHP_VERSION:**
 This option is intended to provide easier debugging during PHP upgrades.  PHP
 versions 7.2, 7.3 and 7.4 are ready to use.  Each version has access to the
