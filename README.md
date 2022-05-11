@@ -52,8 +52,9 @@ podman login registry.access.redhat.com
 Right now, Red Hat is allowing access to this repository at no charge.  All you
 need to do is
 [register](https://developers.redhat.com/#assembly-field-sections-7105). Since
-CentOS has moved out of the production space, this is a good way to see websites
-working in the RHEL environment.  Thankfully, there's not much difference.
+CentOS has moved out of the production space, LAMPReady is a nice solution to see 
+how your website will perform in the RHEL environment.  Thankfully, there's not much
+difference to what you're already used to.
 
 *By default a container does not use up one of your deployment slots.  Inside the
 container you already have access to the main repository.*
@@ -66,14 +67,19 @@ echo "net.ipv4.ip_unprivileged_port_start=0" > /etc/sysctl.d/05-expose-privilege
 sysctl --system
 ```
 
-LAMPReady is a rootless container. As such, there are many configuration standards
-and standard practices to setting up a web server that have been broken simply
-for the sake of productivity.
+LAMPReady is a rootless container. As such, there are standard practices to 
+setting up a web server that have been broken simply for the sake of
+productivity.
 
-Don't let this fool you.  The user will still need access to the root account
-if they plan on using standard Web server ports as noted above.  Root access will
-also be needed to make entries to the firewall and SELinux in order for 
-Xdebug to work properly.
+The user will still need have access to the root account on their local machine.
+Root access will allow you to make entries to the firewall and SELinux in order
+for Xdebug to work properly as in this example:
+
+```
+firewall-cmd --permanent --zone=webserver --add-port=9003/tcp
+semanage port -a -t http_port -p tcp 9003
+```
+
 
 How to Install the RHEL Box?
 ---
@@ -87,15 +93,17 @@ curl https://raw.githubusercontent.com/bridgesense/lampready/master/box > box
 
 __PLEASE NOTE:__ Be sure to review the notes at the head of the box script.
 Xdebug is disabled by default. This box is designed to run container processes
-with root permission, which includes Apache.  In a rootless container it is the
-only way to preserve the proper permissions of shared files. In order for xdebug
-to work as intended, some local network information is exposed when enabling it.
+with root permission, which includes Apache.  The rootless container it is the
+only way to preserve the proper permissions of shared files using podam or
+similar docker-like environment. In order for xdebug to work as intended, some
+local network information is exposed when enabling it.
 
-As you will notice further on, this script's commands closely models
+As you will notice further on, this script's commands closely model
 [Vagrant](https://www.vagrantup.com/).  The advantage of running a container is
-that I no longer need to maintain a fully encapsulated operating system image.
+over a proper VM is that I no longer need to maintain a fully encapsulated 
+operating system image on the vagrantup database.
 
-To see a list of commands, just run:
+To see a list of commands for LAMPReady, just run:
 
 ```
 bash box
