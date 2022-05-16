@@ -115,12 +115,10 @@ function build_default_httpd_conf {
     echo "         SetHandler proxy:fcgi://php-fpm" >> $_http_conf_file
     echo "    </FilesMatch>" >> $_http_conf_file
     echo "    <Directory \"/var/www\">" >> $_http_conf_file
-    echo "         Options Indexes FollowSymLinks" >> $_http_conf_file
     echo "         AllowOverride All" >> $_http_conf_file
     echo "         Require all granted" >> $_http_conf_file
     echo "    </Directory>" >> $_http_conf_file
     echo "    <Directory \"/var/www/${PUBLIC_ROOT_PATH}\">" >> $_http_conf_file
-    echo "         DirectoryIndex index.php index.html" >> $_https_conf_file
     echo "         Options Indexes FollowSymLinks" >> $_http_conf_file
     echo "         AllowOverride All" >> $_http_conf_file
     echo "         Require all granted" >> $_http_conf_file
@@ -165,7 +163,6 @@ function build_default_httpd_conf {
     echo "         Require all granted" >> $_https_conf_file
     echo "    </Directory>" >> $_https_conf_file
     echo "    <Directory \"/var/www/${PUBLIC_ROOT_PATH}\">" >> $_https_conf_file
-    echo "         DirectoryIndex index.php index.html" >> $_https_conf_file
     echo "         Options Indexes FollowSymLinks" >> $_https_conf_file
     echo "         AllowOverride All" >> $_https_conf_file
     echo "         Require all granted" >> $_https_conf_file
@@ -233,12 +230,13 @@ function build_image {
 
     _mariadb_config="sed -i \"/^\\[mysqld\\]/a innodb_file_per_table=1\\ninnodb_file_format=barracuda\\ninnodb_strict_mode=0\\nsql_mode=''\\ninnodb_large_prefix=1\\ninnodb_log_file_size=256M\\ntmp_table_size=256MB\\nmax_heap_table_size=256MB\\nslow_query_log = 1\\nslow_query_log_file = /var/log/mariadb-slow.log\\nlong_query_time = 2\\nlog_error=/var/log/mariadb.log\" /etc/my.cnf.d/server.cnf; \
         sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; \
+        sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb@.service; \
         sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; \
-        sed -i \"s@/usr/sbin/mariadbd@/usr/sbin/mariadbd --user=root@g\" /usr/lib/systemd/system/mariadb.service; \ 
-        rm -Rf /var/lib/mysql/*; \
-        mysql_install_db --user=root --basedir=/usr --datadir=/var/lib/mysql; \
+        sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb@.service; \
+        sed -i \"s@/usr/sbin/mariadbd@/usr/sbin/mariadbd --user=root@g\" /usr/lib/systemd/system/mariadb.service; \
+        sed -i \"s@/usr/sbin/mariadbd@/usr/sbin/mariadbd --user=root@g\" /usr/lib/systemd/system/mariadb@.service; \
         "
-
+   
     # PHP modules
     _php="memcached lzip xz \
         php-devel php-pear php-opcache php-gd php-pdo php-soap php-bcmath php-intl php-pspell php-imap php-xz php-mysqlnd \
@@ -308,7 +306,7 @@ function build_image {
     echo "RUN dnf install -y https://vault.centos.org/centos/8/AppStream/x86_64/os/Packages/boost-program-options-1.66.0-10.el8.x86_64.rpm" >> $_file
     echo "RUN dnf install -y http://releases.galeracluster.com/galera-4/redhat/8/x86_64/galera-4-26.4.11-1.el8.x86_64.rpm" >> $_file
     # echo "RUN dnf install -y " >> $_file
-    
+
     echo "RUN dnf install -y ${_tools} ${_apache} ${_mariadb} ${_php}" >> $_file
     echo "RUN rpm -Fvh --nodeps https://github.com/bridgesense/lampready/raw/master/httpd-ubi-init-2.4.37-99.el8.x86_64.rpm"  >> $_file
     echo "RUN dnf clean all;" >> $_file
@@ -619,7 +617,7 @@ function setup_systemd_service {
         -v "${SITE_HOME}/.container/conf.d:/etc/httpd/conf.d:Z"
         -v "${SITE_HOME}/.container/log:/var/log/httpd:Z"
         -v "${SITE_HOME}/.container/mariadb:/var/lib/mysql:Z"
-
+        --privileged
         "localhost/${SITE_NAME}:private"
     )
 
@@ -636,6 +634,10 @@ function start_systemd_service {
     systemctl --user daemon-reload
     sleep 2
     systemctl --user start "container-${SITE_NAME}"
+    # wake maria
+    sleep 5
+    podman exec "${SITE_NAME}" chown root:root /var/lib/mysql
+    podman exec "${SITE_NAME}" systemctl restart mariadb
 }
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -726,8 +728,12 @@ if [ "$ACTION" == "up" ]; then
         systemctl --user restart "container-${SITE_NAME}.service"  >/dev/null 2>&1
 
         # give plenty of time for Maria to waken
-        sleep 10
-
+        sleep 5
+        podman exec "${SITE_NAME}" chown root:root /var/lib/mysql
+        podman exec "${SITE_NAME}" mysql_install_db --user=root --basedir=/usr --datadir=/var/lib/mysql
+        podman exec "${SITE_NAME}" systemctl restart mariadb
+        sleep 5
+        
         echo ""
         echo "Setting up the databases based on the information"
         echo "that was entered at the head of this file..."

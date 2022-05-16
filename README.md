@@ -237,6 +237,8 @@ Think about the following changes that will need to be made with the root user
 in order for Xdebug to function:
 ```
 firewall-cmd --permanent --zone=webserver --add-port=9003/tcp
+```
+```
 semanage port -a -t http_port -p tcp 9003
 ```
 
@@ -400,7 +402,7 @@ let g:vdebug_options = {
 \    "debug_window_level" : 0,
 \    "debug_file_level" : 0,
 \    "debug_file" : "~/.vdebug.log",
-\    "path_maps" : {"/var/www" : "/Users/Paul/www/your_projects_root_dir"},
+\    "path_maps" : {"/var/www" : "/path/to/the/files/on/your/system"},
 \    "watch_window_style" : 'expanded',
 \    "marker_default" : '⬦',
 \    "marker_closed_tree" : '▸',
