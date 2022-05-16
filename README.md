@@ -40,10 +40,12 @@ thoughts on using a single podman container to build a LAMP stack.  If you use
 familiar with podman, hopefully a quick scan through this script will demystify
 the process.
 
-In this example Podman will need to be logged into registry.access.redhat.com.
-However you may find something suitable on one of the non-subscription repositories.
-In either case, this script is designed to work with 
-[Red Hat Enterprise Linux](https://www.redhat.com) or RHEL for short.
+In this example Podman will need to be logged into registry.access.redhat.com
+in order to download the
+[ubi8-init](https://catalog.redhat.com/software/containers/ubi8-init/5c6aea74dd19c77a158f0892)
+image.  This script has been tested on both the 8 and 9 releases of
+[Red Hat Enterprise Linux](https://www.redhat.com).  It also works on Fedora
+36.
 
 ```
 podman login registry.access.redhat.com
@@ -57,7 +59,7 @@ how your website will perform in the RHEL environment.  Thankfully, there's not 
 difference to what you're already used to.
 
 *By default a container does not use up one of your deployment slots.  Inside the
-container you already have access to the main repository.*
+container you already have access to a limited version of the main repository.*
 
 If you plan on using the standard ports 80 and 443, you will need to expose priviliged
 ports to users.  Run the following commands under root:
@@ -74,11 +76,12 @@ sysctl net.ipv4.ip_unprivileged_port_start=0
 
 LAMPReady is a rootless container. As such, there are standard practices to 
 setting up a web server that have been broken simply for the sake of
-productivity.
+productivity.  This was done to simplify the permissions issues that arise
+when working with shared data within the container.
 
 The user will still need have access to the root account on their local machine.
 Root access will allow you to make entries to the firewall and SELinux in order
-for Xdebug to work properly as in this example:
+for Xdebug to work properly:
 
 ```
 firewall-cmd --permanent --zone=webserver --add-port=9003/tcp
