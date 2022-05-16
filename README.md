@@ -2,7 +2,7 @@ Why LAMPready?
 ---
 
 A LAMP is an acronym describing a Web server that runs on a Linux platform with
-[Apache](https://httpd.apache.org/), [MySQL](https://www.mysql.com/) and
+[Apache](https://httpd.apache.org/), [MariaDB](https://www.mariadb.org/) and
 [PHP](https://www.php.net/).  Web pages with [Python](https://www.python.org/)
 and [Perl](https://www.perl.org/) can also be served under this environment. A
 LAMP stack generally refers to a testing environment where website code can be
@@ -64,7 +64,12 @@ ports to users.  Run the following commands under root:
 
 ```
 echo "net.ipv4.ip_unprivileged_port_start=0" > /etc/sysctl.d/05-expose-privileged.conf
+```
+```
 sysctl --system
+```
+```
+sysctl net.ipv4.ip_unprivileged_port_start=0
 ```
 
 LAMPReady is a rootless container. As such, there are standard practices to 
@@ -77,6 +82,8 @@ for Xdebug to work properly as in this example:
 
 ```
 firewall-cmd --permanent --zone=webserver --add-port=9003/tcp
+```
+```
 semanage port -a -t http_port -p tcp 9003
 ```
 
