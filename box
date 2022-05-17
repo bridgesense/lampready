@@ -61,18 +61,7 @@ SITE_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ACTION="${1:-help}"
 if [ "$SUB_DOMAIN" != "" ]; then SITE_NAME="${SUB_DOMAIN}.${HOSTNAME}"; else SITE_NAME=$HOSTNAME; fi
 MULTI_BOX=0
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # functions
-
-# The default box parameters require a registry login
-# podman login registry.access.redhat.com
-IMAGE="registry.access.redhat.com/ubi8/ubi-init"
-
-SITE_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ACTION="${1:-help}"
-if [ "$SUB_DOMAIN" != "" ]; then SITE_NAME="${SUB_DOMAIN}.${HOSTNAME}"; else SITE_NAME=$HOSTNAME; fi
-MULTI_BOX=0
+USE_TMPFS=0
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # functions
@@ -197,7 +186,7 @@ function build_image {
     # composer
     _composer="curl https://getcomposer.org/composer-stable.phar >> /usr/local/bin/composer; \
         chmod +x /usr/local/bin/composer; \
-        sed -i \"$ a alias composer='env COMPOSER_ALLOW_SUPERUSER=1 composer'\" /root/.bashrc; \
+        echo \"alias composer='env COMPOSER_ALLOW_SUPERUSER=1 composer'\" >> /root/.bashrc; \
         "
 
     # permissions handling
@@ -296,11 +285,11 @@ function build_image {
     # missing in the ubi8-init repo now
     echo "RUN dnf install -y http://mirror.centos.org/centos/7/os/x86_64/Packages/daxctl-libs-65-5.el7.x86_64.rpm" >> $_file
     echo "RUN dnf install -y http://mirror.centos.org/centos/7/os/x86_64/Packages/ndctl-libs-65-5.el7.x86_64.rpm" >> $_file
-    echo "RUN dnf install -y http://rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/libpmem-1.9.2-1.module_el8.5.0+756+4cdc1762.x86_64.rpm" >> $_file
-    echo "RUN dnf install -y https://rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/LibRaw-0.19.5-3.el8.x86_64.rpm" >> $_file
-    echo "RUN dnf install -y http://rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/urlview-0.9-23.20131022git08767a.el8.x86_64.rpm" >> $_file
-    echo "RUN dnf install -y http://rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/mutt-1.10.1-2.el8.x86_64.rpm" >> $_file
-    echo "RUN dnf install -y https://vault.centos.org/centos/8/AppStream/x86_64/os/Packages/boost-program-options-1.66.0-10.el8.x86_64.rpm" >> $_file
+    echo "RUN dnf install -y https://vault.centos.org/centos/8/AppStream/x86_64/os/Packages/libpmem-1.9.2-1.module_el8.4.0+806+82bbed84.x86_64.rpm" >> $_file
+    echo "RUN dnf install -y http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/LibRaw-0.19.5-3.el8.x86_64.rpm" >> $_file
+    echo "RUN dnf install -y http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/urlview-0.9-23.20131022git08767a.el8.x86_64.rpm" >> $_file
+    echo "RUN dnf install -y http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/mutt-2.0.7-1.el8.x86_64.rpm" >> $_file
+    echo "RUN dnf install -y http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/boost-program-options-1.66.0-10.el8.x86_64.rpm" >> $_file
     echo "RUN dnf install -y http://releases.galeracluster.com/galera-4/redhat/8/x86_64/galera-4-26.4.11-1.el8.x86_64.rpm" >> $_file
     # echo "RUN dnf install -y " >> $_file
 
@@ -604,6 +593,15 @@ function setup_systemd_service {
     if [ "${XDEBUG_ENABLE}" == "1" ]; then
         RUN_PARAMS+=(--network host)
     fi
+    if [ $USE_TMPFS -eq 1 ]; then
+        RUN_PARAMS+=(
+            --tmpfs /etc
+            --tmpfs /usr/lib/systemd/system
+            --tmpfs /var/lib
+            --tmpfs /var/run
+            --tmpfs /var/tmp
+        )
+    fi
     RUN_PARAMS+=(
         -p $HTTP_PORT:80
         -p $SSL_PORT:443
@@ -899,7 +897,8 @@ if [ "$ACTION" == "ssh" ]; then
     get_state
 
     if [ $STATE -eq 0 ]; then
-        podman exec -it "${SITE_NAME}" /bin/bash
+        podman exec -it "${SITE_NAME}" /bin/bash -c "source /root/.bashrc" 
+        podman exec -it "${SITE_NAME}" env HOME=/root /bin/bash -l 
         echo "" && exit >/dev/null 2>&1
     else
         no_box_running_message
