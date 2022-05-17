@@ -10,18 +10,19 @@ code can be tested prior to professional deployment.
 
 There are a lot of great LAMP packages out there.  However, I wanted something
 I could spin up fast without a lot of manual intervention.  Each website is
-unique in the way it is served and maintained.
+unique in the way it is served and maintained.  This LAMP stack is not too
+different from an actual working Web server.
 
-This LAMP stack is not too different from an actual working Web server.  As a
-general warning though, this environment is only intended to be used for
-debugging code.  If anything, most LAMP stacks are way oversimplified and are
-in no way ready for production. 
+As a general warning though, this environment is __only intended__ to be used
+for debugging code.  If anything, most LAMP stacks are way oversimplified and
+are in no way ready for production. 
 
 How it Works
 ---
 
-This script syncs your project's root folder inside a container.  That
-allows you to work on and debug code in a working Web server environment.
+This script syncs your project's root folder __safely__ inside a
+[container](https://developers.redhat.com/blog/2019/01/15/podman-managing-containers-pods#).
+That allows you to work on and debug code in a working Web server environment.
 Most of these virtual environments do not have mail utilities set up, because
 dealing with the fallout of development spam is never fun!
 
