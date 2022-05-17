@@ -13,14 +13,14 @@ I could spin up fast without a lot of manual intervention.  Each website is
 unique in the way it is served and maintained.  This LAMP stack is not too
 different from an actual working Web server.
 
-As a general warning though, this environment is __only intended__ to be used
+As a general warning though, this environment is ***only intended*** to be used
 for debugging code.  If anything, most LAMP stacks are way oversimplified and
 are in no way ready for production. 
 
 How it Works
 ---
 
-This script syncs your project's root folder __safely__ inside a
+This script syncs your project's root folder ***safely*** inside a
 [container](https://developers.redhat.com/blog/2019/01/15/podman-managing-containers-pods#).
 That allows you to work on and debug code in a working Web server environment.
 Most of these virtual environments do not have mail utilities set up, because
@@ -28,7 +28,7 @@ dealing with the fallout of development spam is never fun!
 
 Sometimes those forms and crons need tested.  LAMPready uses
 [Postfix](https://www.postfix.org/) to route all outbound mail to a single
-convenient inbox which can be access with the __bash box mail__ command.
+convenient inbox which can be access with the ***bash box mail*** command.
 
 
 Built on Red Hat Linux
@@ -109,10 +109,10 @@ with root permission -- which includes Apache!  Less than optimal, right?!
 
 The rootless container is the only way to preserve the proper permissions
 of shared files.  The upside is that this temporary webs server will run
-__much more efficiently__ than most other local VM solutions!
+***much more efficiently*** than most other local VM solutions!
 
-__In order for Xdebug to work as intended, some local network information is
-exposed when enabling it.__
+***In order for Xdebug to work as intended, some local network information is
+exposed when enabling it.***
 
 As you will notice further on, this script's commands closely model
 [Vagrant](https://www.vagrantup.com/).  The advantage of running a container
