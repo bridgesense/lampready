@@ -149,8 +149,8 @@ bash box mail
 
 How to Configure this Script for Your Project
 ---
-The very first time you run the "bash box up" command, the hostname and
-"User Defined Settings" will be used to set up Apache, Xdebug, the SSL
+The very first time you run the ***bash box up*** command, the hostname and
+***user defined settings*** will be used to set up Apache, Xdebug, the SSL
 certificate, mail relay and any databases without further intervention.
 
 Here is a breakdown of the available options:
@@ -171,8 +171,9 @@ access to add the following line or something similar:
 **PUBLIC_ROOT_PATH:**
 This script should be placed in your project's root directory.  If your
 root directory contains an index file, you'll need to leave this setting blank.
-Otherwise, you'll include the local path to your index file.  The example
-default entry in this script assumes the following directory structure:
+Otherwise, you'll include the local path to your index file.
+
+The example default entry in this script assumes the following directory structure:
 ```
 box
 user_database.sql
@@ -181,7 +182,8 @@ public_html/index.php
 
 In another example, let's say a Magento store resides within a subdirectory of
 an existing website, you might change the root path to "public_html/store"
-assuming your directory structure is as follows
+if the store is registered under a different domain.  Let's assume your directory
+structure is as follows
 ```
 box
 user_database.sql
@@ -193,7 +195,7 @@ public_html/store/app
 The above examples should demonstrate the fact that this script is
 designed to set up one website with one corresponding URL out of the box.
 However, you'll notice a new hidden directory formed in your project root
-directory  You can add more URLS by adding the appropriate configuration
+directory  You can add more URLS by adding the appropriate Apache configuration
 files to: .container/conf.d
 
 
@@ -205,7 +207,8 @@ is now running in a virtual environment.
 
 **SSL_PORT:**
 This port defaults to 443, but may be changed.  Remember though, if the
-port is different it should be part of the URL entered into the browser:
+port is set to something different it should be part of the URL entered
+into the browser:
 
 ```
 https://dev.lampready.com:443
@@ -218,9 +221,9 @@ Set the timezone for Apache using one of
 
 
 **PHP_VERSION:**
-This option is intended to provide easier debugging during PHP upgrades.  PHP
-versions 7.2, 7.3 and 7.4 are ready to use.  Each version has access to the
-most common modules.
+This option is intended to provide easier debugging during PHP upgrades.  Any 
+PHP version in the [Remi repository](https://rpms.remirepo.net/) repository
+is fair game.  Most versions have access to the commonly used set of PHP modules.
 
 
 **PHP_MAX_EXEC_TIME:**
@@ -232,18 +235,18 @@ This is the maximum amount of memory a single PHP script can use.  Remember,
 this is not a virtual environment per se.  This is a rootless container where
 memory is not reserved, only used during the course of the Web server's
 operations.  This makes for a more efficient environment for testing
-software.
+scripts.
 
 
 **XDEBUG_ENABLE:**
 Xdebug is not enabled by default. Xdebug must be enabled before the initial
 setup process begins.  If Xdebug is not enabled during the first initialization
-of the LAMP stack it will have to be destroyed and recreated.
+of the LAMP stack, it will have to be destroyed and recreated.
 
 
 **XDEBUG_PORT:**
 This is the default port normally allocated for Xdebug.  You'll want to be sure
-to open up your firewall to allow communication between Xdebug and your browser.
+to open up your firewall to allow communication between Xdebug and your IDE.
 Think about the following changes that will need to be made with the root user
 in order for Xdebug to function:
 ```
@@ -255,8 +258,8 @@ semanage port -a -t http_port -p tcp 9003
 
 **XDEBUG_FORCE_ERROR_DISPLAY:**
 For sites constructed from many packages with different settings, it is nice to
-be able to easily override error suppression.  Set this option to 1 to
-override individual error settings throughout the code.
+to easily override error suppression.  Set this option to 1 to override individual
+error settings throughout the code.
 
 
 **XDEBUG_SCREAM:**
@@ -265,19 +268,21 @@ in the browser.
 
 
 **DB1:**
-The script can automatically set up and install up to three MySQL databases.
+The script can automatically set up and install any number of MySQL databases.
 By filling out this information, the script will create the database and inject
 your data from a sql file you have placed in the project's root directory.
 
+
 **DB_NAME, DB_USER and DB_PASS:**
 These settings should mirror the same database name and user credentials
-written in the website's database configuration file.  Notice the single quotes
-used for the password.  This is an important work-around to allow the bash
-script to insert certain special characters correctly.
+written in the website's database configuration file.  
+
+***Notice the single quotes used for the password.***  This is an important
+work-around to allow the bash script to insert certain special characters correctly.
 
 
 **DB_PERM:**
-Assign DB permissions to specific users.
+Specific DB permissions may be applied.
 
 
 **DB_PREFIX:**
@@ -296,12 +301,12 @@ fiddling should be necessary.
 **DB_FILENAME:**
 This option is not neccessary if there is no database to import.  While the
 DB_NAME option will create an empty database, this option populates that
-database.  The script will look for the sql file in your projects root
-directory (one directory below document root).
+database.  The script will look for the sql file in the same directory as
+the script resides.
 
 
 **DB_CUSTOM_FUNCTIONS:**
-This option is used for importing an additional script or custom functions.
+This option is generally reserved for importing custom database functions.
 
 
 How to Use this Box?
@@ -345,18 +350,18 @@ Emacs and Dap-Mode
 ---
 
 Dap-Mode is part of the [Emacs-Lsp](https://emacs-lsp.github.io/) package which
-is a very awesome PHP IDE!  LAMPReady is a rootless container and therefore needs
-the correct path mapping to the project's root directory in your virtual
-environment as well as the directory where the files are physically located.
-There are some excellent notes on
+is a very awesome PHP IDE!  The website is running from a rootless container and
+therefore needs the correct path mapping to the project's root directory.  This 
+would include the path within the container as well as the directory on your
+machine. There are some excellent notes on
 [Spacemac's implementation](https://develop.spacemacs.org/layers/+lang/php/README.html#backends)
 
 DAP-Mode actually uses the PHP VSCode plugin
 [vscode-php-debug](https://github.com/xdebug/vscode-php-debug) which can be
 installed with: M-x dap-php-setup 
 
-You'll also want to create a file called launch.json and place the following 
-information in it:
+You'll also want to create a file called launch.json in your project's root
+directory and place the following information in it:
 
 ```
 {
