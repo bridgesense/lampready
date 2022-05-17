@@ -5,17 +5,17 @@ A LAMP is an acronym describing a Web server that runs on a Linux platform with
 [Apache](https://httpd.apache.org/), [MariaDB](https://www.mariadb.org/) and
 [PHP](https://www.php.net/).  Web pages with [Python](https://www.python.org/)
 and [Perl](https://www.perl.org/) can also be served under this environment. 
-References to a LAMP stack generally relate to a testing environment where
-website code can be tested prior to professional deployment. 
+References to a LAMP stack generally relate to an environment where website
+code can be tested prior to professional deployment. 
 
 There are a lot of great LAMP packages out there.  However, I wanted something
 I could spin up fast without a lot of manual intervention.  Each website is
 unique in the way it is served and maintained.
 
-This LAMP stack is not too different from an actual working production Web
-server.  As a general warning though, this environment is only intended to be
-used for debugging code.  If anything, most LAMP stacks are an oversimplified
-version of a Web server are in no way meant for production. 
+This LAMP stack is not too different from an actual working Web server.  As a
+general warning though, this environment is only intended to be used for
+debugging code.  If anything, most LAMP stacks are way oversimplified and are
+in no way ready for production. 
 
 How it Works
 ---
@@ -23,8 +23,9 @@ How it Works
 This script syncs your project's root folder inside a container.  That
 allows you to work on and debug code in a working Web server environment.
 Most of these virtual environments do not have mail utilities set up, because
-dealing with the fallout of development spam is never fun.  Sometimes those
-forms and crons need tested.  LAMPready uses
+dealing with the fallout of development spam is never fun!
+
+Sometimes those forms and crons need tested.  LAMPready uses
 [Postfix](https://www.postfix.org/) to route all outbound mail to a single
 convenient inbox which can be access with the __bash box mail__ command.
 
@@ -34,10 +35,10 @@ Built on Red Hat Linux
 
 This script is based off
 [Scott McCarty's](https://crunchtools.com/moving-linux-services-to-containers)
-conversation on using a single podman container to build a LAMP stack.  If you use
-[podman](https://podman.io/), you might want to test this out.  If you aren't
-familiar with podman, hopefully a quick scan through this script will demystify
-the process.
+conversation on using a single Podman container to build a LAMP stack.  If
+you use [Podman](https://podman.io/), you might want to test this example
+out.  If you aren't familiar with Podman, hopefully a quick scan through
+this script will demystify the process.
 
 In this example Podman will need to be logged into registry.access.redhat.com
 in order to download the
