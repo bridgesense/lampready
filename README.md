@@ -4,30 +4,29 @@ Why LAMPready?
 A LAMP is an acronym describing a Web server that runs on a Linux platform with
 [Apache](https://httpd.apache.org/), [MariaDB](https://www.mariadb.org/) and
 [PHP](https://www.php.net/).  Web pages with [Python](https://www.python.org/)
-and [Perl](https://www.perl.org/) can also be served under this environment. A
-LAMP stack generally refers to a testing environment where website code can be
-tested for production (professional) deployment. 
+and [Perl](https://www.perl.org/) can also be served under this environment. 
+References to a LAMP stack generally relate to a testing environment where
+website code can be tested prior to professional deployment. 
 
 There are a lot of great LAMP packages out there.  However, I wanted something
 I could spin up fast without a lot of manual intervention.  Each website is
-unique in the way it is served and maintained.  This script takes away a lot
-of the heavy lifting and complexity of setting up a LAMP stack.
+unique in the way it is served and maintained.
 
 This LAMP stack is not too different from an actual working production Web
 server.  As a general warning though, this environment is only intended to be
-a template of a Web server.  If anything, it is an oversimplified version of
-such that provides a stable environment for testing code.
+used for debugging code.  If anything, most LAMP stacks are an oversimplified
+version of a Web server are in no way meant for production. 
 
 How it Works
 ---
 
 This script syncs your project's root folder inside a container.  That
 allows you to work on and debug code in a working Web server environment.
-Most of these virtual environments do not have mail utilities set up because
+Most of these virtual environments do not have mail utilities set up, because
 dealing with the fallout of development spam is never fun.  Sometimes those
 forms and crons need tested.  LAMPready uses
 [Postfix](https://www.postfix.org/) to route all outbound mail to a single
-convenient inbox that can be accessed with a local mail client.
+convenient inbox which can be access with the __bash box mail__ command.
 
 
 Built on Red Hat Linux
@@ -35,7 +34,7 @@ Built on Red Hat Linux
 
 This script is based off
 [Scott McCarty's](https://crunchtools.com/moving-linux-services-to-containers)
-thoughts on using a single podman container to build a LAMP stack.  If you use
+conversation on using a single podman container to build a LAMP stack.  If you use
 [podman](https://podman.io/), you might want to test this out.  If you aren't
 familiar with podman, hopefully a quick scan through this script will demystify
 the process.
@@ -58,11 +57,12 @@ CentOS has moved out of the production space, LAMPReady is a nice solution to se
 how your website will perform in the RHEL environment.  Thankfully, there's not much
 difference to what you're already used to.
 
-*By default a container does not use up one of your deployment slots.  Inside the
-container you already have access to a limited version of the main repository.*
+*For those with paid subscriptions a container does not use a deployment slot.
+Inside the container you already have access to a limited version of the main
+repository -- enough for an orientation.*
 
-If you plan on using the standard ports 80 and 443, you will need to expose priviliged
-ports to users.  Run the following commands under root:
+If you plan on using the standard ports 80 and 443, you will need to expose privileged
+ports.  Run the following commands under root to do that:
 
 ```
 echo "net.ipv4.ip_unprivileged_port_start=0" > /etc/sysctl.d/05-expose-privileged.conf
@@ -79,7 +79,7 @@ setting up a web server that have been broken simply for the sake of
 productivity.  This was done to simplify the permissions issues that arise
 when working with shared data within the container.
 
-The user will still need have access to the root account on their local machine.
+The user will still need have access to the root account on their host  machine.
 Root access will allow you to make entries to the firewall and SELinux in order
 for Xdebug to work properly:
 
@@ -103,15 +103,20 @@ curl https://raw.githubusercontent.com/bridgesense/lampready/master/box > box
 
 __PLEASE NOTE:__ Be sure to review the notes at the head of the box script.
 Xdebug is disabled by default. This box is designed to run container processes
-with root permission, which includes Apache.  The rootless container it is the
-only way to preserve the proper permissions of shared files using podam or
-similar docker-like environment. In order for xdebug to work as intended, some
-local network information is exposed when enabling it.
+with root permission -- which includes Apache!  Less than optimal, right?!
+
+The rootless container is the only way to preserve the proper permissions
+of shared files.  The upside is that this temporary webs server will run
+__much more efficiently__ than most other local VM solutions!
+
+__In order for Xdebug to work as intended, some local network information is
+exposed when enabling it.__
 
 As you will notice further on, this script's commands closely model
-[Vagrant](https://www.vagrantup.com/).  The advantage of running a container is
-over a proper VM is that I no longer need to maintain a fully encapsulated 
-operating system image on the vagrantup database.
+[Vagrant](https://www.vagrantup.com/).  The advantage of running a container
+this way is that I no longer need to maintain a fully encapsulated 
+operating system image on an existing database. This bodes well with
+keeping better abreast with the latest release changes.
 
 To see a list of commands for LAMPReady, just run:
 
@@ -131,7 +136,7 @@ bash box up
 bash box ssh
 ```
 
-* Access the website via https://127.0.01 or use your custom domain
+* Access the website via https://127.0.0.1 or use your custom domain
 settings (see below)
 
 * Access outbound mail using the following command:
@@ -146,6 +151,7 @@ The very first time you run the "bash box up" command, the hostname and
 "User Defined Settings" will be used to set up Apache, Xdebug, the SSL
 certificate, mail relay and any databases without further intervention.
 
+Here is a breakdown of the available options:
 
 **HOSTNAME:**
 The hostname should contain your domain name. 
@@ -190,14 +196,14 @@ files to: .container/conf.d
 
 
 **HTTP_PORT:**
-The this port generally defaults to 80.  If you have root access, you are
+This port generally defaults to 80.  If you have root access, you are
 encouraged to use this port for full compatibility of the code that
 is now running in a virtual environment.
 
 
 **SSL_PORT:**
 This port defaults to 443, but may be changed.  Remember though, if the
-port is different, it should be part of the URL entered into the browser:
+port is different it should be part of the URL entered into the browser:
 
 ```
 https://dev.lampready.com:443
