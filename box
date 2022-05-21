@@ -212,8 +212,8 @@ function build_image {
         "
 
     # Mariadb repository
-    _mariadb_repo="printf \"# MariaDB 10.8 [RC] RedHat repository list - created  UTC\\n# https://mariadb.org/download\\n[mariadb]\\nname=MariaDB\\nbaseurl=https://mirrors.xtom.com/mariadb/yum/10.8/rhel8-amd64\\nmodule_hotfixes=1\\ngpgkey=https://mirrors.xtom.com/mariadb/yum/RPM-GPG-KEY-MariaDB\\ngpgcheck=1\\n\" > /etc/yum.repos.d/MariaDB.repo;"
-
+    _mariadb_repo="curl https://downloads.mariadb.com/MariaDB/mariadb_repo_setup --output mariadb_repo_setup && bash mariadb_repo_setup --mariadb-server-version='mariadb-10.4';"
+    
     # Mariadb
     _mariadb="MariaDB-server \
         "
@@ -221,13 +221,13 @@ function build_image {
     _mariadb_config="sed -i \"/^\\[mysqld\\]/a innodb_file_per_table=1\\ninnodb_file_format=barracuda\\ninnodb_strict_mode=0\\nsql_mode=''\\ninnodb_large_prefix=1\\ninnodb_log_file_size=256M\\ntmp_table_size=256MB\\nmax_heap_table_size=256MB\\nslow_query_log = 1\\nslow_query_log_file = /var/log/mariadb-slow.log\\nlong_query_time = 2\\nlog_error=/var/log/mariadb.log\" /etc/my.cnf.d/server.cnf; \
         sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; \
         sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; \
-        sed -i \"s@/usr/sbin/mariadbd@/usr/sbin/mariadbd --user=root@g\" /usr/lib/systemd/system/mariadb.service; \
+        sed -i \"s@/usr/sbin/mysqld@/usr/sbin/mysqld --user=root@g\" /usr/lib/systemd/system/mariadb.service; \
         "
    
     # PHP modules
     _php="memcached lzip xz \
         php-devel php-pear php-opcache php-gd php-pdo php-soap php-bcmath php-intl php-pspell php-imap php-xz php-mysqlnd \
-        php-pecl-memcached php-pecl-xdebug3 php-pecl-zip libsodium libsodium-devel \
+        php-pecl-memcached php-pecl-xdebug3 php-pecl-zip ImageMagick php-pecl-imagick libsodium libsodium-devel \
         "
     # pecl
     _pecl="libsodium \
@@ -515,6 +515,7 @@ function import_databases {
                         cd "/var/www/${PUBLIC_ROOT_PATH}"
                         php bin/magento setup:store-config:set --base-url="http://${SITE_NAME}/"
                         php bin/magento setup:store-config:set --base-url-secure="https://${SITE_NAME}/"
+                        php bin/magento setup:static-content:deploy -f
                         php bin/magento cache:flush
                         php bin/magento indexer:reindex
                     fi
