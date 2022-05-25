@@ -254,8 +254,6 @@ function build_image {
         sed -i \"s@group = apache@group = root@g\" /etc/php-fpm.d/www.conf; \
         sed -i \"s@^listen\.acl_users.*@listen.acl_users = root@g\" /etc/php-fpm.d/www.conf; \
         sed -i \"s@sbin/php-fpm@sbin/php-fpm -R@g\" /usr/lib/systemd/system/php-fpm.service; \
-        sed -i \"$ a pm = ondemand\" /etc/php-fpm.d/www.conf; \
-        sed -i \"$ a pm.max_children = 4\" /etc/php-fpm.d/www.conf; \
         "
 
     # postfix config
