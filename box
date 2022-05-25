@@ -284,12 +284,12 @@ function build_image {
     # missing in the ubi8-init repo now
     echo "RUN dnf install -y http://mirror.centos.org/centos/7/os/x86_64/Packages/daxctl-libs-65-5.el7.x86_64.rpm" >> $_file
     echo "RUN dnf install -y http://mirror.centos.org/centos/7/os/x86_64/Packages/ndctl-libs-65-5.el7.x86_64.rpm" >> $_file
-    echo "RUN dnf install -y https://vault.centos.org/centos/8/AppStream/x86_64/os/Packages/libpmem-1.9.2-1.module_el8.4.0+806+82bbed84.x86_64.rpm" >> $_file
+    echo "RUN dnf install -y http://vault.centos.org/centos/8/AppStream/x86_64/os/Packages/libpmem-1.9.2-1.module_el8.4.0+806+82bbed84.x86_64.rpm" >> $_file
     echo "RUN dnf install -y http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/LibRaw-0.19.5-3.el8.x86_64.rpm" >> $_file
     echo "RUN dnf install -y http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/urlview-0.9-23.20131022git08767a.el8.x86_64.rpm" >> $_file
     echo "RUN dnf install -y http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/mutt-2.0.7-1.el8.x86_64.rpm" >> $_file
     echo "RUN dnf install -y http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/boost-program-options-1.66.0-10.el8.x86_64.rpm" >> $_file
-    echo "RUN dnf install -y http://releases.galeracluster.com/galera-4/redhat/8/x86_64/galera-4-26.4.11-1.el8.x86_64.rpm" >> $_file
+    echo "RUN dnf install -y http://releases.galeracluster.com/galera-4/redhat/8/x86_64/galera-4-26.4.12-1.el8.x86_64.rpm" >> $_file
     # echo "RUN dnf install -y " >> $_file
 
     echo "RUN dnf install -y ${_tools} ${_apache} ${_mariadb} ${_php}" >> $_file
@@ -753,7 +753,7 @@ if [ "$ACTION" == "up" ]; then
         echo "+                                                                 +"
         echo "+  For Xdebug to work, make sure to open the port (example):      +"
         echo "+  firewall-cmd --permanent --zone=webserver --add-port=${XDEBUG_PORT}/tcp"
-        echo "+  semanage port -a -t http_port -p tcp ${XDEBUG_PORT}"
+        echo "+  semanage port -a -t http_port_t -p tcp ${XDEBUG_PORT}"
         echo "+                                                                 +"
         echo "+  All outbound mail is trapped and can be viewed with:           +"
         echo "+  bash box mail                                                  +"
