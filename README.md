@@ -31,7 +31,7 @@ Sometimes those forms and crons need tested.  LAMPready uses
 convenient inbox which can be access with the ***bash box mail*** command.
 
 
-Built on Red Hat Linux
+The Red Hat Box 
 ---
 
 This script is based off
@@ -45,8 +45,9 @@ In this example Podman will need to be logged into registry.access.redhat.com
 in order to download the
 [ubi8-init](https://catalog.redhat.com/software/containers/ubi8-init/5c6aea74dd19c77a158f0892)
 image.  This script has been tested on both the 8 and 9 releases of
-[Red Hat Enterprise Linux](https://www.redhat.com).  It also works on Fedora
-36.
+[Red Hat Enterprise Linux](https://www.redhat.com).  It should work on any Linux
+distribution runs on [[systemd](https://systemd.io/). This would include the great
+majority of Linux distributions.  Podman and Buildah will also need installed.
 
 ```
 podman login registry.access.redhat.com
@@ -63,6 +64,32 @@ difference to what you're already used to.
 Inside the container you already have access to a limited version of the main
 repository -- enough for an orientation.*
 
+The user will still need have access to the root account on their host  machine.
+Root access will allow you to make entries to the firewall and SELinux in order
+for Xdebug to work properly:
+
+```
+firewall-cmd --permanent --zone=webserver --add-port=9003/tcp
+```
+```
+semanage port -a -t http_port -p tcp 9003
+```
+
+The Ubuntu Box
+---
+[Ubuntu]https://ubuntu.com/ sets the industry standard for stability and ease of use.
+The Ubuntu Box contains the similar web toolset to the Red Hat box.
+
+
+
+
+Being Rootless
+---
+LAMPReady is a rootless container. As such, there are standard practices to 
+setting up a web server that have been broken simply for the sake of
+productivity.  This was done to simplify the permissions issues that arise
+when working with shared data within the container.
+
 If you plan on using the standard ports 80 and 443, you will need to expose privileged
 ports.  Run the following commands under root to do that:
 
@@ -76,31 +103,20 @@ sysctl --system
 sysctl net.ipv4.ip_unprivileged_port_start=0
 ```
 
-LAMPReady is a rootless container. As such, there are standard practices to 
-setting up a web server that have been broken simply for the sake of
-productivity.  This was done to simplify the permissions issues that arise
-when working with shared data within the container.
-
-The user will still need have access to the root account on their host  machine.
-Root access will allow you to make entries to the firewall and SELinux in order
-for Xdebug to work properly:
-
-```
-firewall-cmd --permanent --zone=webserver --add-port=9003/tcp
-```
-```
-semanage port -a -t http_port -p tcp 9003
-```
-
-
-How to Install the RHEL Box?
+How to Use Lampready
 ---
 Download the box script into your project's root directory.  A pretty rough
 video demonstration can be seen
 [here](https://bridgesense.com/blog/making-friends-with-podman).
 
+RedHat Server
 ```
-curl https://raw.githubusercontent.com/bridgesense/lampready/master/box > box
+curl https://raw.githubusercontent.com/bridgesense/lampready/master/redhat-box > box
+```
+
+Ubuntu LTS
+```
+curl https://raw.githubusercontent.com/bridgesense/lampready/master/ubuntu-box > box
 ```
 
 __PLEASE NOTE:__ Be sure to review the notes at the head of the box script.
