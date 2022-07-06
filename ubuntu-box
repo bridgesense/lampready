@@ -25,7 +25,7 @@ SSL_PORT="443"
 
 TIMEZONE="America/Los_Angeles"
 
-PHP_VERSION="7.4" # 7.2 - 8.1
+PHP_VERSION="7.4" # 5.6 - 8.1
 PHP_MAX_EXEC_TIME="600"
 PHP_MEM_LIMIT="512M"
 
@@ -230,6 +230,10 @@ function build_image {
         sed -i \"s@;date.timezone =@date.timezone = ${TIMEZONE}@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         "
 
+    # sodium
+    _php_sodium="php${PHP_VERSION}-sodium\
+        "
+    
     # postfix config
     _postfix_config="echo \"postfix postfix/mailname string ${SITE_NAME}\" | debconf-set-selections; \
         echo \"postfix postfix/main_mailer_type string 'Internet Site'\" | debconf-set-selections; \
@@ -258,6 +262,10 @@ function build_image {
     echo "RUN ${_openssl}" >> $_file
     echo "RUN ${_apache_config} ${_mariadb_config} ${_php_config} ${_xdebug_config} ${_postfix_config}" >> $_file
     echo "RUN ${_elasticsearch}" >> $_file
+    sodium_ver=("7.0" "7.1")
+    if [[ " ${sodium_ver[*]} " =~ " ${PHP_VERSION} " ]]; then
+        echo "RUN apt-get install -y ${_php_sodium}" >> $_file
+    fi
     if [ $USE_EXTRAS -eq 1 ]; then
         echo "RUN apt-get install -y ${_modules}" >> $_file
         echo "RUN ${_npm_globals}" >> $_file
