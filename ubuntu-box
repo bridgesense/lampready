@@ -10,9 +10,9 @@
 #
 # 2. Make sure to expose priviledged ports
 # > sudo -i
-# > echo "net.ipv4.ip_unprivileged_port_start=80" > /etc/sysctl.d/05-expose-privileged.conf
+# > echo "net.ipv4.ip_unprivileged_port_start=0" > /etc/sysctl.d/05-expose-privileged.conf
 # > sysctl --system
-# > sysctl net.ipv4.ip_unprivileged_port_start=80
+# > sysctl net.ipv4.ip_unprivileged_port_start=0
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -25,7 +25,7 @@ SSL_PORT="443"
 
 TIMEZONE="America/Los_Angeles"
 
-PHP_VERSION="7.4" # 7.2 - 7.4, 8.0
+PHP_VERSION="7.4" # 7.2 - 8.1
 PHP_MAX_EXEC_TIME="600"
 PHP_MEM_LIMIT="512M"
 
@@ -54,14 +54,15 @@ declare -A DB1=(
 # Don't edit below this point unless you really want to
 
 # The default box parameters require a registry login
-# podman login docker.io 
-IMAGE="docker.io/ubuntu:latest"
+# podman login docker.io
+IMAGE="docker.io/ubuntu/bind9"
 
 SITE_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ACTION="${1:-help}"
 if [ "$SUB_DOMAIN" != "" ]; then SITE_NAME="${SUB_DOMAIN}.${HOSTNAME}"; else SITE_NAME=$HOSTNAME; fi
 MULTI_BOX=0
 USE_TMPFS=0
+USE_EXTRAS=0
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # functions
@@ -77,8 +78,8 @@ function build_container_directory {
     fi
     mkdir -p "${SITE_HOME}/.container/log"
     mkdir -p "${SITE_HOME}/.container/mariadb"
-    if [ ! -d "${SITE_HOME}/.container/conf.d" ]; then
-        mkdir -p "${SITE_HOME}/.container/conf.d"
+    if [ ! -d "${SITE_HOME}/.container/sites-enabled" ]; then
+        mkdir -p "${SITE_HOME}/.container/sites-enabled"
     fi
     if [ ! -d "${SITE_HOME}/${PUBLIC_ROOT_PATH}" ]; then
         mkdir -p "${SITE_HOME}/${PUBLIC_ROOT_PATH}"
@@ -89,20 +90,15 @@ function build_container_directory {
 # build default httpd conf files
 function build_default_httpd_conf {
     # default http file
-    _http_conf_file=/etc/httpd/conf.d/default.conf
+    _http_conf_file=/etc/apache2/sites-enabled/000-default.conf
     echo "<VirtualHost *:${HTTP_PORT}>" > $_http_conf_file
     echo "    ServerAdmin root@${HOSTNAME}" >> $_http_conf_file
     echo "    ServerName ${HOSTNAME}" >> $_http_conf_file
     echo "    ServerAlias ${SUB_DOMAIN}.${HOSTNAME}" >> $_http_conf_file
     echo "    DocumentRoot /var/www/${PUBLIC_ROOT_PATH}" >> $_http_conf_file
-    echo "    CustomLog \"/var/log/httpd/${HOSTNAME}.access.log\" common" >> $_http_conf_file
-    echo "    ErrorLog \"/var/log/httpd/${HOSTNAME}.error.log\"" >> $_http_conf_file
-    echo "    <Proxy \"unix:/run/php-fpm/www.sock|fcgi://php-fpm\">" >> $_http_conf_file
-    echo "         ProxySet disablereuse=off" >> $_http_conf_file
-    echo "    </Proxy>" >> $_http_conf_file
-    echo "    <FilesMatch \\.php\$>" >> $_http_conf_file
-    echo "         SetHandler proxy:fcgi://php-fpm" >> $_http_conf_file
-    echo "    </FilesMatch>" >> $_http_conf_file
+    echo "    DirectoryIndex index.php index.html index.htm" >> $_http_conf_file
+    echo "    ErrorLog /var/log/apache2/${HOSTNAME}.error.log" >> $_http_conf_file
+    echo "    CustomLog /var/log/apache2/${HOSTNAME}.access.log combined" >> $_http_conf_file
     echo "    <Directory \"/var/www\">" >> $_http_conf_file
     echo "         AllowOverride All" >> $_http_conf_file
     echo "         Require all granted" >> $_http_conf_file
@@ -115,31 +111,18 @@ function build_default_httpd_conf {
     echo "</VirtualHost>" >> $_http_conf_file
 
     # default https file
-    _https_conf_file=/etc/httpd/conf.d/default-ssl.conf
-    echo "SSLPassPhraseDialog exec:/usr/libexec/httpd-ssl-pass-dialog" >> $_https_conf_file
-    echo "SSLSessionCache        shmcb:/run/httpd/sslcache(512000)" >> $_https_conf_file
-    echo "SSLSessionCacheTimeout 300" >> $_https_conf_file
-    echo "SSLCryptoDevice builtin" >> $_https_conf_file
-    echo "Timeout ${PHP_MAX_EXEC_TIME}" >> $_https_conf_file
-    echo "<VirtualHost _default_:${SSL_PORT}>" >> $_https_conf_file
+    _https_conf_file=/etc/apache2/sites-enabled/000-default-ssl.conf
+    echo "<VirtualHost _default_:${SSL_PORT}>" > $_https_conf_file
     echo "    ServerAdmin root@${HOSTNAME}" >> $_https_conf_file
     echo "    ServerName ${HOSTNAME}" >> $_https_conf_file
     echo "    ServerAlias ${SUB_DOMAIN}.${HOSTNAME}" >> $_https_conf_file
     echo "    DocumentRoot /var/www/${PUBLIC_ROOT_PATH}" >> $_https_conf_file
-    echo "    CustomLog \"/var/log/httpd/${HOSTNAME}.ssl-access.log\" common" >> $_https_conf_file
-    echo "    ErrorLog \"/var/log/httpd/${HOSTNAME}.ssl-error.log\"" >> $_https_conf_file
-    echo "    <Proxy \"unix:/run/php-fpm/www.sock|fcgi://php-fpm\">" >> $_https_conf_file
-    echo "         ProxySet disablereuse=off" >> $_https_conf_file
-    echo "    </Proxy>" >> $_https_conf_file
-    echo "    <FilesMatch \\.php\$>" >> $_https_conf_file
-    echo "         SetHandler proxy:fcgi://php-fpm" >> $_https_conf_file
-    echo "    </FilesMatch>" >> $_https_conf_file
+    echo "    DirectoryIndex index.php index.html index.htm" >> $_https_conf_file
+    echo "    ErrorLog /var/log/apache2/${HOSTNAME}.ssl-error.log" >> $_https_conf_file
+    echo "    CustomLog /var/log/apache2/${HOSTNAME}.ssl-access.log combined" >> $_https_conf_file
     echo "    SSLEngine on" >> $_https_conf_file
-    echo "    SSLHonorCipherOrder on" >> $_https_conf_file
-    echo "    SSLCipherSuite PROFILE=SYSTEM" >> $_https_conf_file
-    echo "    SSLProxyCipherSuite PROFILE=SYSTEM" >> $_https_conf_file
-    echo "    SSLCertificateFile /etc/pki/tls/certs/localhost.crt" >> $_https_conf_file
-    echo "    SSLCertificateKeyFile /etc/pki/tls/private/localhost.key" >> $_https_conf_file
+    echo "    SSLCertificateFile /etc/ssl/certs/ssl-cert-snakeoil.pem" >> $_https_conf_file
+    echo "    SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key" >> $_https_conf_file
     echo "    <FilesMatch \"\\.(cgi|shtml|phtml|php)$\">" >> $_https_conf_file
     echo "         SSLOptions +StdEnvVars" >> $_https_conf_file
     echo "    </FilesMatch>" >> $_https_conf_file
@@ -175,13 +158,19 @@ function build_image {
     fi
 
     # tools
-    _tools="make crontabs cronie postfix iputils net-tools git unzip xz elasticsearch"
+    # _tools="make crontabs cronie iputils net-tools git unzip xz elasticsearch"
+    _tools="vim dialog apt-utils dumb-init git curl wget software-properties-common"
 
     # modules
-    _modules="nodejs python36 ruby"
+    _modules="nodejs npm python3 python3-pip ruby"
 
     # npm globals
-    _npm_globals="npm install -g npm@latest; npm install --global yarn gulp-cli typescript;"
+    _npm_globals="npm install -g n; n stable; npm install -g npm@latest; npm install -g npm;\
+        npm install --global yarn grunt-cli eslint csslint sass gulp-sass \
+        typescript typescript-language-server intelephense coffeelint yaml-lint \
+        eslint-plugin-toml eslint-plugin-markdown golangci-lint \
+        vscode-css-languageserver-bin; \
+        "
 
     # composer
     _composer="curl https://getcomposer.org/composer-stable.phar >> /usr/local/bin/composer; \
@@ -189,79 +178,68 @@ function build_image {
         echo \"alias composer='env COMPOSER_ALLOW_SUPERUSER=1 composer'\" >> /root/.bashrc; \
         "
 
-    # permissions handling
-    _perm="sed -i \"s@umask 002@umask 022@g\" /etc/bashrc;"
-
     # apache
-    _apache="httpd httpd-tools httpd-manual mod_ssl openssl mailcap"
+    _apache="apache2 openssl"
 
     # Apache config
-    _apache_config="sed -i \"/^Listen 80/a Listen ${SSL_PORT}\" /etc/httpd/conf/httpd.conf; \ 
-        sed -i \"s@DocumentRoot.*@@g\" /etc/httpd/conf/httpd.conf; \
-        sed -i \"s@User apache@User root@g\" /etc/httpd/conf/httpd.conf; \
-        sed -i \"s@Group apache@Group root@g\" /etc/httpd/conf/httpd.conf; \
-        sed -i \"s@DirectoryIndex @DirectoryIndex index.php @g\" /etc/httpd/conf/httpd.conf; \
-        echo \"IncludeOptional conf.d/*.conf\" >> /etc/httpd/conf/httpd.conf; \
-        cp /etc/mime.types /etc/httpd/conf; \
+    _apache_config="a2enmod ssl rewrite; \
+        sed -i \"s@export APACHE_RUN_USER.*@export APACHE_RUN_USER=root@g\" /etc/apache2/envvars; \
+        sed -i \"s@export APACHE_RUN_GROUP.*@export APACHE_RUN_GROUP=root@g\" /etc/apache2/envvars; \
         "
 
     # openssl
     _openssl="openssl req -newkey rsa:2048 -x509 -sha256 -days 999999 \
         -nodes -subj '/C=US/ST=Oregon/L=Portland/O=DevTeam/CN=${SITE_NAME}' \
-        -out /etc/pki/tls/certs/localhost.crt -keyout /etc/pki/tls/private/localhost.key; \
+        -out /etc/ssl/certs/ssl-cert-snakeoil.pem -keyout /etc/ssl/private/ssl-cert-snakeoil.key; \
         "
 
-    # Mariadb repository
-    _mariadb_repo="curl https://downloads.mariadb.com/MariaDB/mariadb_repo_setup --output mariadb_repo_setup && bash mariadb_repo_setup --mariadb-server-version='mariadb-10.4';"
-    
     # Mariadb
-    _mariadb="MariaDB-server \
+    _mariadb="mariadb-server \
         "
 
-    _mariadb_config="sed -i \"/^\\[mysqld\\]/a innodb_file_per_table=1\\ninnodb_file_format=barracuda\\ninnodb_strict_mode=0\\nsql_mode=''\\ninnodb_large_prefix=1\\ninnodb_log_file_size=256M\\ntmp_table_size=256MB\\nmax_heap_table_size=256MB\\nslow_query_log = 1\\nslow_query_log_file = /var/log/mariadb-slow.log\\nlong_query_time = 2\\nlog_error=/var/log/mariadb.log\" /etc/my.cnf.d/server.cnf; \
+    _mariadb_config="sed -i \"/^\\[mysqld\\]/a innodb_file_per_table=1\\ninnodb_file_format=barracuda\\ninnodb_strict_mode=0\\nsql_mode=''\\ninnodb_large_prefix=1\\ninnodb_log_file_size=256M\\ntmp_table_size=256MB\\nmax_heap_table_size=256MB\\nslow_query_log = 1\\nslow_query_log_file = /var/log/apache2/mariadb-slow.log\\nlong_query_time = 2\\nlog_error=/var/log/apache2/mariadb.log\\nuser=root\" /etc/mysql/mariadb.conf.d/50-server.cnf; \
         sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; \
         sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; \
-        sed -i \"s@/usr/sbin/mysqld@/usr/sbin/mysqld --user=root@g\" /usr/lib/systemd/system/mariadb.service; \
-        "
-   
-    # PHP modules
-    _php="memcached lzip xz \
-        php-devel php-pear php-opcache php-gd php-pdo php-soap php-bcmath php-intl php-pspell php-imap php-xz php-mysqlnd \
-        php-pecl-memcached php-pecl-xdebug3 php-pecl-zip ImageMagick php-pecl-imagick libsodium libsodium-devel \
-        "
-    # pecl
-    _pecl="libsodium \
+        sed -i \"s@/usr/sbin/mariadbd@/usr/sbin/mariadbd --user=root@g\" /usr/lib/systemd/system/mariadb.service; \
         "
 
     # elasticsearch
-    _elasticsearch="rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch; \
-        printf \"[Elasticsearch-7]\\nname=Elasticsearch repository for 7.x packages\\nbaseurl=https://artifacts.elastic.co/packages/7.x/yum\\ngpgcheck=1\\ngpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch\\nenabled=1\\nautorefresh=1\\ntype=rpm-md\\n\" > /etc/yum.repos.d/elasticsearch.repo; \
+    _elasticsearch="curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor -o /usr/share/keyrings/elastic.gpg; \
+        echo \"deb [signed-by=/usr/share/keyrings/elastic.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main\" | tee -a /etc/apt/sources.list.d/elastic-7.x.list; \
+        apt-get update; \
+        apt-get install -y elasticsearch; \
         "
+
+    # php
+    _php="php${PHP_VERSION} php${PHP_VERSION}-bz2 php${PHP_VERSION}-curl \
+          php${PHP_VERSION}-gd php${PHP_VERSION}-intl php${PHP_VERSION}-mbstring \
+          php${PHP_VERSION}-mcrypt php${PHP_VERSION}-pspell php${PHP_VERSION}-xml \
+          php${PHP_VERSION}-zip php${PHP_VERSION}-imap php${PHP_VERSION}-imagick \
+          php${PHP_VERSION}-mysqlnd php${PHP_VERSION}-soap php${PHP_VERSION}-dev \
+          php${PHP_VERSION}-memcached php${PHP_VERSION}-xdebug \
+          memcached \
+          "
 
     # php config
-    _php_config="sed -i \"s@short_open_tag.*@short_open_tag=On@g\" /etc/php.ini; \
-        sed -i \"s@max_execution_time.*@max_execution_time=${PHP_MAX_EXEC_TIME}@g\" /etc/php.ini; \
-        sed -i \"s@max_input_vars.*@max_input_vars=10000@g\" /etc/php.ini; \
-        sed -i \"s@memory_limit.*@memory_limit=${PHP_MEM_LIMIT}@g\" /etc/php.ini; \
-        sed -i \"s@post_max_size.*@post_max_size=16M@g\" /etc/php.ini; \
-        sed -i \"s@upload_max_filesize.*@upload_max_filesize=16M@g\" /etc/php.ini; \
-        sed -i \"s@;date.timezone =@date.timezone = ${TIMEZONE}@g\" /etc/php.ini; \
-        echo \"extension=sodium.so\" > /etc/php.d/20-sodium.ini; \
-        "
-
-    # php-fpm config
-    _fpm_config="sed -i \"s@user = apache@user = root@g\" /etc/php-fpm.d/www.conf; \
-        sed -i \"s@group = apache@group = root@g\" /etc/php-fpm.d/www.conf; \
-        sed -i \"s@^listen\.acl_users.*@listen.acl_users = root@g\" /etc/php-fpm.d/www.conf; \
-        sed -i \"s@sbin/php-fpm@sbin/php-fpm -R@g\" /usr/lib/systemd/system/php-fpm.service; \
+    _php_config="sed -i \"s@short_open_tag.*@short_open_tag=On@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
+        sed -i \"s@max_execution_time.*@max_execution_time=${PHP_MAX_EXEC_TIME}@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
+        sed -i \"s@max_input_vars.*@max_input_vars=10000@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
+        sed -i \"s@memory_limit.*@memory_limit=${PHP_MEM_LIMIT}@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
+        sed -i \"s@post_max_size.*@post_max_size=16M@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
+        sed -i \"s@upload_max_filesize.*@upload_max_filesize=16M@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
+        sed -i \"s@;date.timezone =@date.timezone = ${TIMEZONE}@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         "
 
     # postfix config
-    _postfix_config="printf \"smtpd_use_tls=no\nmyhostname = ${HOSTNAME}\nmynetworks = 127.0.0.1 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128\nvirtual_maps = regexp:/etc/postfix/virtual-regexp\" >> /etc/postfix/main.cf; \
-        echo \"/.+@.+/ root\" >> /etc/postfix/virtual-regexp; \
+    _postfix_config="echo \"postfix postfix/mailname string ${SITE_NAME}\" | debconf-set-selections; \
+        echo \"postfix postfix/main_mailer_type string 'Internet Site'\" | debconf-set-selections; \
+        apt-get install --assume-yes -y mailutils; \
+        sed -i \"s@myhostname =.*@myhostname = ${HOSTNAME}@g\" /etc/postfix/main.cf; \
+        printf \"smtpd_use_tls = no\nvirtual_maps = regexp:/etc/postfix/virtual-regexp\nmaillog_file=/var/log/apache2/mail.log\" >> /etc/postfix/main.cf; \
+        printf \"/.+@.+/ root\" > /etc/postfix/virtual-regexp; \
         "
 
-    _xdebug_config="printf \"xdebug.mode=debug\nxdebug.start_with_request=yes\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.cli_color=1\nxdebug.remote_log='/tmp/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\" >> /etc/php.d/15-xdebug.ini; \
+    _xdebug_config="printf \"xdebug.mode=debug\nxdebug.start_with_request=yes\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.cli_color=1\nxdebug.remote_log='/var/log/apache2/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\" >> /etc/php/${PHP_VERSION}/apache2/conf.d/20-xdebug.ini; \
         "
 
     # build the image in docker style
@@ -273,39 +251,23 @@ function build_image {
     echo "LABEL io.k8s.display-name='An Ubuntu LTS full LAMP stack'" >> $_file
 
     # included epel for mcrypt and imagick libraries
-    # echo "RUN dnf install -y http://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/e/epel-release-8-15.el8.noarch.rpm" >> $_file
-    # echo "RUN rpm -ivh --nodeps --nosignature https://rpmfind.net/linux/centos/8-stream/PowerTools/x86_64/os/Packages/xz-lzma-compat-5.2.4-3.el8.x86_64.rpm" >> $_file
-    # echo "RUN dnf install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm" >> $_file
-    # echo "RUN ${_elasticsearch}" >> $_file
-    # echo "RUN ${_mariadb_repo}" >> $_file
-    # echo "RUN dnf update -y" >> $_file
-    # echo "RUN dnf module install -y php:remi-${PHP_VERSION} ${_modules}" >> $_file
+    echo "RUN apt-get update -y" >> $_file
+    echo "RUN apt-get install -y ${_tools}" >> $_file
+    echo "RUN add-apt-repository -y ppa:ondrej/php" >> $_file
+    echo "RUN apt-get install -y ${_apache} ${_mariadb} ${_php}" >> $_file
+    echo "RUN ${_openssl}" >> $_file
+    echo "RUN ${_apache_config} ${_mariadb_config} ${_php_config} ${_xdebug_config} ${_postfix_config}" >> $_file
+    echo "RUN ${_elasticsearch}" >> $_file
+    if [ $USE_EXTRAS -eq 1 ]; then
+        echo "RUN apt-get install -y ${_modules}" >> $_file
+        echo "RUN ${_npm_globals}" >> $_file
+        echo "RUN ${_composer}" >> $_file
+    fi
 
-    # missing in the ubi8-init repo now
-    # echo "RUN dnf install -y http://mirror.centos.org/centos/7/os/x86_64/Packages/daxctl-libs-65-5.el7.x86_64.rpm" >> $_file
-    # echo "RUN dnf install -y http://mirror.centos.org/centos/7/os/x86_64/Packages/ndctl-libs-65-5.el7.x86_64.rpm" >> $_file
-    # echo "RUN dnf install -y http://vault.centos.org/centos/8/AppStream/x86_64/os/Packages/libpmem-1.9.2-1.module_el8.4.0+806+82bbed84.x86_64.rpm" >> $_file
-    # echo "RUN dnf install -y http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/LibRaw-0.19.5-3.el8.x86_64.rpm" >> $_file
-    # echo "RUN dnf install -y http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/urlview-0.9-23.20131022git08767a.el8.x86_64.rpm" >> $_file
-    # echo "RUN dnf install -y http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/mutt-2.0.7-1.el8.x86_64.rpm" >> $_file
-    # echo "RUN dnf install -y http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/boost-program-options-1.66.0-10.el8.x86_64.rpm" >> $_file
-    # echo "RUN dnf install -y http://releases.galeracluster.com/galera-4/redhat/8/x86_64/galera-4-26.4.12-1.el8.x86_64.rpm" >> $_file
-    # echo "RUN dnf install -y " >> $_file
+    # apache override
+    echo "RUN wget https://github.com/bridgesense/lampready/raw/master/apache2-bin_2.4.52-1ubuntu4.1_amd64.deb -O /tmp/apache2-override.deb" >> $_file
+    echo "RUN dpkg -i /tmp/apache2-override.deb && rm /tmp/apache2-override.deb" >> $_file
 
-    # echo "RUN dnf install -y ${_tools} ${_apache} ${_mariadb} ${_php}" >> $_file
-    # echo "RUN rpm -Fvh --nodeps https://github.com/bridgesense/lampready/raw/master/httpd-ubi-init-2.4.37-99.el8.x86_64.rpm"  >> $_file
-    # echo "RUN dnf clean all;" >> $_file
-    # echo "RUN ${_openssl}" >> $_file
-    # echo "RUN pecl install ${_pecl}" >> $_file
-    # echo "RUN ${_npm_globals} ${_composer} " >> $_file
-    # echo "RUN ${_perm} ${_apache_config} ${_php_config} ${_fpm_config} ${_mariadb_config} ${_postfix_config} ${_xdebug_config}" >> $_file
-    # echo "RUN ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime" >> $_file
-    # echo "RUN systemctl enable postfix" >> $_file
-    # echo "RUN systemctl enable mariadb" >> $_file
-    # echo "RUN systemctl enable php-fpm" >> $_file
-    # echo "RUN systemctl enable memcached" >> $_file
-    # echo "RUN systemctl enable elasticsearch" >> $_file
-    # echo "RUN systemctl enable httpd" >> $_file
     podman build -t "${SITE_NAME}:private" -f $_file
 }
 
@@ -407,8 +369,8 @@ function display_help {
     echo "top of this file.  Additional site configuration files may be copied to the"
     echo "following directory:"
     echo ""
-    echo "mkdir -p .container/conf.d"
-    echo "cp my_site_config.conf .container/conf.d"
+    echo "mkdir -p .container/sites-enabled"
+    echo "cp my_site_config.conf .container/sites-enabled"
     echo ""
     echo "ACCESSING LOG FILES:"
     echo "Log files may be accessed in the following directory after the script"
@@ -420,7 +382,7 @@ function display_help {
     echo "The destroy command will not delete some shared content. The following directories"
     echo "will not be affected:"
     echo ""
-    echo "${SITE_HOME}/.container/conf.d"
+    echo "${SITE_HOME}/.container/sites-enabled"
     echo "${SITE_HOME}/${PUBLIC_ROOT_PATH}"
     echo ""
     echo "WHY DO I USE THE RESET OPTION FOR?"
@@ -609,9 +571,10 @@ function setup_systemd_service {
         --hostname $HOSTNAME
         --name $SITE_NAME
         -v "${SITE_HOME}:/var/www:Z"
-        -v "${SITE_HOME}/.container/conf.d:/etc/httpd/conf.d:Z"
-        -v "${SITE_HOME}/.container/log:/var/log/httpd:Z"
+        -v "${SITE_HOME}/.container/sites-enabled:/etc/apache2/sites-enabled:Z"
+        -v "${SITE_HOME}/.container/log:/var/log/apache2:Z"
         -v "${SITE_HOME}/.container/mariadb:/var/lib/mysql:Z"
+        --init
         --privileged
         "localhost/${SITE_NAME}:private"
     )
@@ -632,7 +595,11 @@ function start_systemd_service {
     # wake maria
     sleep 5
     podman exec "${SITE_NAME}" chown root:root /var/lib/mysql
-    podman exec "${SITE_NAME}" systemctl restart mariadb
+    podman exec "${SITE_NAME}" service postfix start
+    podman exec "${SITE_NAME}" service memcached start
+    podman exec "${SITE_NAME}" service elasticsearch start
+    podman exec "${SITE_NAME}" service mariadb start
+    podman exec "${SITE_NAME}" service apache2 start
 }
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -651,9 +618,13 @@ if [ "$ACTION" == "up" ]; then
     # handle validation warning
     if [ $STATE -eq 6 ]; then
         echo ""
-        echo "This script is designed to be used with Red Hat Linux"
-        echo "Please make sure that the following package is installed:"
+        echo "This script is designed to be used with a Linux system built on systemd"
+        echo "Please make sure that the following packages are installed:"
         echo ""
+        echo "For Debian Systems"
+        echo "sudo apt install podman buildah"
+        echo ""
+        echo "For Red Hat Systems"
         echo "sudo dnf module install -y container-tools:3.0"
         echo ""
     fi
@@ -725,10 +696,14 @@ if [ "$ACTION" == "up" ]; then
         # give plenty of time for Maria to waken
         sleep 5
         podman exec "${SITE_NAME}" chown root:root /var/lib/mysql
-        podman exec "${SITE_NAME}" mysql_install_db --user=root --basedir=/usr --datadir=/var/lib/mysql
-        podman exec "${SITE_NAME}" systemctl restart mariadb
+        podman exec "${SITE_NAME}" mariadb-install-db --user=root --basedir=/usr --datadir=/var/lib/mysql
+        podman exec "${SITE_NAME}" service postfix start
+        podman exec "${SITE_NAME}" service memcached start
+        podman exec "${SITE_NAME}" service elasticsearch start
+        podman exec "${SITE_NAME}" service mariadb start
+        podman exec "${SITE_NAME}" service apache2 start
         sleep 5
-        
+
         echo ""
         echo "Setting up the databases based on the information"
         echo "that was entered at the head of this file..."
@@ -897,8 +872,8 @@ if [ "$ACTION" == "ssh" ]; then
     get_state
 
     if [ $STATE -eq 0 ]; then
-        podman exec -it "${SITE_NAME}" /bin/bash -c "source /root/.bashrc" 
-        podman exec -it "${SITE_NAME}" env HOME=/root /bin/bash -l 
+        podman exec -it "${SITE_NAME}" /bin/bash -c "source /root/.bashrc"
+        podman exec -it "${SITE_NAME}" env HOME=/root /bin/bash -l
         echo "" && exit >/dev/null 2>&1
     else
         no_box_running_message

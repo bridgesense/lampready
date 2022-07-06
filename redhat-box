@@ -10,9 +10,9 @@
 #
 # 2. Make sure to expose priviledged ports
 # > sudo -i
-# > echo "net.ipv4.ip_unprivileged_port_start=80" > /etc/sysctl.d/05-expose-privileged.conf
+# > echo "net.ipv4.ip_unprivileged_port_start=0" > /etc/sysctl.d/05-expose-privileged.conf
 # > sysctl --system
-# > sysctl net.ipv4.ip_unprivileged_port_start=80
+# > sysctl net.ipv4.ip_unprivileged_port_start=0
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -25,7 +25,7 @@ SSL_PORT="443"
 
 TIMEZONE="America/Los_Angeles"
 
-PHP_VERSION="7.4" # 7.2 - 7.4, 8.0
+PHP_VERSION="7.2" # 7.2 - 8.0
 PHP_MAX_EXEC_TIME="600"
 PHP_MEM_LIMIT="512M"
 
@@ -257,7 +257,7 @@ function build_image {
         "
 
     # postfix config
-    _postfix_config="printf \"smtpd_use_tls=no\nmyhostname = ${HOSTNAME}\nmynetworks = 127.0.0.1 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128\nvirtual_maps = regexp:/etc/postfix/virtual-regexp\" >> /etc/postfix/main.cf; \
+    _postfix_config="printf \"smtpd_use_tls=no\nmyhostname = ${HOSTNAME}\nmynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128\nvirtual_maps = regexp:/etc/postfix/virtual-regexp\" >> /etc/postfix/main.cf; \
         echo \"/.+@.+/ root\" >> /etc/postfix/virtual-regexp; \
         "
 
@@ -651,9 +651,13 @@ if [ "$ACTION" == "up" ]; then
     # handle validation warning
     if [ $STATE -eq 6 ]; then
         echo ""
-        echo "This script is designed to be used with Red Hat Linux"
-        echo "Please make sure that the following package is installed:"
+        echo "This script is designed to be used with a Linux system built on Systemd"
+        echo "Please make sure that the following packages are installed:"
         echo ""
+        echo "For Debian Systems"
+        echo "sudo apt install podman buildah"
+        echo ""
+        echo "For Red Hat Systems"
         echo "sudo dnf module install -y container-tools:3.0"
         echo ""
     fi

@@ -30,10 +30,6 @@ Sometimes those forms and crons need tested.  LAMPready uses
 [Postfix](https://www.postfix.org/) to route all outbound mail to a single
 convenient inbox which can be access with the ***bash box mail*** command.
 
-
-The Red Hat Box 
----
-
 This script is based off
 [Scott McCarty's](https://crunchtools.com/moving-linux-services-to-containers)
 conversation on using a single Podman container to build a LAMP stack.  If
@@ -41,13 +37,30 @@ you use [Podman](https://podman.io/), you might want to test this example
 out.  If you aren't familiar with Podman, hopefully a quick scan through
 this script will demystify the process.
 
+The Ubuntu Box
+---
+In this example Podman will need to logged into docker.io in order to download the
+[ubuntu/bind9](https://hub.docker.com/r/ubuntu/bind9) image.  This is an init
+image running the 22.04 release of [Ubuntu LTS](https://ubuntu.com/download/server).
+
+It should work on any Linux distribution runs on [[systemd](https://systemd.io/).
+This would include the great majority of Linux distributions.  Both Podman and Buildah
+will also need installed.
+
+```
+podman login docker.io 
+```
+A free account can be created on docker.io by registering
+[here](https://hub.docker.com/signup).
+
+The Red Hat Box 
+---
 In this example Podman will need to be logged into registry.access.redhat.com
 in order to download the
 [ubi8-init](https://catalog.redhat.com/software/containers/ubi8-init/5c6aea74dd19c77a158f0892)
 image.  This script has been tested on both the 8 and 9 releases of
-[Red Hat Enterprise Linux](https://www.redhat.com).  It should work on any Linux
-distribution runs on [[systemd](https://systemd.io/). This would include the great
-majority of Linux distributions.  Podman and Buildah will also need installed.
+[Red Hat Enterprise Linux](https://www.redhat.com). It should work on any Linux
+system built on systemd.
 
 ```
 podman login registry.access.redhat.com
@@ -64,7 +77,7 @@ difference to what you're already used to.
 Inside the container you already have access to a limited version of the main
 repository -- enough for an orientation.*
 
-The user will still need have access to the root account on their host  machine.
+The user will still need have access to the root account on their host machine.
 Root access will allow you to make entries to the firewall and SELinux in order
 for Xdebug to work properly:
 
@@ -74,14 +87,6 @@ firewall-cmd --permanent --zone=webserver --add-port=9003/tcp
 ```
 semanage port -a -t http_port -p tcp 9003
 ```
-
-The Ubuntu Box
----
-[Ubuntu]https://ubuntu.com/ sets the industry standard for stability and ease of use.
-The Ubuntu Box contains the similar web toolset to the Red Hat box.
-
-
-
 
 Being Rootless
 ---
