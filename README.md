@@ -43,15 +43,15 @@ In this example Podman will need to logged into docker.io in order to download t
 [ubuntu/bind9](https://hub.docker.com/r/ubuntu/bind9) image.  This is an init
 image running the 22.04 release of [Ubuntu LTS](https://ubuntu.com/download/server).
 
-It should work on any Linux distribution runs on [systemd](https://systemd.io/).
-This would include the great majority of Linux distributions.  Both Podman and Buildah
-will also need installed.
+It should work on any Linux distribution that runs on [systemd](https://systemd.io/).
+This would include the most distributions.  Both Podman and Buildah will also need
+installed.
 
 ```
 podman login docker.io 
 ```
-A free account can be created on docker.io by registering
-[here](https://hub.docker.com/signup).
+A free account can be created on docker.io by 
+[registering here](https://hub.docker.com/signup).
 
 The Red Hat Box 
 ---
@@ -114,14 +114,13 @@ Download the box script into your project's root directory.  A pretty rough
 video demonstration can be seen
 [here](https://bridgesense.com/blog/making-friends-with-podman).
 
-RedHat Server
-```
-curl https://raw.githubusercontent.com/bridgesense/lampready/master/redhat-box > box
-```
-
 Ubuntu LTS
 ```
 curl https://raw.githubusercontent.com/bridgesense/lampready/master/ubuntu-box > box
+```
+RedHat Server
+```
+curl https://raw.githubusercontent.com/bridgesense/lampready/master/redhat-box > box
 ```
 
 __PLEASE NOTE:__ Be sure to review the notes at the head of the box script.
