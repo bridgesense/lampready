@@ -159,7 +159,7 @@ function build_image {
 
     # tools
     # _tools="make crontabs cronie iputils net-tools git unzip xz elasticsearch"
-    _tools="vim dialog apt-utils dumb-init git curl wget software-properties-common"
+    _tools="vim dialog apt-utils dumb-init git curl wget software-properties-common mutt"
 
     # modules
     _modules="nodejs npm python3 python3-pip ruby"
