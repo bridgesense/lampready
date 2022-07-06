@@ -43,7 +43,7 @@ In this example Podman will need to logged into docker.io in order to download t
 [ubuntu/bind9](https://hub.docker.com/r/ubuntu/bind9) image.  This is an init
 image running the 22.04 release of [Ubuntu LTS](https://ubuntu.com/download/server).
 
-It should work on any Linux distribution runs on [[systemd](https://systemd.io/).
+It should work on any Linux distribution runs on [systemd](https://systemd.io/).
 This would include the great majority of Linux distributions.  Both Podman and Buildah
 will also need installed.
 
