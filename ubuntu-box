@@ -182,7 +182,7 @@ function build_image {
     _apache="apache2 openssl"
 
     # Apache config
-    _apache_config="a2enmod ssl rewrite; \
+    _apache_config="a2enmod ssl rewrite headers; \
         sed -i \"/^# Global configuration/a ServerName ${HOSTNAME}\" /etc/apache2/apache2.conf; \
         sed -i \"s@export APACHE_RUN_USER.*@export APACHE_RUN_USER=root@g\" /etc/apache2/envvars; \
         sed -i \"s@export APACHE_RUN_GROUP.*@export APACHE_RUN_GROUP=root@g\" /etc/apache2/envvars; \
