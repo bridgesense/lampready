@@ -53,10 +53,17 @@ podman login docker.io
 A free account can be created on docker.io by 
 [registering here](https://hub.docker.com/signup).
 
-If you receive permission denied notices the for vm.max_map_count, run the following
+If you receive permission denied notices for vm.max_map_count, run the following
 command from root:
+
 ```
 sysctl -w vm.max_map_count=262144
+```
+This increases the mmap counts in mappfs.  To make this change permanant add the
+following line to the bottom of the /etc/sysctl.conf file and reboot.
+
+```
+vm.max_map_count=262144
 ```
 
 The Red Hat Box 
