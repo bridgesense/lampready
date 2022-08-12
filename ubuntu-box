@@ -217,7 +217,7 @@ function build_image {
           php${PHP_VERSION}-mcrypt php${PHP_VERSION}-pspell php${PHP_VERSION}-xml \
           php${PHP_VERSION}-zip php${PHP_VERSION}-imap php${PHP_VERSION}-imagick \
           php${PHP_VERSION}-mysqlnd php${PHP_VERSION}-soap php${PHP_VERSION}-dev \
-          php${PHP_VERSION}-memcached php${PHP_VERSION}-xdebug \
+          php${PHP_VERSION}-memcached php${PHP_VERSION}-xdebug php${PHP_VERSION}-bcmath\
           memcached \
           "
 
