@@ -244,7 +244,7 @@ function build_image {
         printf \"/.+@.+/ root\" > /etc/postfix/virtual-regexp; \
         "
 
-    _xdebug_config="printf \"xdebug.mode=debug\nxdebug.start_with_request=yes\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.cli_color=1\nxdebug.remote_log='/var/log/apache2/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\" >> /etc/php/${PHP_VERSION}/apache2/conf.d/20-xdebug.ini; \
+    _xdebug_config="printf \"xdebug.mode=develop,debug\nxdebug.start_with_request=yes\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.cli_color=1\nxdebug.remote_log='/var/log/apache2/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\" >> /etc/php/${PHP_VERSION}/apache2/conf.d/20-xdebug.ini; \
         "
 
     # build the image in docker style
