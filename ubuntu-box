@@ -259,6 +259,7 @@ function build_image {
     echo "RUN apt-get update -y" >> $_file
     echo "RUN apt-get install -y ${_tools}" >> $_file
     echo "RUN add-apt-repository -y ppa:ondrej/php" >> $_file
+    echo "RUN apt-get update -y" >> $_file
     echo "RUN apt-get install -y ${_apache} ${_mariadb} ${_php}" >> $_file
     echo "RUN ${_openssl}" >> $_file
     echo "RUN ${_apache_config} ${_mariadb_config} ${_php_config} ${_xdebug_config} ${_postfix_config}" >> $_file
