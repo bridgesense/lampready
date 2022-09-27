@@ -36,6 +36,9 @@ XDEBUG_ENABLE="0"
 XDEBUG_PORT="9003"
 XDEBUG_FORCE_DISPLAY_ERRORS="1"
 XDEBUG_SCREAM="0"
+XDEBUG_DISPLAY_MAX_DATA="-1"
+XDEBUG_DISPLAY_MAX_DEPTH="5"
+XDEBUG_DISPLAY_MAX_CHILDREN="-1"
 
 declare -A DB1=(
         [DB_NAME]=""
@@ -244,7 +247,7 @@ function build_image {
         printf \"/.+@.+/ root\" > /etc/postfix/virtual-regexp; \
         "
 
-    _xdebug_config="printf \"xdebug.mode=develop,debug\nxdebug.start_with_request=yes\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.cli_color=1\nxdebug.remote_log='/var/log/apache2/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\" >> /etc/php/${PHP_VERSION}/apache2/conf.d/20-xdebug.ini; \
+    _xdebug_config="printf \"xdebug.mode=develop,debug\nxdebug.start_with_request=yes\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.var_display_max_data=${XDEBUG_DISPLAY_MAX_DATA}\nxdebug.var_display_max_depth=${XDEBUG_DISPLAY_MAX_DEPTH}\nxdebug.var_display_max_children=${XDEBUG_DISPLAY_MAX_CHILDREN}\nxdebug.cli_color=1\nxdebug.remote_log='/var/log/apache2/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\" >> /etc/php/${PHP_VERSION}/apache2/conf.d/20-xdebug.ini; \
         "
 
     # build the image in docker style
@@ -254,12 +257,12 @@ function build_image {
     echo "LABEL maintainer='bridgesense llc'" >> $_file
     echo "LABEL description='Provides a full LAMP stack, xdebug and mail shield for PHP development.'" >> $_file
     echo "LABEL io.k8s.display-name='An Ubuntu LTS full LAMP stack'" >> $_file
-
+    echo "RUN apt-get update -y" >> $_file
     # included epel for mcrypt and imagick libraries
-    echo "RUN apt-get update -y" >> $_file
     echo "RUN apt-get install -y ${_tools}" >> $_file
-    echo "RUN add-apt-repository -y ppa:ondrej/php" >> $_file
+    echo "RUN LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php" >> $_file
     echo "RUN apt-get update -y" >> $_file
+    echo "RUN apt-get dist-upgrade -y" >> $_file
     echo "RUN apt-get install -y ${_apache} ${_mariadb} ${_php}" >> $_file
     echo "RUN ${_openssl}" >> $_file
     echo "RUN ${_apache_config} ${_mariadb_config} ${_php_config} ${_xdebug_config} ${_postfix_config}" >> $_file
