@@ -201,7 +201,9 @@ function build_image {
     _mariadb="mariadb-server \
         "
 
-    _mariadb_config="sed -i \"/^\\[mysqld\\]/a socket=/var/run/mysqld/mysqld.sock\\ntmpdir=/tmp\\nlc-messages-dir=/usr/share/mysql\\nskip-external-locking\\nquery_cache_limit=1G\\nquery_cache_size=16M\\ninnodb_file_per_table=1\\ninnodb_file_format=barracuda\\ninnodb_strict_mode=0\\nsql_mode=''\\ninnodb_large_prefix=1\\ninnodb_log_file_size=256M\\ntmp_table_size=256MB\\nmax_heap_table_size=256MB\\nslow_query_log = 1\\nslow_query_log_file = /var/log/apache2/mariadb-slow.log\\nlong_query_time = 2\\nlog_error=/var/log/apache2/mariadb.log\\nuser=root\" /etc/mysql/mariadb.conf.d/50-server.cnf; \
+    _mariadb_config="sed -i \"s@^pid-file@#pid-file@g\" /etc/mysql/mariadb.conf.d/50-server.cnf; \
+        sed -i \"s@^socket@#socket@g\" /etc/mysql/mariadb.conf.d/50-server.cnf; \
+        sed -i \"/^\\[mysqld\\]/a socket=/var/lib/mysql/mysql.sock\\ntmpdir=/tmp\\nlc-messages-dir=/usr/share/mysql\\nskip-external-locking\\nquery_cache_limit=1G\\nquery_cache_size=16M\\ninnodb_file_per_table=1\\ninnodb_file_format=barracuda\\ninnodb_strict_mode=0\\nsql_mode=''\\ninnodb_large_prefix=1\\ninnodb_log_file_size=256M\\ntmp_table_size=256MB\\nmax_heap_table_size=256MB\\nslow_query_log = 1\\nslow_query_log_file = /var/log/apache2/mariadb-slow.log\\nlong_query_time = 2\\nlog_error=/var/log/apache2/mariadb.log\\nuser=root\" /etc/mysql/mariadb.conf.d/50-server.cnf; \
         sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; \
         sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; \
         sed -i \"s@/usr/sbin/mariadbd@/usr/sbin/mariadbd --user=root@g\" /usr/lib/systemd/system/mariadb.service; \
@@ -278,7 +280,8 @@ function build_image {
     fi
 
     # apache override
-    echo "RUN wget https://github.com/bridgesense/lampready/raw/master/apache2-bin_2.4.52-1ubuntu4.1_amd64.deb -O /tmp/apache2-override.deb" >> $_file
+    # echo "RUN wget https://github.com/bridgesense/lampready/raw/master/apache2-bin_2.4.52-1ubuntu4.1_amd64.deb -O /tmp/apache2-override.deb" >> $_file
+    echo "RUN wget https://github.com/bridgesense/lampready/raw/master/apache2-bin_2.4.41-4ubuntu3.12_amd64.deb -O /tmp/apache2-override.deb" >> $_file
     echo "RUN dpkg -i /tmp/apache2-override.deb && rm /tmp/apache2-override.deb" >> $_file
 
     podman build -t "${SITE_NAME}:private" -f $_file
@@ -611,7 +614,7 @@ function start_systemd_service {
     podman exec "${SITE_NAME}" service postfix start
     podman exec "${SITE_NAME}" service memcached start
     podman exec "${SITE_NAME}" service elasticsearch start
-    podman exec "${SITE_NAME}" service mariadb start
+    podman exec "${SITE_NAME}" service mysql start
     podman exec "${SITE_NAME}" service apache2 start
 }
 
@@ -709,11 +712,11 @@ if [ "$ACTION" == "up" ]; then
         # give plenty of time for Maria to waken
         sleep 5
         podman exec "${SITE_NAME}" chown root:root /var/lib/mysql
-        podman exec "${SITE_NAME}" mariadb-install-db --user=root --basedir=/usr --datadir=/var/lib/mysql
+        podman exec "${SITE_NAME}" mysql_install_db --user=root --basedir=/usr --datadir=/var/lib/mysql
         podman exec "${SITE_NAME}" service postfix start
         podman exec "${SITE_NAME}" service memcached start
         podman exec "${SITE_NAME}" service elasticsearch start
-        podman exec "${SITE_NAME}" service mariadb start
+        podman exec "${SITE_NAME}" service mysql start
         podman exec "${SITE_NAME}" service apache2 start
         sleep 5
 
