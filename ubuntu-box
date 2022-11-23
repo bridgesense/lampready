@@ -58,7 +58,7 @@ declare -A DB1=(
 
 # The default box parameters require a registry login
 # podman login docker.io
-IMAGE="docker.io/ubuntu/bind9"
+IMAGE="docker.io/ubuntu/bind9:9.16-20.04_beta"
 
 SITE_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ACTION="${1:-help}"
@@ -201,7 +201,7 @@ function build_image {
     _mariadb="mariadb-server \
         "
 
-    _mariadb_config="sed -i \"/^\\[mysqld\\]/a socket=/var/run/mysqld/mysqld.sock\\ntmpdir=/tmp\\nlc-messages-dir=/usr/share/mysql\\nskip-external-locking\\nquery_cache_limit=1G\\nquery_cache_size=16M\\ninnodb_file_per_table=1\\ninnodb_file_format=barracuda\\ninnodb_strict_mode=0\\nsql_mode='ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'\\ninnodb_large_prefix=1\\ninnodb_log_file_size=256M\\ntmp_table_size=256MB\\nmax_heap_table_size=256MB\\nslow_query_log = 1\\nslow_query_log_file = /var/log/apache2/mariadb-slow.log\\nlong_query_time = 2\\nlog_error=/var/log/apache2/mariadb.log\\nuser=root\" /etc/mysql/mariadb.conf.d/50-server.cnf; \
+    _mariadb_config="sed -i \"/^\\[mysqld\\]/a socket=/var/run/mysqld/mysqld.sock\\ntmpdir=/tmp\\nlc-messages-dir=/usr/share/mysql\\nskip-external-locking\\nquery_cache_limit=1G\\nquery_cache_size=16M\\ninnodb_file_per_table=1\\ninnodb_file_format=barracuda\\ninnodb_strict_mode=0\\nsql_mode=''\\ninnodb_large_prefix=1\\ninnodb_log_file_size=256M\\ntmp_table_size=256MB\\nmax_heap_table_size=256MB\\nslow_query_log = 1\\nslow_query_log_file = /var/log/apache2/mariadb-slow.log\\nlong_query_time = 2\\nlog_error=/var/log/apache2/mariadb.log\\nuser=root\" /etc/mysql/mariadb.conf.d/50-server.cnf; \
         sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; \
         sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; \
         sed -i \"s@/usr/sbin/mariadbd@/usr/sbin/mariadbd --user=root@g\" /usr/lib/systemd/system/mariadb.service; \
