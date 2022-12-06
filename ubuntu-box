@@ -234,6 +234,13 @@ function build_image {
         sed -i \"s@post_max_size.*@post_max_size=16M@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@upload_max_filesize.*@upload_max_filesize=16M@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@;date.timezone =@date.timezone = ${TIMEZONE}@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
+        sed -i \"s@short_open_tag.*@short_open_tag=On@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
+        sed -i \"s@max_execution_time.*@max_execution_time=${PHP_MAX_EXEC_TIME}@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
+        sed -i \"s@max_input_vars.*@max_input_vars=10000@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
+        sed -i \"s@memory_limit.*@memory_limit=${PHP_MEM_LIMIT}@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
+        sed -i \"s@post_max_size.*@post_max_size=16M@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
+        sed -i \"s@upload_max_filesize.*@upload_max_filesize=16M@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
+        sed -i \"s@;date.timezone =@date.timezone = ${TIMEZONE}@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
         "
 
     # sodium
@@ -280,10 +287,13 @@ function build_image {
     fi
 
     # apache override
-    # echo "RUN wget https://github.com/bridgesense/lampready/raw/master/apache2-bin_2.4.52-1ubuntu4.1_amd64.deb -O /tmp/apache2-override.deb" >> $_file
     echo "RUN wget https://github.com/bridgesense/lampready/raw/master/apache2-bin_2.4.41-4ubuntu3.12_amd64.deb -O /tmp/apache2-override.deb" >> $_file
     echo "RUN dpkg -i /tmp/apache2-override.deb && rm /tmp/apache2-override.deb" >> $_file
 
+    # set server time
+    echo "RUN ln -fs /usr/share/zoneinfo/${TIMEZONE} /etc/localtime" >> $_file
+    echo "RUN dpkg-reconfigure -f noninteractive tzdata" >> $_file
+    
     podman build -t "${SITE_NAME}:private" -f $_file
 }
 
@@ -717,6 +727,7 @@ if [ "$ACTION" == "up" ]; then
         podman exec "${SITE_NAME}" service memcached start
         podman exec "${SITE_NAME}" service elasticsearch start
         podman exec "${SITE_NAME}" service mysql start
+        podman exec "${SITE_NAME}" mysql_tzinfo_to_sql /usr/share/zoneinfo
         podman exec "${SITE_NAME}" service apache2 start
         sleep 5
 
