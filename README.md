@@ -417,7 +417,7 @@ directory and place the following information in it:
 
 After running dap-php-setup, you should have a new option called "Use custom
 launch.json script" to choose.  For more information and an example Emacs
-setup, check out my [dotfiles](https://lampready.com).
+setup, check out my [dotfiles](https://github.com/bridgesense/dotfiles).
 
 VIM with the Vdebug Plugin
 ---
