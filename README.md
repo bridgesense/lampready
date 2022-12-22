@@ -39,21 +39,14 @@ this script will demystify the process.
 
 The Ubuntu Box
 ---
-In this example Podman will need to logged into docker.io in order to download the
+In this example Podman will download the
 [ubuntu/bind9](https://hub.docker.com/r/ubuntu/bind9) image.  This is an init
-image running the 22.04 release of [Ubuntu LTS](https://ubuntu.com/download/server).
+image running the 20.04 release of [Ubuntu LTS](https://ubuntu.com/download/server).
 
-It should work on any Linux distribution that runs on [systemd](https://systemd.io/).
-This would include the most distributions.  Both Podman and Buildah will also need
-installed.
+It should work on any Linux distribution that runs on [systemd](https://systemd.io/),
+which is most of them.  Both Podman and Buildah will also need installed.
 
-```
-podman login docker.io 
-```
-A free account can be created on docker.io by 
-[registering here](https://hub.docker.com/signup).
-
-If you receive permission denied notices for vm.max_map_count, run the following
+NOTE: If you receive permission denied notices for vm.max_map_count, run the following
 command from root:
 
 ```
@@ -64,41 +57,6 @@ following line to the bottom of the /etc/sysctl.conf file and reboot.
 
 ```
 vm.max_map_count=262144
-```
-
-The Red Hat Box 
----
-In this example Podman will need to be logged into registry.access.redhat.com
-in order to download the
-[ubi8-init](https://catalog.redhat.com/software/containers/ubi8-init/5c6aea74dd19c77a158f0892)
-image.  This script has been tested on both the 8 and 9 releases of
-[Red Hat Enterprise Linux](https://www.redhat.com). It should work on any Linux
-system built on systemd.
-
-```
-podman login registry.access.redhat.com
-```
-
-Right now, Red Hat is allowing access to this repository at no charge.  All you
-need to do is
-[register](https://developers.redhat.com/#assembly-field-sections-7105). Since
-CentOS has moved out of the production space, LAMPReady is a nice solution to see 
-how your website will perform in the RHEL environment.  Thankfully, there's not much
-difference to what you're already used to.
-
-*For those with paid subscriptions a container does not use a deployment slot.
-Inside the container you already have access to a limited version of the main
-repository -- enough for an orientation.*
-
-The user will still need have access to the root account on their host machine.
-Root access will allow you to make entries to the firewall and SELinux in order
-for Xdebug to work properly:
-
-```
-firewall-cmd --permanent --zone=webserver --add-port=9003/tcp
-```
-```
-semanage port -a -t http_port -p tcp 9003
 ```
 
 Being Rootless
@@ -130,10 +88,6 @@ video demonstration can be seen
 Ubuntu LTS
 ```
 curl https://raw.githubusercontent.com/bridgesense/lampready/master/ubuntu-box > box
-```
-RedHat Server
-```
-curl https://raw.githubusercontent.com/bridgesense/lampready/master/redhat-box > box
 ```
 
 __PLEASE NOTE:__ Be sure to review the notes at the head of the box script.

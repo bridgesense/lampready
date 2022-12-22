@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
 # Home: https://github.com/bridgesense/lampready
-# This script creates a LAMP stack with a single rhel8 container.
+# This script creates a LAMP stack with a single ubuntu focal container.
 # Customize the information below to suit your needs,
 # then run: bash box
 #
 # Before you begin:
-# 1. Make sure to log into registry.redhat.io
-# > podman login docker.io 
-#
-# 2. Make sure to expose priviledged ports
+# Make sure to expose priviledged ports
 # > sudo -i
 # > echo "net.ipv4.ip_unprivileged_port_start=0" > /etc/sysctl.d/05-expose-privileged.conf
 # > sysctl --system
@@ -288,7 +285,9 @@ function build_image {
 
     # apache override
     echo "RUN wget https://github.com/bridgesense/lampready/raw/master/apache2-bin_2.4.41-4ubuntu3.12_amd64.deb -O /tmp/apache2-override.deb" >> $_file
-    echo "RUN dpkg -i /tmp/apache2-override.deb && rm /tmp/apache2-override.deb" >> $_file
+    # the apache2 patch must be applied on each iteration
+    # as a work around for older combinations of systemd and podman
+    echo "RUN dpkg -i /tmp/apache2-override.deb" >> $_file
 
     # set server time
     echo "RUN ln -fs /usr/share/zoneinfo/${TIMEZONE} /etc/localtime" >> $_file
@@ -625,6 +624,9 @@ function start_systemd_service {
     podman exec "${SITE_NAME}" service memcached start
     podman exec "${SITE_NAME}" service elasticsearch start
     podman exec "${SITE_NAME}" service mysql start
+    # the apache2 patch must be applied on each iteration
+    # as a work around for older combinations of systemd and podman
+    podman exec "${SITE_NAME}" dpkg -i /tmp/apache2-override.deb   
     podman exec "${SITE_NAME}" service apache2 start
 }
 
@@ -728,6 +730,9 @@ if [ "$ACTION" == "up" ]; then
         podman exec "${SITE_NAME}" service elasticsearch start
         podman exec "${SITE_NAME}" service mysql start
         podman exec "${SITE_NAME}" mysql_tzinfo_to_sql /usr/share/zoneinfo
+        # the apache2 patch must be applied on each iteration
+        # as a work around for older combinations of systemd and podman
+        podman exec "${SITE_NAME}" dpkg -i /tmp/apache2-override.deb   
         podman exec "${SITE_NAME}" service apache2 start
         sleep 5
 
