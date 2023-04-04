@@ -284,7 +284,7 @@ function build_image {
     fi
 
     # apache override
-    echo "RUN wget https://github.com/bridgesense/lampready/raw/master/apache2-bin_2.4.41-4ubuntu3.13_amd64.deb -O /tmp/apache2-override.deb" >> $_file
+    echo "RUN wget http://github.com/bridgesense/lampready/raw/master/apache2-bin_2.4.41-4ubuntu3.13_amd64.deb -O /tmp/apache2-override.deb" >> $_file
     # the apache2 patch must be applied on each iteration
     # as a work around for older combinations of systemd and podman
     echo "RUN dpkg -i /tmp/apache2-override.deb" >> $_file
