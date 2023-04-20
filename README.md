@@ -333,7 +333,7 @@ bash box ps
 bash box reset 
 ```
 
-Emacs and Dap-Mode 
+Dap-Mode for Emacs
 ---
 
 Dap-Mode is part of the [Emacs-Lsp](https://emacs-lsp.github.io/) package which
@@ -360,7 +360,7 @@ directory and place the following information in it:
         "request": "launch",
         "port": 9003,
         "pathMappings": {
-            "/var/www": "/path/to/the/files/on/your/system"
+            "/var/www": "/path/to/your/project/root"
           },
         "sourchMaps": true,
         "log": false 
@@ -372,6 +372,18 @@ directory and place the following information in it:
 After running dap-php-setup, you should have a new option called "Use custom
 launch.json script" to choose.  For more information and an example Emacs
 setup, check out my [dotfiles](https://github.com/bridgesense/dotfiles).
+
+Dap-Mode for NeoVIM 
+---
+
+Dap-Mode for NeoVIM is even better than VSCode's implementation, and I have
+found it much more stable than the Emacs version.
+
+I used [mason.vim](https://github.com/williamboman/mason.nvim) to add the 
+vscode-php-debug extension, which never seems to load using the Emacs alternative.
+Afterwards, all I needed to do was add a few lines of code to my [Nvim init file](https://github.com/bridgesense/dotfiles/blob/master/workstation/nvim/init.lua).
+The same configuration used above for Emacs will work, but it should be placed into 
+a subdirectory of your root folder: ~/your-project-root/.vscode/launch.json.
 
 VIM with the Vdebug Plugin
 ---
@@ -405,7 +417,7 @@ let g:vdebug_options = {
 \    "debug_window_level" : 0,
 \    "debug_file_level" : 0,
 \    "debug_file" : "~/.vdebug.log",
-\    "path_maps" : {"/var/www" : "/path/to/the/files/on/your/system"},
+\    "path_maps" : {"/var/www" : "/path/to/your/project/root"},
 \    "watch_window_style" : 'expanded',
 \    "marker_default" : '⬦',
 \    "marker_closed_tree" : '▸',
