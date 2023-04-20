@@ -360,7 +360,7 @@ directory and place the following information in it:
         "request": "launch",
         "port": 9003,
         "pathMappings": {
-            "/var/www": "/path/to/your/project/root"
+            "/var/www": "/home/username/your-project-folder"
           },
         "sourchMaps": true,
         "log": false 
@@ -417,7 +417,7 @@ let g:vdebug_options = {
 \    "debug_window_level" : 0,
 \    "debug_file_level" : 0,
 \    "debug_file" : "~/.vdebug.log",
-\    "path_maps" : {"/var/www" : "/path/to/your/project/root"},
+\    "path_maps" : {"/var/www" : "/home/username/your-project-folder"},
 \    "watch_window_style" : 'expanded',
 \    "marker_default" : '⬦',
 \    "marker_closed_tree" : '▸',
