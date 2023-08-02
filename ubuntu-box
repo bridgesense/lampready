@@ -53,8 +53,6 @@ declare -A DB1=(
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Don't edit below this point unless you really want to
 
-# The default box parameters require a registry login
-# podman login docker.io
 IMAGE="docker.io/ubuntu/bind9:9.16-20.04_beta"
 
 SITE_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
@@ -230,6 +228,7 @@ function build_image {
         sed -i \"s@memory_limit.*@memory_limit=${PHP_MEM_LIMIT}@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@post_max_size.*@post_max_size=16M@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@upload_max_filesize.*@upload_max_filesize=16M@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
+        sed -i \"s@session.gc_maxlifetime.*@session.gc_maxlifetime=43200\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@;date.timezone =@date.timezone = ${TIMEZONE}@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@short_open_tag.*@short_open_tag=On@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
         sed -i \"s@max_execution_time.*@max_execution_time=${PHP_MAX_EXEC_TIME}@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
