@@ -226,6 +226,7 @@ function build_image {
         sed -i \"s@max_execution_time.*@max_execution_time=${PHP_MAX_EXEC_TIME}@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@max_input_vars.*@max_input_vars=10000@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@memory_limit.*@memory_limit=${PHP_MEM_LIMIT}@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
+        sed -i \"s@max_input_vars.*@max_input_vars=10000@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@post_max_size.*@post_max_size=16M@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@upload_max_filesize.*@upload_max_filesize=16M@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@session.gc_maxlifetime.*@session.gc_maxlifetime=43200\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
