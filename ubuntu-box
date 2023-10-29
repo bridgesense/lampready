@@ -289,8 +289,9 @@ function build_image {
 	fi
 
 	# apache override
-	echo "RUN wget http://github.com/bridgesense/lampready/raw/master/apache2-bin_2.4.41-4ubuntu3.13_amd64.deb -O /tmp/apache2-override.deb" >>$_file
-	echo "RUN dpkg -i /tmp/apache2-override.deb" >>$_file
+	echo "RUN wget http://github.com/bridgesense/lampready/raw/master/apache2-bin_2.4.41-4ubuntu3.13_amd64.deb -O /usr/local/share/apache2-override.deb" >>$_file
+	echo "RUN sleep 2" >>$_file
+	echo "RUN dpkg -i /usr/local/share/apache2-override.deb" >>$_file
 
 	# set server time
 	echo "RUN ln -fs /usr/share/zoneinfo/${TIMEZONE} /etc/localtime" >>$_file
@@ -628,7 +629,7 @@ function start_systemd_service {
 	if [ $USE_TMPFS -ne 1 ]; then
 		# the apache2 patch must be applied on each iteration
 		# as a work around for older combinations of systemd and podman
-		podman exec "${SITE_NAME}" dpkg -i /tmp/apache2-override.deb
+		podman exec "${SITE_NAME}" dpkg -i /usr/local/share/apache2-override.deb
 	fi
 	podman exec "${SITE_NAME}" ln -s /var/lib/mysql/mysql.sock /var/run/mysqld/mysqld.sock
 	podman exec "${SITE_NAME}" service apache2 start
@@ -740,7 +741,7 @@ if [ "$ACTION" == "up" ]; then
 		if [ $USE_TMPFS -ne 1 ]; then
 			# the apache2 patch must be applied on each iteration
 			# as a work around for older combinations of systemd and podman
-			podman exec "${SITE_NAME}" dpkg -i /tmp/apache2-override.deb
+			podman exec "${SITE_NAME}" dpkg -i /usr/local/share/apache2-override.deb
 		fi
 
 		podman exec "${SITE_NAME}" ln -s /var/lib/mysql/mysql.sock /var/run/mysqld/mysqld.sock
