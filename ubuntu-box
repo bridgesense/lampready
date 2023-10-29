@@ -52,8 +52,8 @@ declare -A DB1=(
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Don't edit below this point unless you really want to
-
-IMAGE="docker.io/ubuntu/bind9:9.16-20.04_beta"
+# ref: https://hub.docker.com/r/jrei/systemd-ubuntu
+IMAGE="docker.io/jrei/systemd-ubuntu:20.04"
 
 SITE_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 ACTION="${1:-help}"
@@ -253,7 +253,7 @@ function build_image {
         printf \"/.+@.+/ root\" > /etc/postfix/virtual-regexp; \
         "
 
-	_xdebug_config="printf \"xdebug.mode=develop,debug\nxdebug.start_with_request=yes\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.var_display_max_data=${XDEBUG_DISPLAY_MAX_DATA}\nxdebug.var_display_max_depth=${XDEBUG_DISPLAY_MAX_DEPTH}\nxdebug.var_display_max_children=${XDEBUG_DISPLAY_MAX_CHILDREN}\nxdebug.cli_color=1\nxdebug.remote_log='/var/log/apache2/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\" >> /etc/php/${PHP_VERSION}/apache2/conf.d/20-xdebug.ini; \
+	_xdebug_config="printf \"xdebug.mode=develop,debug\nxdebug.start_with_request=yes\nxdebug.scream=${XDEBUG_SCREAM}\nxdebug.var_display_max_data=${XDEBUG_DISPLAY_MAX_DATA}\nxdebug.var_display_max_depth=${XDEBUG_DISPLAY_MAX_DEPTH}\nxdebug.var_display_max_children=${XDEBUG_DISPLAY_MAX_CHILDREN}\nxdebug.cli_color=1\nxdebug.log='/var/log/apache2/xdebug.log'\nxdebug.force_display_errors=${XDEBUG_FORCE_DISPLAY_ERRORS}\" >> /etc/php/${PHP_VERSION}/apache2/conf.d/20-xdebug.ini; \
         "
 
 	# build the image in docker style
@@ -290,8 +290,6 @@ function build_image {
 
 	# apache override
 	echo "RUN wget http://github.com/bridgesense/lampready/raw/master/apache2-bin_2.4.41-4ubuntu3.13_amd64.deb -O /tmp/apache2-override.deb" >>$_file
-	# the apache2 patch must be applied on each iteration
-	# as a work around for older combinations of systemd and podman
 	echo "RUN dpkg -i /tmp/apache2-override.deb" >>$_file
 
 	# set server time
@@ -587,8 +585,9 @@ function setup_systemd_service {
 			--tmpfs /etc
 			--tmpfs /usr/lib/systemd/system
 			--tmpfs /var/lib
-			--tmpfs /var/run
-			--tmpfs /var/tmp
+			--tmpfs /run/lock
+			--tmpfs /run
+			--tmpfs /tmp
 		)
 	fi
 	RUN_PARAMS+=(
@@ -601,9 +600,9 @@ function setup_systemd_service {
 		-v "${SITE_HOME}/.container/sites-enabled:/etc/apache2/sites-enabled:Z"
 		-v "${SITE_HOME}/.container/log:/var/log/apache2:Z"
 		-v "${SITE_HOME}/.container/mariadb:/var/lib/mysql:Z"
-		--init
+		--systemd=true
 		--privileged
-		"localhost/${SITE_NAME}:private"
+		-v "/sys/fs/cgroup:/sys/fs/cgroup:ro localhost/${SITE_NAME}:private"
 	)
 
 	# start the service with everything in place
@@ -625,10 +624,13 @@ function start_systemd_service {
 	podman exec "${SITE_NAME}" service postfix start
 	podman exec "${SITE_NAME}" service memcached start
 	podman exec "${SITE_NAME}" service elasticsearch start
-	podman exec "${SITE_NAME}" service mysql start
-	# the apache2 patch must be applied on each iteration
-	# as a work around for older combinations of systemd and podman
-	podman exec "${SITE_NAME}" dpkg -i /tmp/apache2-override.deb
+	podman exec "${SITE_NAME}" service mariadb start
+	if [ $USE_TMPFS -ne 1 ]; then
+		# the apache2 patch must be applied on each iteration
+		# as a work around for older combinations of systemd and podman
+		podman exec "${SITE_NAME}" dpkg -i /tmp/apache2-override.deb
+	fi
+	podman exec "${SITE_NAME}" ln -s /var/lib/mysql/mysql.sock /var/run/mysqld/mysqld.sock
 	podman exec "${SITE_NAME}" service apache2 start
 }
 
@@ -733,11 +735,15 @@ if [ "$ACTION" == "up" ]; then
 		podman exec "${SITE_NAME}" service postfix start
 		podman exec "${SITE_NAME}" service memcached start
 		podman exec "${SITE_NAME}" service elasticsearch start
-		podman exec "${SITE_NAME}" service mysql start
+		podman exec "${SITE_NAME}" service mariadb start
 		podman exec "${SITE_NAME}" mysql_tzinfo_to_sql /usr/share/zoneinfo
-		# the apache2 patch must be applied on each iteration
-		# as a work around for older combinations of systemd and podman
-		podman exec "${SITE_NAME}" dpkg -i /tmp/apache2-override.deb
+		if [ $USE_TMPFS -ne 1 ]; then
+			# the apache2 patch must be applied on each iteration
+			# as a work around for older combinations of systemd and podman
+			podman exec "${SITE_NAME}" dpkg -i /tmp/apache2-override.deb
+		fi
+
+		podman exec "${SITE_NAME}" ln -s /var/lib/mysql/mysql.sock /var/run/mysqld/mysqld.sock
 		podman exec "${SITE_NAME}" service apache2 start
 		sleep 5
 
