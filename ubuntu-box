@@ -617,7 +617,6 @@ function setup_systemd_service {
 		-v "${SITE_HOME}/.container/log:/var/log/apache2:Z"
 		-v "${SITE_HOME}/.container/mariadb:/var/lib/mysql:Z"
 		--systemd=true
-		--privileged
 		-v "/sys/fs/cgroup:/sys/fs/cgroup:ro localhost/${SITE_NAME}:private"
 	)
 
