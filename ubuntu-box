@@ -76,6 +76,15 @@ if [ "$SUB_DOMAIN" != "" ]; then SITE_NAME="${SUB_DOMAIN}.${HOSTNAME}"; else SIT
 MULTI_BOX=0
 USE_TMPFS=0
 USE_EXTRAS=0
+if command -v podman >/dev/null 2>&1; then
+	if [[ $(podman --version | awk '{print int($3)}') -ge 4 ]]; then
+		# Podman version is greater than 4
+		MARIADB_FIX="mariadb"
+	else
+		# Podman version is lower than or equal to 4.3.1
+		MARIADB_FIX="mysqld"
+	fi
+fi
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # functions
@@ -216,7 +225,7 @@ function build_image {
         sed -i \"/^\\[mysqld\\]/a socket=/var/lib/mysql/mysql.sock\\ntmpdir=/tmp\\nlc-messages-dir=/usr/share/mysql\\nskip-external-locking\\nquery_cache_limit=1G\\nquery_cache_size=16M\\ninnodb_file_per_table=1\\ninnodb_file_format=barracuda\\ninnodb_strict_mode=0\\nsql_mode=''\\ninnodb_large_prefix=1\\ninnodb_log_file_size=256M\\ntmp_table_size=256MB\\nmax_heap_table_size=256MB\\nslow_query_log = 1\\nslow_query_log_file = /var/log/apache2/mariadb-slow.log\\nlong_query_time = 2\\nlog_error=/var/log/apache2/mariadb.log\\nuser=root\" /etc/mysql/mariadb.conf.d/50-server.cnf; \
         sed -i \"s@^User=mysql@User=root@g\" /usr/lib/systemd/system/mariadb.service; \
         sed -i \"s@^Group=mysql@Group=root@g\" /usr/lib/systemd/system/mariadb.service; \
-        sed -i \"s@/usr/sbin/mariadbd@/usr/sbin/mariadbd --user=root@g\" /usr/lib/systemd/system/mariadb.service; \
+        sed -i \"s@/usr/sbin/${MARIADB_FIX}@/usr/sbin/mysqld --user=root@g\" /usr/lib/systemd/system/mariadb.service; \
         "
 
 	# elasticsearch
