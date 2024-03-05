@@ -14,6 +14,8 @@
 # TROUBLE SHOOTING
 # Error: OCI runtime error: chmod `run/shm`: Operation not supported
 # see: https://noobient.com/2023/11/15/fixing-ubuntu-containers-failing-to-start-with-systemd/
+# bash box reset
+# rm -rf ~/.local/share/containers
 # export CRUN_VER='1.11.2'
 # mkdir -p "${HOME}/.local/bin"
 # curl -L "https://github.com/containers/crun/releases/download/${CRUN_VER}/crun-${CRUN_VER}-linux-amd64" -o "${HOME}/.local/bin/crun"
@@ -26,8 +28,8 @@
 #   "/usr/bin/crun"
 # ]
 # EOF
+#
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
 HOSTNAME="lampready.com"
 SUB_DOMAIN="dev"
 PUBLIC_ROOT_PATH="public_html"
