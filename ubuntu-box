@@ -39,7 +39,7 @@ SSL_PORT="443"
 
 TIMEZONE="America/Los_Angeles"
 
-PHP_VERSION="7.4" # 5.6 - 8.1
+PHP_VERSION="8.1" # 5.6 - 8.1
 PHP_MAX_EXEC_TIME="600"
 PHP_MEM_LIMIT="512M"
 
@@ -303,7 +303,6 @@ function build_image {
 	echo "RUN apt-get install -y ${_apache} ${_mariadb} ${_php}" >>$_file
 	echo "RUN ${_openssl}" >>$_file
 	echo "RUN ${_apache_config} ${_mariadb_config} ${_php_config} ${_xdebug_config} ${_postfix_config}" >>$_file
-	echo "RUN ${_elasticsearch}" >>$_file
 	sodium_ver=("7.0" "7.1")
 	if [[ " ${sodium_ver[*]} " =~ " ${PHP_VERSION} " ]]; then
 		echo "RUN apt-get install -y ${_php_sodium}" >>$_file
@@ -312,6 +311,7 @@ function build_image {
 		echo "RUN apt-get install -y ${_modules}" >>$_file
 		echo "RUN ${_npm_globals}" >>$_file
 		echo "RUN ${_composer}" >>$_file
+		echo "RUN ${_elasticsearch}" >>$_file
 	fi
 
 	# apache override
@@ -649,7 +649,9 @@ function start_systemd_service {
 	podman exec "${SITE_NAME}" chown root:root /var/lib/mysql
 	podman exec "${SITE_NAME}" service postfix start
 	podman exec "${SITE_NAME}" service memcached start
-	podman exec "${SITE_NAME}" service elasticsearch start
+	if [ $USE_EXTRAS -eq 1 ]; then
+		podman exec "${SITE_NAME}" service elasticsearch start
+	fi
 	podman exec "${SITE_NAME}" service mariadb start
 	if [ $USE_TMPFS -ne 1 ]; then
 		# the apache2 patch must be applied on each iteration
@@ -760,7 +762,9 @@ if [ "$ACTION" == "up" ]; then
 		podman exec "${SITE_NAME}" mysql_install_db --user=root --basedir=/usr --datadir=/var/lib/mysql
 		podman exec "${SITE_NAME}" service postfix start
 		podman exec "${SITE_NAME}" service memcached start
-		podman exec "${SITE_NAME}" service elasticsearch start
+		if [ $USE_EXTRAS -eq 1 ]; then
+			podman exec "${SITE_NAME}" service elasticsearch start
+		fi
 		podman exec "${SITE_NAME}" service mariadb start
 		podman exec "${SITE_NAME}" mysql_tzinfo_to_sql /usr/share/zoneinfo
 		if [ $USE_TMPFS -ne 1 ]; then
