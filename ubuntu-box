@@ -77,7 +77,7 @@ ACTION="${1:-help}"
 if [ "$SUB_DOMAIN" != "" ]; then SITE_NAME="${SUB_DOMAIN}.${HOSTNAME}"; else SITE_NAME=$HOSTNAME; fi
 MULTI_BOX=0
 USE_TMPFS=0
-USE_EXTRAS=0
+USE_EXTRAS=1
 if command -v podman >/dev/null 2>&1; then
   if [[ $(podman --version | awk '{print int($3)}') -ge 4 ]]; then
     # Podman version is greater than 4
@@ -186,15 +186,18 @@ function build_image {
   _tools="vim dialog apt-utils dumb-init git curl wget software-properties-common mutt"
 
   # modules
-  _modules="nodejs npm python3 python3-pip ruby"
+  _modules="nodejs python3 python3-pip ruby"
 
   # npm globals
-  _npm_globals="npm install -g n; n stable; npm install -g npm@latest; npm install -g npm;\
-        npm install --global yarn grunt-cli eslint csslint sass gulp-sass \
-        typescript typescript-language-server intelephense coffeelint yaml-lint \
-        eslint-plugin-toml eslint-plugin-markdown golangci-lint \
-        vscode-css-languageserver-bin; \
-        "
+  # _npm_globals="npm install -g n; n stable; npm install -g npm@latest; npm install -g npm;\
+  #       npm install --global yarn grunt-cli eslint csslint sass gulp-sass \
+  #       typescript typescript-language-server intelephense coffeelint yaml-lint \
+  #       eslint-plugin-toml eslint-plugin-markdown golangci-lint \
+  #       vscode-css-languageserver-bin; \
+  #       "
+
+  _npm_install="curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash;"
+  _npm_init="nvm install 18.20.4;"
 
   # composer
   _composer="curl https://getcomposer.org/composer-stable.phar >> /usr/local/bin/composer; \
@@ -244,7 +247,7 @@ function build_image {
           php${PHP_VERSION}-zip php${PHP_VERSION}-imap php${PHP_VERSION}-imagick \
           php${PHP_VERSION}-mysqlnd php${PHP_VERSION}-soap php${PHP_VERSION}-dev \
           php${PHP_VERSION}-memcached php${PHP_VERSION}-xdebug php${PHP_VERSION}-bcmath \
-          php${PHP_VERSION}-tidy \
+          php${PHP_VERSION}-tidy php${PHP_VERSION}-grpc \
           memcached \
           "
 
@@ -304,15 +307,15 @@ function build_image {
   echo "RUN apt-get install -y ${_apache} ${_mariadb} ${_php}" >>$_file
   echo "RUN ${_openssl}" >>$_file
   echo "RUN ${_apache_config} ${_mariadb_config} ${_php_config} ${_xdebug_config} ${_postfix_config}" >>$_file
+  echo "RUN ${_elasticsearch}" >>$_file
   sodium_ver=("7.0" "7.1")
   if [[ " ${sodium_ver[*]} " =~ " ${PHP_VERSION} " ]]; then
     echo "RUN apt-get install -y ${_php_sodium}" >>$_file
   fi
   if [ $USE_EXTRAS -eq 1 ]; then
     echo "RUN apt-get install -y ${_modules}" >>$_file
-    echo "RUN ${_npm_globals}" >>$_file
+    echo "RUN ${_npm_install}" >>$_file
     echo "RUN ${_composer}" >>$_file
-    echo "RUN ${_elasticsearch}" >>$_file
   fi
 
   # apache override
@@ -650,9 +653,7 @@ function start_systemd_service {
   podman exec "${SITE_NAME}" chown root:root /var/lib/mysql
   podman exec "${SITE_NAME}" service postfix start
   podman exec "${SITE_NAME}" service memcached start
-  if [ $USE_EXTRAS -eq 1 ]; then
-    podman exec "${SITE_NAME}" service elasticsearch start
-  fi
+  podman exec "${SITE_NAME}" service elasticsearch start
   podman exec "${SITE_NAME}" service mariadb start
   if [ $USE_TMPFS -ne 1 ]; then
     # the apache2 patch must be applied on each iteration
@@ -763,9 +764,7 @@ if [ "$ACTION" == "up" ]; then
     podman exec "${SITE_NAME}" mysql_install_db --user=root --basedir=/usr --datadir=/var/lib/mysql
     podman exec "${SITE_NAME}" service postfix start
     podman exec "${SITE_NAME}" service memcached start
-    if [ $USE_EXTRAS -eq 1 ]; then
-      podman exec "${SITE_NAME}" service elasticsearch start
-    fi
+    podman exec "${SITE_NAME}" service elasticsearch start
     podman exec "${SITE_NAME}" service mariadb start
     podman exec "${SITE_NAME}" mysql_tzinfo_to_sql /usr/share/zoneinfo
     if [ $USE_TMPFS -ne 1 ]; then
@@ -949,7 +948,10 @@ if [ "$ACTION" == "ssh" ]; then
   get_state
 
   if [ $STATE -eq 0 ]; then
-    podman exec -it "${SITE_NAME}" /bin/bash -c "source /root/.bashrc"
+    podman exec -it "${SITE_NAME}" /bin/bash -c "source /root/.bashrc;"
+    if [ $USE_EXTRAS -eq 1 ]; then
+      podman exec -it "${SITE_NAME}" /bin/bash -c "${_npm_init}"
+    fi
     podman exec -it "${SITE_NAME}" env HOME=/root /bin/bash -l
     echo "" && exit >/dev/null 2>&1
   else
