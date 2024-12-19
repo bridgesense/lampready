@@ -773,7 +773,8 @@ if [ "$ACTION" == "up" ]; then
 
     echo ""
     echo "Setting up the databases based on the information"
-    echo "that was entered at the head of this file..."
+    echo "that was entered at the head of this file."
+    echo "This might take a while..."
     echo ""
     podman exec "${SITE_NAME}" bash /var/www/box import_db
   fi
