@@ -188,16 +188,10 @@ function build_image {
   # modules
   _modules="nodejs python3 python3-pip ruby"
 
-  # npm globals
-  # _npm_globals="npm install -g n; n stable; npm install -g npm@latest; npm install -g npm;\
-  #       npm install --global yarn grunt-cli eslint csslint sass gulp-sass \
-  #       typescript typescript-language-server intelephense coffeelint yaml-lint \
-  #       eslint-plugin-toml eslint-plugin-markdown golangci-lint \
-  #       vscode-css-languageserver-bin; \
-  #       "
-
-  _npm_install="curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash;"
-  _npm_init="nvm install 18.20.4;"
+  _npm_install="curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash; \
+        echo \"nvm install v18.20.4\" >> /root/.bashrc; \
+        echo \"npm install --location=global --save-dev grunt-cli gulp gulp-cli\" >> /root/.bashrc; \
+		"
 
   # composer
   _composer="curl https://getcomposer.org/composer-stable.phar >> /usr/local/bin/composer; \
@@ -949,9 +943,6 @@ if [ "$ACTION" == "ssh" ]; then
 
   if [ $STATE -eq 0 ]; then
     podman exec -it "${SITE_NAME}" /bin/bash -c "source /root/.bashrc;"
-    if [ $USE_EXTRAS -eq 1 ]; then
-      podman exec -it "${SITE_NAME}" /bin/bash -c "${_npm_init}"
-    fi
     podman exec -it "${SITE_NAME}" env HOME=/root /bin/bash -l
     echo "" && exit >/dev/null 2>&1
   else
