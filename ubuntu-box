@@ -65,6 +65,8 @@ declare -A DB1=(
   [DB_CUSTOM_FUNCTIONS_FILENAME]="" # my_custom_functions.sql
 )
 
+# declare -A DB2=(...
+
 ## # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Don't edit below this point unless you really want to
 # ref: https://hub.docker.com/r/jrei/systemd-ubuntu
@@ -252,14 +254,12 @@ function build_image {
         sed -i \"s@post_max_size.*@post_max_size=16M@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@upload_max_filesize.*@upload_max_filesize=16M@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@session.gc_maxlifetime.*@session.gc_maxlifetime=43200\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
-        sed -i \"s@;date.timezone =@date.timezone = ${TIMEZONE}@g\" /etc/php/${PHP_VERSION}/apache2/php.ini; \
         sed -i \"s@short_open_tag.*@short_open_tag=On@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
         sed -i \"s@max_execution_time.*@max_execution_time=${PHP_MAX_EXEC_TIME}@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
         sed -i \"s@max_input_vars.*@max_input_vars=10000@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
         sed -i \"s@memory_limit.*@memory_limit=${PHP_MEM_LIMIT}@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
         sed -i \"s@post_max_size.*@post_max_size=16M@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
         sed -i \"s@upload_max_filesize.*@upload_max_filesize=16M@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
-        sed -i \"s@;date.timezone =@date.timezone = ${TIMEZONE}@g\" /etc/php/${PHP_VERSION}/cli/php.ini; \
         "
 
 	# sodium
@@ -317,7 +317,7 @@ function build_image {
 
 	# set server time
 	echo "RUN ln -fs /usr/share/zoneinfo/${TIMEZONE} /etc/localtime" >>$_file
-	echo "RUN dpkg-reconfigure -f noninteractive tzdata" >>$_file
+	#echo "RUN dpkg-reconfigure -f noninteractive tzdata" >>$_file
 
 	podman build -t "${SITE_NAME}:private" -f $_file
 }
@@ -758,7 +758,6 @@ if [ "$ACTION" == "up" ]; then
 		podman exec "${SITE_NAME}" service memcached start
 		podman exec "${SITE_NAME}" service elasticsearch start
 		podman exec "${SITE_NAME}" service mariadb start
-		podman exec "${SITE_NAME}" mysql_tzinfo_to_sql /usr/share/zoneinfo
 		if [ $USE_TMPFS -ne 1 ]; then
 			# the apache2 patch must be applied on each iteration
 			# as a work around for older combinations of systemd and podman
